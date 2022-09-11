@@ -2,7 +2,7 @@ import type { AWS } from "@serverless/typescript";
 
 const serverlessConfiguration: AWS = {
   service: "ssb-api",
-  plugins: ["serverless-plugin-typescript"],
+  plugins: ["serverless-plugin-typescript", "serverless-offline"],
   frameworkVersion: "*",
   provider: {
     name: "aws",
@@ -10,7 +10,7 @@ const serverlessConfiguration: AWS = {
   },
   functions: {
     hello: {
-      handler: "handler.hello",
+      handler: "src/index.hello",
       events: [
         {
           http: {
