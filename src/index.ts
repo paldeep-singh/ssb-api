@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 
 // modern module syntax
-export async function hello(event, context, callback) {
+export async function hello(event: string, context: string, callback: string) {
   // dependencies work as expected
   console.log(_.VERSION);
 
@@ -11,10 +11,11 @@ export async function hello(event, context, callback) {
   const response = {
     statusCode: 200,
     body: JSON.stringify({
-      message: "Go Serverless v1.0! Your function executed successfully!",
+      message:
+        "Go Serverless v1.0! Your function executed successfully! WOOP WOOP",
       input: event,
     }),
   };
 
-  callback(null, response);
+  return response;
 }
