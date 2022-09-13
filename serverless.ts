@@ -10,11 +10,11 @@ const serverlessConfiguration: AWS = {
   },
   functions: {
     hello: {
-      handler: "src/index.hello",
+      handler: "src/index.handleHello",
       events: [
         {
           http: {
-            method: "get",
+            method: "post",
             path: "hello",
           },
         },

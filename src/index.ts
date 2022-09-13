@@ -1,21 +1,17 @@
-import * as _ from "lodash";
+import { hello } from "./hello";
+import { APIGatewayEvent } from "aws-lambda";
 
-// modern module syntax
-export async function hello(event: string, context: string, callback: string) {
-  // dependencies work as expected
-  console.log(_.VERSION);
+export const handleHello = async (event: APIGatewayEvent) => {
+  const { body } = event;
 
-  // async/await also works out of the box
-  await new Promise((resolve, reject) => setTimeout(resolve, 500));
+  if (!body) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: `Error! Name is required`,
+      }),
+    };
+  }
 
-  const response = {
-    statusCode: 200,
-    body: JSON.stringify({
-      message:
-        "Go Serverless v1.0! Your function executed successfully! WOOP WOOP",
-      input: event,
-    }),
-  };
-
-  return response;
-}
+  return await hello(body);
+};
