@@ -25,6 +25,7 @@
   "dependencies": {
     "@tsconfig/node16": "^1.0.3",
     "@types/aws-lambda": "^8.10.103",
+    "dynamoose": "^3.1.0",
     "lodash": "^4.17.21"
   }
 }
