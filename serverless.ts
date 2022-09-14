@@ -21,6 +21,29 @@ const serverlessConfiguration: AWS = {
       ],
     },
   },
+  resources: {
+    Resources: {
+      AdminUsersTable: {
+        Type: "AWS::DynamoDB::Table",
+
+        Properties: {
+          TableName: "admin-users-table",
+          AttributeDefinitions: [
+            {
+              AttributeName: "adminUserId",
+              AttributeType: "S",
+            },
+          ],
+          KeySchema: [
+            {
+              AttributeName: "adminUserId",
+              KeyType: "HASH",
+            },
+          ],
+        },
+      },
+    },
+  },
 };
 
 module.exports = serverlessConfiguration;
