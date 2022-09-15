@@ -1,0 +1,19 @@
+version: "3.6"
+
+services:
+  dynamo:
+    container_name: testing-local-dynamodb
+    image: amazon/dynamodb-local
+    networks:
+      - local-dynamodb
+    ports:
+      - "8448:8448"
+    working_dir: /home/dynamodblocal
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath . -port 8448"
+
+networks:
+  local-dynamodb:
+    name: local-dynamodb
+
+volumes:
+  dynamodata: {}
