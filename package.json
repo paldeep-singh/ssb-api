@@ -20,7 +20,9 @@
   },
   "scripts": {
     "start:dev": "serverless offline",
-    "test": "jest"
+    "test": "./scripts/runTests.sh unit",
+    "test:dynamodb": "./scripts/runTests.sh integration",
+    "test:all": "./scripts/runTests.sh all"
   },
   "dependencies": {
     "@tsconfig/node16": "^1.0.3",

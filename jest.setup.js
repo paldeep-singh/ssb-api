@@ -1,0 +1,1 @@
+process.env.MOCK_DYNAMODB_ENDPOINT = 'http://localhost:8448'

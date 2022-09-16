@@ -2,25 +2,31 @@ import { Schema, model, aws } from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 
 if (process.env.MOCK_DYNAMODB_ENDPOINT) {
-  aws.ddb.local(process.env.MOCK_DYNAMODB_ENDPOINT);
+  const localDDB = new aws.ddb.DynamoDB({
+    region: 'local',
+    endpoint: process.env.MOCK_DYNAMODB_ENDPOINT
+  })
+
+  aws.ddb.set(localDDB)
 }
 
-interface adminUser {
-  adminUserEmail: string;
+
+export interface IAdminUser {
+  email: string;
   passwordHash: string;
 }
 
 const adminUserSchema = new Schema({
-  adminUserEmail: {
+  email: {
     type: String,
     hashKey: true,
   },
   passwordHash: String,
 });
 
-interface adminUserItem extends Item, adminUser {}
+interface adminUserItem extends Item, IAdminUser {}
 
-const adminUserModel = model<adminUserItem>(
+export const adminUserModel = model<adminUserItem>(
   "admin-users-table",
   adminUserSchema,
   {
@@ -29,9 +35,9 @@ const adminUserModel = model<adminUserItem>(
   }
 );
 
-const adminUserEmailExists = async (email: string) => {
+export const adminUserExists = async (email: string) => {
   const response = await adminUserModel
-    .query("adminUserEmail")
+    .query("email")
     .eq(email)
     .consistent()
     .count()
