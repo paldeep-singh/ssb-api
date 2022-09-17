@@ -1,10 +1,7 @@
-import {
-  adminUserExists,
-  adminUserPasswordIsSet,
-} from "../../models/adminUsers";
-import { LambdaEventWithResult } from "../../libs/api-gateway";
+import { adminUserExists, adminUserPasswordIsSet } from "./model";
+import { LambdaEventWithResult } from "@libs/api-gateway";
 import { adminUserEmailInput } from "./schema";
-import { middyfy } from "../../libs/lambda";
+import { middyfy } from "@libs/lambda";
 
 const checkAdminUserExists: LambdaEventWithResult<
   typeof adminUserEmailInput

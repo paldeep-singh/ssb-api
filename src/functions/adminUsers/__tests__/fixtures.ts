@@ -1,4 +1,4 @@
-import { adminUserModel, IAdminUser } from "../models/adminUsers";
+import { adminUserModel, IAdminUser } from "../model";
 import { faker } from "@faker-js/faker";
 
 export const createAdminUser = (

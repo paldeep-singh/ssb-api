@@ -58,3 +58,27 @@ export const adminUserPasswordIsSet = async (email: string) => {
 
   return !!adminUser.passwordHash;
 };
+
+export const setAdminUserPassword = async ({
+  email,
+  newPassword,
+  confirmNewPassword,
+}: {
+  email: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}) => {
+  if (newPassword !== confirmNewPassword) {
+    throw new Error("Passwords do not match");
+  }
+
+  const adminUser = await adminUserModel.get(email);
+
+  if (!adminUser) {
+    throw new Error("Admin user does not exist");
+  }
+
+  adminUser.passwordHash = newPassword;
+
+  await adminUser.save();
+};

@@ -8,11 +8,11 @@ import {
   createAPIGatewayProxyEventContext,
 } from "@libs/fixtures";
 import { adminUserEmailInput } from "../schema";
-import { adminUserExists, adminUserPasswordIsSet } from "@models/adminUsers";
+import { adminUserExists, adminUserPasswordIsSet } from "../model";
 import { mocked } from "jest-mock";
 import { APIGatewayProxyResult } from "aws-lambda";
 
-jest.mock("@models/adminUsers");
+jest.mock("../model");
 jest.mock("@middy/core", () => {
   return (handler: any) => {
     return {

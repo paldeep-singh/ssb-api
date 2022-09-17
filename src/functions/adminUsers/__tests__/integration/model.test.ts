@@ -3,8 +3,8 @@ import {
   createAdminUser,
   deleteTestAdminUser,
   insertTestAdminUser,
-} from "../../fixtures";
-import * as dynamoDB from "../adminUsers";
+} from "../fixtures";
+import * as dynamoDB from "../../model";
 
 const email = faker.internet.email();
 
