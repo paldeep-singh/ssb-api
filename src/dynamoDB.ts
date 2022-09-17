@@ -1,10 +1,14 @@
 import { Schema, model, aws } from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 
-if (process.env.MOCK_DYNAMODB_ENDPOINT) {
+const localDynamoDBEndpoint = process.env.LOCAL_DYNAMODB_PORT;
+
+console.log(localDynamoDBEndpoint);
+
+if (localDynamoDBEndpoint) {
   const localDDB = new aws.ddb.DynamoDB({
     region: "local",
-    endpoint: process.env.MOCK_DYNAMODB_ENDPOINT,
+    endpoint: localDynamoDBEndpoint,
   });
 
   aws.ddb.set(localDDB);
@@ -29,14 +33,12 @@ export const adminUserModel = model<adminUserItem>(
   "admin-users-table",
   adminUserSchema,
   {
-    create: !!process.env.MOCK_DYNAMODB_ENDPOINT,
-    waitForActive: !!process.env.MOCK_DYNAMODB_ENDPOINT,
+    create: !!localDynamoDBEndpoint,
+    waitForActive: !!localDynamoDBEndpoint,
   }
 );
 
 export const adminUserExists = async (email: string) => {
-  console.log(email);
-
   try {
     const response = await adminUserModel
       .query("email")
@@ -47,7 +49,7 @@ export const adminUserExists = async (email: string) => {
 
     return response.count !== 0;
   } catch (error) {
-    console.log(error);
+    console.log("printed error", error);
     throw error;
   }
 };
