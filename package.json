@@ -17,6 +17,8 @@
     "serverless-plugin-typescript": "^2.1.2",
     "ts-jest": "^29.0.0",
     "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.1.0",
+    "type-fest": "^2.19.0",
     "typescript": "^4.8.3"
   },
   "scripts": {
@@ -26,6 +28,8 @@
     "test:all": "./scripts/runTests.sh all"
   },
   "dependencies": {
+    "@middy/core": "^3.3.2",
+    "@middy/http-json-body-parser": "^3.3.2",
     "@tsconfig/node16": "^1.0.3",
     "@types/aws-lambda": "^8.10.103",
     "dynamoose": "^3.1.0",

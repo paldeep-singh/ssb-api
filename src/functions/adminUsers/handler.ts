@@ -1,11 +1,11 @@
-import { APIGatewayEvent } from "aws-lambda";
 import { adminUserExists } from "../../dynamoDB";
 import { LambdaEventWithResult } from "../../libs/api-gateway";
 import schema from "./schema";
+import { middyfy } from "../../libs/lambda";
 
-export const handleAdminUserExists: LambdaEventWithResult<
-  typeof schema
-> = async (event) => {
+const checkAdminUserExists: LambdaEventWithResult<typeof schema> = async (
+  event
+) => {
   const { email } = event.body;
 
   const userExists = await adminUserExists(email);
@@ -17,3 +17,5 @@ export const handleAdminUserExists: LambdaEventWithResult<
     }),
   };
 };
+
+export const handleCheckAdminUserExists = middyfy(checkAdminUserExists);

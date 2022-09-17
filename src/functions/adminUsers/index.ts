@@ -4,7 +4,7 @@ import { AWS } from "@serverless/typescript";
 
 const adminUserFunctions: AWS["functions"] = {
   adminUserExists: {
-    handler: `${handlerPath(__dirname)}/handler.main`,
+    handler: `${handlerPath(__dirname)}/handler.handleCheckAdminUserExists`,
     events: [
       {
         http: {

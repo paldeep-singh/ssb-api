@@ -1,7 +1,7 @@
-import { handleAdminUserExists } from "../handler";
+import { handleCheckAdminUserExists } from "../handler";
 import { faker } from "@faker-js/faker";
 import {
-  createAPIGatewayProxyEvent,
+  createParsedAPIGatewayProxyEvent,
   createAPIGatewayProxyEventContext,
 } from "../../../libs/fixtures";
 import schema from "../schema";
@@ -10,6 +10,13 @@ import { mocked } from "jest-mock";
 import { APIGatewayProxyResult } from "aws-lambda";
 
 jest.mock("../../../dynamoDB");
+jest.mock("@middy/core", () => {
+  return (handler: any) => {
+    return {
+      use: jest.fn().mockReturnValue(handler), // ...use(ssm()) will return handler function
+    };
+  };
+});
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -18,7 +25,7 @@ beforeEach(() => {
 describe("handleAdminUserExists", () => {
   const email = faker.internet.email();
   const context = createAPIGatewayProxyEventContext();
-  const APIGatewayEvent = createAPIGatewayProxyEvent<typeof schema>({
+  const APIGatewayEvent = createParsedAPIGatewayProxyEvent<typeof schema>({
     body: {
       email,
     },
@@ -30,17 +37,14 @@ describe("handleAdminUserExists", () => {
     });
 
     it("returns statusCode 200", async () => {
-      const { statusCode }: APIGatewayProxyResult = await handleAdminUserExists(
-        APIGatewayEvent,
-        context,
-        jest.fn()
-      );
+      const { statusCode }: APIGatewayProxyResult =
+        await handleCheckAdminUserExists(APIGatewayEvent, context, jest.fn());
 
       expect(statusCode).toEqual(200);
     });
 
     it("returns adminUserExists: true", async () => {
-      const { body } = await handleAdminUserExists(
+      const { body } = await handleCheckAdminUserExists(
         APIGatewayEvent,
         context,
         jest.fn()
@@ -56,17 +60,14 @@ describe("handleAdminUserExists", () => {
     });
 
     it("returns statusCode 404", async () => {
-      const { statusCode }: APIGatewayProxyResult = await handleAdminUserExists(
-        APIGatewayEvent,
-        context,
-        jest.fn()
-      );
+      const { statusCode }: APIGatewayProxyResult =
+        await handleCheckAdminUserExists(APIGatewayEvent, context, jest.fn());
 
       expect(statusCode).toEqual(404);
     });
 
     it("returns adminUserExists: false", async () => {
-      const { body } = await handleAdminUserExists(
+      const { body } = await handleCheckAdminUserExists(
         APIGatewayEvent,
         context,
         jest.fn()

@@ -2,12 +2,24 @@ import { faker } from "@faker-js/faker";
 import { Context } from "aws-lambda";
 import type { FromSchema, JSONSchema7 } from "json-schema-to-ts";
 import { ValidatedAPIGatewayProxyEvent } from "../api-gateway";
+import { JsonValue } from "type-fest";
 
-export const createAPIGatewayProxyEvent = <requestSchema extends JSONSchema7>(
-  eventAttributes: Partial<ValidatedAPIGatewayProxyEvent<requestSchema>> = {}
-): ValidatedAPIGatewayProxyEvent<requestSchema> => {
+type ParsedEvent<requestSchema extends JSONSchema7> = Omit<
+  ValidatedAPIGatewayProxyEvent<requestSchema>,
+  "body"
+> & {
+  body: JsonValue;
+  rawBody: string;
+};
+
+export const createParsedAPIGatewayProxyEvent = <
+  requestSchema extends JSONSchema7
+>(
+  eventAttributes: Partial<ParsedEvent<requestSchema>> = {}
+): ParsedEvent<requestSchema> => {
   return {
-    body: {} as FromSchema<requestSchema>,
+    body: {} as JsonValue,
+    rawBody: "",
     headers: {},
     multiValueHeaders: {},
     httpMethod: "",
