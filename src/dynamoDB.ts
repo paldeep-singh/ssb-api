@@ -1,7 +1,7 @@
 import { Schema, model, aws } from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 
-const localDynamoDBEndpoint = process.env.LOCAL_DYNAMODB_PORT;
+const localDynamoDBEndpoint = process.env.LOCAL_DYNAMODB_ENDPOINT;
 
 console.log(localDynamoDBEndpoint);
 

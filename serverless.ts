@@ -3,6 +3,22 @@ import adminUserFunctions from "@functions/adminUsers";
 
 const serverlessConfiguration: AWS = {
   service: "ssb-api",
+  plugins: [
+    "serverless-esbuild",
+    "serverless-dynamodb-local",
+    "serverless-offline",
+  ],
+  frameworkVersion: "*",
+  provider: {
+    name: "aws",
+    runtime: "nodejs16.x",
+    environment: {
+      LOCAL_DYNAMODB_ENDPOINT: "http://localhost:8448",
+    },
+  },
+  functions: {
+    ...adminUserFunctions,
+  },
   custom: {
     dynamodb: {
       stages: ["dev"],
@@ -32,22 +48,6 @@ const serverlessConfiguration: AWS = {
       //   },
       // },
     },
-  },
-  plugins: [
-    "serverless-plugin-typescript",
-    "serverless-dynamodb-local",
-    "serverless-offline",
-  ],
-  frameworkVersion: "*",
-  provider: {
-    name: "aws",
-    runtime: "nodejs16.x",
-    environment: {
-      LOCAL_DYNAMODB_PORT: "http://localhost:8448",
-    },
-  },
-  functions: {
-    ...adminUserFunctions,
   },
   resources: {
     Resources: {
