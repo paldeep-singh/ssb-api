@@ -1,15 +1,18 @@
 import { adminUserEmailInput } from "./schema";
-import { handlerPath } from "@libs/handler-resolver";
+import { handlerPath, handlerRoute } from "@libs/handler-resolver";
 import { AWS } from "@serverless/typescript";
+
+const path = handlerPath(__dirname);
+const route = handlerRoute(__dirname);
 
 const adminUserFunctions: AWS["functions"] = {
   adminUserExists: {
-    handler: `${handlerPath(__dirname)}/handlers.handleCheckAdminUserExists`,
+    handler: `${path}/handlers.handleCheckAdminUserExists`,
     events: [
       {
         http: {
           method: "post",
-          path: `admin-users/exists`,
+          path: `${route}/exists`,
           request: {
             schemas: {
               "application/json": adminUserEmailInput,
@@ -20,14 +23,12 @@ const adminUserFunctions: AWS["functions"] = {
     ],
   },
   adminUserPasswordIsSet: {
-    handler: `${handlerPath(
-      __dirname
-    )}/handlers.handleCheckAdminUserPasswordIsSet`,
+    handler: `${path}/handlers.handleCheckAdminUserPasswordIsSet`,
     events: [
       {
         http: {
           method: "post",
-          path: "admin-users/claimed",
+          path: `${route}/claimed`,
           request: {
             schemas: {
               "application/json": adminUserEmailInput,
