@@ -50,3 +50,11 @@ export const adminUserExists = async (email: string) => {
     throw error;
   }
 };
+
+export const adminUserPasswordIsSet = async (email: string) => {
+  const adminUser = await adminUserModel.get(email);
+
+  if (!adminUser) return false;
+
+  return !!adminUser.passwordHash;
+};
