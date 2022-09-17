@@ -3,13 +3,13 @@ import { faker } from "@faker-js/faker";
 import {
   createParsedAPIGatewayProxyEvent,
   createAPIGatewayProxyEventContext,
-} from "../../../libs/fixtures";
+} from "@libs/fixtures";
 import schema from "../schema";
-import { adminUserExists } from "../../../dynamoDB";
+import { adminUserExists } from "@models/adminUsers";
 import { mocked } from "jest-mock";
 import { APIGatewayProxyResult } from "aws-lambda";
 
-jest.mock("../../../dynamoDB");
+jest.mock("@models/adminUsers");
 jest.mock("@middy/core", () => {
   return (handler: any) => {
     return {

@@ -1,4 +1,4 @@
-import { adminUserExists } from "../../dynamoDB";
+import { adminUserExists } from "../../models/adminUsers";
 import { LambdaEventWithResult } from "../../libs/api-gateway";
 import schema from "./schema";
 import { middyfy } from "../../libs/lambda";

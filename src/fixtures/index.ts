@@ -1,4 +1,4 @@
-import { adminUserModel, IAdminUser } from "../dynamoDB";
+import { adminUserModel, IAdminUser } from "../models/adminUsers";
 import { faker } from "@faker-js/faker";
 
 export const createAdminUser = (

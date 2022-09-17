@@ -3,8 +3,8 @@ import {
   createAdminUser,
   deleteTestAdminUser,
   insertTestAdminUser,
-} from "../fixtures";
-import * as dynamoDB from "../dynamoDB";
+} from "../../fixtures";
+import * as dynamoDB from "../adminUsers";
 
 describe("adminUserExists", () => {
   describe("if the admin user does not exist", () => {

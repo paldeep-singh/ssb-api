@@ -4,7 +4,7 @@
   "main": "src/index.ts",
   "repository": "https://github.com/paldeep-singh/ssb-api.git",
   "author": "penguinpp <paldeepsingh21@gmail.com>",
-  "license": "No license",
+  "license": "UNLICENSED",
   "devDependencies": {
     "@faker-js/faker": "^7.5.0",
     "@serverless/typescript": "^3.21.0",
@@ -26,7 +26,7 @@
   "scripts": {
     "start:local": "serverless offline start",
     "test": "./scripts/runTests.sh unit",
-    "test:dynamodb": "./scripts/runTests.sh integration",
+    "test:integration": "./scripts/runTests.sh integration",
     "test:all": "./scripts/runTests.sh all"
   },
   "dependencies": {
