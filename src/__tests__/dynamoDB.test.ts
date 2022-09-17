@@ -3,7 +3,7 @@ import {
   createAdminUser,
   deleteTestAdminUser,
   insertTestAdminUser,
-} from "../testFixtures";
+} from "../fixtures";
 import * as dynamoDB from "../dynamoDB";
 
 describe("adminUserExists", () => {

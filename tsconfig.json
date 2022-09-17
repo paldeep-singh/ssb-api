@@ -9,8 +9,13 @@
     "outDir": ".build",
     "moduleResolution": "node",
     "lib": ["ESNext"],
-    "rootDir": "./"
+    "rootDir": "./",
+    "baseUrl": ".",
+    "paths": {
+      "@functions/*": ["src/functions/*"],
+      "@libs/*": ["src/libs/*"]
+    }
   },
-  "include": ["src"],
-  "exclude": ["node_modules"],
+  "include": ["src/**/*.ts", "serverless.ts"],
+  "exclude": ["node_modules"]
 }

@@ -1,4 +1,5 @@
 import type { AWS } from "@serverless/typescript";
+import adminUserFunctions from "@functions/adminUsers";
 
 const serverlessConfiguration: AWS = {
   service: "ssb-api",
@@ -9,17 +10,7 @@ const serverlessConfiguration: AWS = {
     runtime: "nodejs16.x",
   },
   functions: {
-    hello: {
-      handler: "src/index.handleHello",
-      events: [
-        {
-          http: {
-            method: "post",
-            path: "hello",
-          },
-        },
-      ],
-    },
+    ...adminUserFunctions,
   },
   resources: {
     Resources: {
