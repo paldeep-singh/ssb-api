@@ -4,7 +4,7 @@
   "main": "src/index.ts",
   "repository": "https://github.com/paldeep-singh/ssb-api.git",
   "author": "penguinpp <paldeepsingh21@gmail.com>",
-  "license": "MIT",
+  "license": "No license",
   "devDependencies": {
     "@faker-js/faker": "^7.5.0",
     "@serverless/typescript": "^3.21.0",
