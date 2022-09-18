@@ -83,6 +83,8 @@ const serverlessConfiguration: AWS = {
             WriteCapacityUnits: 1,
           },
         },
+        // Change this in permanent deployment
+        DeletionPolicy: "Delete",
       },
     },
   },
