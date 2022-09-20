@@ -6,20 +6,24 @@ export type Principal =
       Federated?: string;
     };
 
+type Resource = string | string[] | { [key: string]: Resource } | Resource[];
+
+export type Statement = {
+  Effect: "Allow" | "Deny";
+  Action: string | string[];
+  NotAction?: string | string[];
+  Principal?: Principal;
+  NotPrincipal?: Principal;
+  Resource?: Resource;
+  NotResource?: Resource;
+  Condition?: {
+    [key: string]: string;
+  };
+};
+
 export type PolicyDocument = {
   Version: "2012-10-17";
-  Statement: {
-    Effect: "Allow" | "Deny";
-    Action: string | string[];
-    NotAction?: string | string[];
-    Principal?: Principal;
-    NotPrincipal?: Principal;
-    Resource?: string | string[];
-    NotResource?: string | string[];
-    Condition?: {
-      [key: string]: string;
-    };
-  };
+  Statement: Statement | Statement[];
 };
 
 export type Policy = {
@@ -45,11 +49,29 @@ export type iamRole = {
   };
 };
 
-export const createAssumeRolePolicyDocument = (Principal: Principal) => ({
+export const lambdaAssumeRolePolicyDocument: PolicyDocument = {
   Version: "2012-10-17",
   Statement: {
     Effect: "Allow",
     Action: "sts:AssumeRole",
-    Principal,
+    Principal: {
+      Service: "lambda.amazonaws.com",
+    },
   },
-});
+};
+
+export const lambdaBaseStatement: Statement = {
+  Effect: "Allow",
+  Action: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+  Resource: {
+    "Fn::Join": [
+      ":",
+      [
+        "arn:aws:logs",
+        "${AWS::Region}",
+        "${AWS::AccountId}",
+        "log-group:/aws/lambda/*:*:*",
+      ],
+    ],
+  },
+};
