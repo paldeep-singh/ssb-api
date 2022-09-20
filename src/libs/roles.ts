@@ -1,4 +1,4 @@
-export type Principal =
+type Principal =
   | "*"
   | {
       Service?: string;
@@ -21,17 +21,17 @@ export type Statement = {
   };
 };
 
-export type PolicyDocument = {
+type PolicyDocument = {
   Version: "2012-10-17";
   Statement: Statement | Statement[];
 };
 
-export type Policy = {
+type Policy = {
   PolicyName: string;
   PolicyDocument: PolicyDocument;
 };
 
-export type iamRole = {
+type iamRole = {
   Type: "AWS::IAM::Role";
   Properties: {
     AssumeRolePolicyDocument: PolicyDocument;
@@ -49,7 +49,7 @@ export type iamRole = {
   };
 };
 
-export const lambdaAssumeRolePolicyDocument: PolicyDocument = {
+const lambdaAssumeRolePolicyDocument: PolicyDocument = {
   Version: "2012-10-17",
   Statement: {
     Effect: "Allow",
@@ -60,7 +60,7 @@ export const lambdaAssumeRolePolicyDocument: PolicyDocument = {
   },
 };
 
-export const lambdaBaseStatement: Statement = {
+const lambdaBaseStatement: Statement = {
   Effect: "Allow",
   Action: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
   Resource: {
@@ -74,4 +74,35 @@ export const lambdaBaseStatement: Statement = {
       ],
     ],
   },
+};
+
+interface ICreateLambdaRole {
+  statements: Statement[];
+  roleName: string;
+  policyName: string;
+}
+
+export const createLambdaRole = ({
+  statements,
+  roleName,
+  policyName,
+}: ICreateLambdaRole) => {
+  const role: iamRole = {
+    Type: "AWS::IAM::Role",
+    Properties: {
+      AssumeRolePolicyDocument: lambdaAssumeRolePolicyDocument,
+      RoleName: roleName,
+      Policies: [
+        {
+          PolicyName: policyName,
+          PolicyDocument: {
+            Version: "2012-10-17",
+            Statement: [lambdaBaseStatement, ...statements],
+          },
+        },
+      ],
+    },
+  };
+
+  return role;
 };
