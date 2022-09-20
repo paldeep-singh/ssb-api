@@ -63,17 +63,12 @@ const lambdaAssumeRolePolicyDocument: PolicyDocument = {
 const lambdaBaseStatement: Statement = {
   Effect: "Allow",
   Action: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
-  Resource: {
-    "Fn::Join": [
-      ":",
-      [
-        "arn:aws:logs",
-        "${AWS::Region}",
-        "${AWS::AccountId}",
-        "log-group:/aws/lambda/*:*:*",
-      ],
-    ],
-  },
+  Resource: [
+    {
+      "Fn::Sub":
+        "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*",
+    },
+  ],
 };
 
 interface ICreateLambdaRole {

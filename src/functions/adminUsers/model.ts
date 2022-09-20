@@ -12,6 +12,8 @@ if (localDynamoDBEndpoint) {
   aws.ddb.set(localDDB);
 }
 
+export const ADMIN_USERS_TABLE_NAME = "admin-users-table";
+
 export interface IAdminUser {
   email: string;
   passwordHash: string;
@@ -28,7 +30,7 @@ const adminUserSchema = new Schema({
 interface adminUserItem extends Item, IAdminUser {}
 
 export const adminUserModel = model<adminUserItem>(
-  "admin-users-table",
+  ADMIN_USERS_TABLE_NAME,
   adminUserSchema,
   {
     create: !!localDynamoDBEndpoint,

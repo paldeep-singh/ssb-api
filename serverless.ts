@@ -1,5 +1,6 @@
 import type { AWS } from "@serverless/typescript";
 import adminUserFunctions from "@functions/adminUsers";
+import adminUserRoles from "@functions/adminUsers/roles";
 
 const serverlessConfiguration: AWS = {
   service: "ssb-api",
@@ -12,9 +13,10 @@ const serverlessConfiguration: AWS = {
   provider: {
     name: "aws",
     runtime: "nodejs16.x",
-    environment: {
-      LOCAL_DYNAMODB_ENDPOINT: "http://localhost:8448",
-    },
+    region: "ap-southeast-2",
+    // environment: {
+    //   LOCAL_DYNAMODB_ENDPOINT: "http://localhost:8448",
+    // },
   },
   functions: {
     ...adminUserFunctions,
@@ -86,6 +88,7 @@ const serverlessConfiguration: AWS = {
         // Change this in permanent deployment
         DeletionPolicy: "Delete",
       },
+      ...adminUserRoles,
     },
   },
 };
