@@ -8,7 +8,7 @@ import {
   createAPIGatewayProxyEventContext,
 } from "@libs/fixtures";
 import { adminUserEmailInput } from "../schema";
-import { adminUserExists, adminUserPasswordIsSet } from "../model";
+import { adminUserExists, adminUserPasswordIsSet, ErrorCodes } from "../model";
 import { mocked } from "jest-mock";
 import { APIGatewayProxyResult } from "aws-lambda";
 
@@ -97,4 +97,34 @@ describe("handleCheckAdminUserPasswordIsSet", () => {
       });
     }
   );
+
+  describe("when the user does not exist", () => {
+    beforeEach(() => {
+      mocked(adminUserPasswordIsSet).mockRejectedValueOnce(
+        new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER)
+      );
+    });
+
+    it("returns statusCode 404", async () => {
+      const { statusCode } = await handleCheckAdminUserPasswordIsSet(
+        APIGatewayEvent,
+        context,
+        jest.fn()
+      );
+
+      expect(statusCode).toEqual(404);
+    });
+
+    it(`returns ${ErrorCodes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
+      const { body } = await handleCheckAdminUserPasswordIsSet(
+        APIGatewayEvent,
+        context,
+        jest.fn()
+      );
+
+      expect(JSON.parse(body).message).toEqual(
+        ErrorCodes.NON_EXISTENT_ADMIN_USER
+      );
+    });
+  });
 });

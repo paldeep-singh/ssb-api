@@ -5,6 +5,7 @@ import {
   insertTestAdminUser,
 } from "../fixtures";
 import * as dynamoDB from "../../model";
+import { expectError } from "@libs/testUtils";
 
 const email = faker.internet.email();
 
@@ -57,10 +58,13 @@ describe("adminUserPasswordIsSet", () => {
   });
 
   describe("when the user does not exist", () => {
-    it("returns false", async () => {
-      const response = await dynamoDB.adminUserPasswordIsSet(email);
-
-      expect(response).toEqual(false);
+    it("throws a NON_EXISTENT_ADMIN_USER error", async () => {
+      expect.assertions(1);
+      try {
+        await dynamoDB.adminUserPasswordIsSet(email);
+      } catch (error) {
+        expectError(error, dynamoDB.ErrorCodes.NON_EXISTENT_ADMIN_USER);
+      }
     });
   });
 });

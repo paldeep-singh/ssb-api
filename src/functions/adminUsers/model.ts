@@ -38,6 +38,10 @@ export const adminUserModel = model<adminUserItem>(
   }
 );
 
+export enum ErrorCodes {
+  NON_EXISTENT_ADMIN_USER = "NON_EXISTENT_ADMIN_USER",
+}
+
 export const adminUserExists = async (email: string) => {
   try {
     const response = await adminUserModel
@@ -56,7 +60,7 @@ export const adminUserExists = async (email: string) => {
 export const adminUserPasswordIsSet = async (email: string) => {
   const adminUser = await adminUserModel.get(email);
 
-  if (!adminUser) return false;
+  if (!adminUser) throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER);
 
   return !!adminUser.passwordHash;
 };

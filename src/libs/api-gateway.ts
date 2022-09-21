@@ -24,9 +24,19 @@ export type LambdaEventWithResult<requestSchema extends JSONSchema7> =
     APIGatewayProxyResult
   >;
 
-export const formatJSONResponse = (response: Record<string, unknown>) => {
+export const formatJSONResponse = (
+  statusCode: number,
+  response: Record<string, unknown>
+) => {
   return {
-    statusCode: 200,
+    statusCode,
     body: JSON.stringify(response),
   };
+};
+
+export const formatJSONErrorResponse = (
+  statusCode: number,
+  message: string
+) => {
+  return formatJSONResponse(statusCode, { message });
 };
