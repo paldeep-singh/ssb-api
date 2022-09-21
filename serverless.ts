@@ -2,7 +2,6 @@ import type { AWS } from "@serverless/typescript";
 import adminUserFunctions from "@functions/adminUsers";
 import adminUserRoles from "@functions/adminUsers/roles";
 
-console.log(process.env.SLS_STAGE);
 const stage = process.env.SLS_STAGE ?? "dev";
 const local = "local";
 const localStage = stage === "local";

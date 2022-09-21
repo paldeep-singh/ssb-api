@@ -13,5 +13,5 @@ export const handlerPath = (context: string): string => {
 };
 
 export const handlerRoute = (context: string): string => {
-  return `${kebabize(resolveFilePath(context))}`;
+  return kebabize(resolveFilePath(context).replace("src/functions/", ""));
 };
