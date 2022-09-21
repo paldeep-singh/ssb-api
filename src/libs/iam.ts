@@ -27,7 +27,7 @@ export type Statement = {
   };
 };
 
-type PolicyDocument = {
+export type PolicyDocument = {
   Version: "2012-10-17";
   Statement: Statement | Statement[];
 };

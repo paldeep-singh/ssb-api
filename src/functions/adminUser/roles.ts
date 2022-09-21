@@ -1,4 +1,4 @@
-import { Statement, createLambdaRole } from "@libs/roles";
+import { Statement, createLambdaRole } from "@libs/iam";
 import { ADMIN_USERS_TABLE_NAME } from "./model";
 
 const adminUsersTableARN = [{ "Fn::GetAtt": ["AdminUsersTable", "Arn"] }];
