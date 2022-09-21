@@ -24,7 +24,8 @@
     "typescript": "^4.8.3"
   },
   "scripts": {
-    "start:local": "serverless offline start",
+    "start:local": "SLS_STAGE=local serverless offline start",
+    "deploy:dev": "SLS_STAGE=dev serverless",
     "test": "./scripts/runTests.sh unit",
     "test:integration": "./scripts/runTests.sh integration",
     "test:all": "./scripts/runTests.sh all"

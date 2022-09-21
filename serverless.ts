@@ -2,6 +2,12 @@ import type { AWS } from "@serverless/typescript";
 import adminUserFunctions from "@functions/adminUsers";
 import adminUserRoles from "@functions/adminUsers/roles";
 
+console.log(process.env.SLS_STAGE);
+const stage = process.env.SLS_STAGE ?? "dev";
+const local = "local";
+const localStage = stage === "local";
+const dynamoDbPort = 8448;
+console.log(stage);
 const serverlessConfiguration: AWS = {
   service: "ssb-api",
   plugins: [
@@ -12,11 +18,14 @@ const serverlessConfiguration: AWS = {
   frameworkVersion: "*",
   provider: {
     name: "aws",
+    stage,
     runtime: "nodejs16.x",
     region: "ap-southeast-2",
-    // environment: {
-    //   LOCAL_DYNAMODB_ENDPOINT: "http://localhost:8448",
-    // },
+    environment: {
+      ...(localStage && {
+        LOCAL_DYNAMODB_ENDPOINT: `http://localhost:${dynamoDbPort}`,
+      }),
+    },
   },
   functions: {
     ...adminUserFunctions,
@@ -33,11 +42,11 @@ const serverlessConfiguration: AWS = {
       concurrency: 10,
     },
     dynamodb: {
-      stages: ["dev"],
+      stages: [local],
       start: {
         docker: true,
         migrate: true,
-        port: 8448,
+        port: dynamoDbPort,
         inMemory: true,
         convertEmptyValues: true,
         // Uncomment only if you already have a DynamoDB running locally,
