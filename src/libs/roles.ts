@@ -1,29 +1,4 @@
-import { AwsCfRef } from "@serverless/typescript";
-
-type AwsCfImport = {
-  "Fn::ImportValue": string | AwsCfFunction;
-};
-
-type AwsCfJoin = {
-  "Fn::Join": [string, Array<string | AwsCfFunction>];
-};
-
-type AwsCfGetAtt = {
-  "Fn::GetAtt": string[];
-};
-
-interface AwsCfSub {
-  "Fn::Sub": string | [string, { [key: string]: string | AwsCfFunction }];
-}
-
-type AwsCfFunction =
-  | AwsCfImport
-  | AwsCfJoin
-  | AwsCfGetAtt
-  | AwsCfRef
-  | AwsCfSub;
-
-type AwsStrings = string | AwsCfFunction | Array<string | AwsCfFunction>;
+import { AwsStrings, Tag } from "./misc-aws-utils";
 
 type Principal =
   | "*"
@@ -73,10 +48,7 @@ type iamRole = {
     PermissionsBoundary?: string;
     Policies?: Policy[];
     RoleName: string;
-    Tags?: {
-      Key: string;
-      Value: string;
-    };
+    Tags?: Tag[];
   };
 };
 

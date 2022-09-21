@@ -1,12 +1,13 @@
 import type { AWS } from "@serverless/typescript";
 import functions from "@functions/index";
-import Resources from "@functions/resources";
+import resources from "@functions/resources";
+import roles from "@functions/roles";
 
 const stage = process.env.SLS_STAGE ?? "dev";
 const local = "local";
 const localStage = stage === "local";
 const dynamoDbPort = 8448;
-console.log(stage);
+
 const serverlessConfiguration: AWS = {
   service: "ssb-api",
   plugins: [
@@ -68,7 +69,10 @@ const serverlessConfiguration: AWS = {
     },
   },
   resources: {
-    Resources,
+    Resources: {
+      ...resources,
+      ...roles,
+    },
   },
 };
 

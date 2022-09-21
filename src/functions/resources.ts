@@ -1,7 +1,7 @@
 import adminUserResources from "./adminUser/resources";
 
-const Resources = {
+const resources = {
   ...adminUserResources,
 };
 
-export default Resources;
+export default resources;
