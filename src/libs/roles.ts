@@ -1,12 +1,43 @@
+import { AwsCfRef } from "@serverless/typescript";
+
+type AwsCfImport = {
+  "Fn::ImportValue": string | AwsCfFunction;
+};
+
+type AwsCfJoin = {
+  "Fn::Join": [string, Array<string | AwsCfFunction>];
+};
+
+type AwsCfGetAtt = {
+  "Fn::GetAtt": string[];
+};
+
+interface AwsCfSub {
+  "Fn::Sub": string | [string, { [key: string]: string | AwsCfFunction }];
+}
+
+type AwsCfFunction =
+  | AwsCfImport
+  | AwsCfJoin
+  | AwsCfGetAtt
+  | AwsCfRef
+  | AwsCfSub;
+
+type AwsStrings = string | AwsCfFunction | Array<string | AwsCfFunction>;
+
 type Principal =
   | "*"
   | {
-      Service?: string;
-      AWS?: string;
-      Federated?: string;
+      AWS: AwsStrings;
+    }
+  | {
+      Service: AwsStrings;
+    }
+  | {
+      Federated: AwsStrings;
     };
 
-type Resource = string | string[] | { [key: string]: Resource } | Resource[];
+type Resource = AwsStrings;
 
 export type Statement = {
   Effect: "Allow" | "Deny";
