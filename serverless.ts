@@ -1,6 +1,6 @@
 import type { AWS } from "@serverless/typescript";
-import adminUserFunctions from "@functions/adminUser";
-import adminUserRoles from "@functions/adminUser/roles";
+import functions from "@functions/index";
+import Resources from "@functions/resources";
 
 const stage = process.env.SLS_STAGE ?? "dev";
 const local = "local";
@@ -26,9 +26,7 @@ const serverlessConfiguration: AWS = {
       }),
     },
   },
-  functions: {
-    ...adminUserFunctions,
-  },
+  functions,
   custom: {
     esbuild: {
       bundle: true,
@@ -70,34 +68,7 @@ const serverlessConfiguration: AWS = {
     },
   },
   resources: {
-    Resources: {
-      AdminUsersTable: {
-        Type: "AWS::DynamoDB::Table",
-
-        Properties: {
-          TableName: "admin-users-table",
-          AttributeDefinitions: [
-            {
-              AttributeName: "email",
-              AttributeType: "S",
-            },
-          ],
-          KeySchema: [
-            {
-              AttributeName: "email",
-              KeyType: "HASH",
-            },
-          ],
-          ProvisionedThroughput: {
-            ReadCapacityUnits: 1,
-            WriteCapacityUnits: 1,
-          },
-        },
-        // Change this in permanent deployment
-        DeletionPolicy: "Delete",
-      },
-      ...adminUserRoles,
-    },
+    Resources,
   },
 };
 
