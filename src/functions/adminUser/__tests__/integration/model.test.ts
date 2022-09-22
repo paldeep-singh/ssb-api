@@ -9,7 +9,6 @@ import * as dynamoDB from "../../model";
 import { expectError } from "@libs/testUtils";
 import { EncryptCommand, KMSClient } from "@aws-sdk/client-kms";
 import { mockClient } from "aws-sdk-client-mock";
-import { mocked } from "jest-mock";
 import { stringToUint8Array } from "@libs/kms";
 
 const email = faker.internet.email();
