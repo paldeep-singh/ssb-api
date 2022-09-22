@@ -3,13 +3,16 @@ import { STAGE } from "@libs/env";
 import { defaultKeyPolicy, KMSAlias, KMSKey } from "@libs/kms";
 
 export const ADMIN_USER_TABLE_NAME = `${STAGE}-admin-users-table`;
-export const ADMIN_USER_PASSWORD_KEY_ALIAS = `alias/${STAGE}-admin-user-password-key`;
 export const ADMIN_USER_TABLE_REF = "AdminUsersTable";
+
+export const VERIFICATION_CODE_TABLE_NAME = `${STAGE}admin-users-verification-codes-table`;
+export const VERIFICATION_CODE_TABLE_REF = "VerificationCodesTable";
+
+export const ADMIN_USER_PASSWORD_KEY_ALIAS = `alias/${STAGE}-admin-user-password-key`;
 export const ADMIN_USER_PASSWORD_KEY_REF = "AdminUserPasswordKey";
 
 const AdminUsersTable: Table = {
   Type: "AWS::DynamoDB::Table",
-
   Properties: {
     TableName: ADMIN_USER_TABLE_NAME,
     AttributeDefinitions: [
@@ -21,6 +24,31 @@ const AdminUsersTable: Table = {
     KeySchema: [
       {
         AttributeName: "email",
+        KeyType: "HASH",
+      },
+    ],
+    ProvisionedThroughput: {
+      ReadCapacityUnits: 1,
+      WriteCapacityUnits: 1,
+    },
+  },
+  // Change this in permanent deployment
+  DeletionPolicy: "Delete",
+};
+
+const AdminUsersVerficiationCodeTable: Table = {
+  Type: "AWS::DynamoDB::Table",
+  Properties: {
+    TableName: VERIFICATION_CODE_TABLE_NAME,
+    AttributeDefinitions: [
+      {
+        AttributeName: "adminUserId",
+        AttributeType: "S",
+      },
+    ],
+    KeySchema: [
+      {
+        AttributeName: "adminUserId",
         KeyType: "HASH",
       },
     ],
@@ -53,6 +81,7 @@ const adminUserResources = {
   AdminUsersTable,
   AdminUserPasswordKey,
   AdminUserPasswordKeyAliasResource,
+  AdminUsersVerficiationCodeTable,
 };
 
 export default adminUserResources;
