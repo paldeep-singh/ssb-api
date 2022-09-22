@@ -34,7 +34,7 @@ const adminUserExistsRole = createLambdaRole({
 });
 
 const adminUserPasswordIsSetRole = createLambdaRole({
-  statements: [getAdminUserStatement],
+  statements: [queryAdminUsersStatement],
   roleName: "adminUserPasswordIsSetRole",
   policyName: "adminUserPasswordIsSetPolicy",
 });

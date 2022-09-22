@@ -11,12 +11,13 @@ import {
 import { adminUserEmailInput, adminUserSetPasswordInput } from "../schema";
 import {
   documentExists,
-  userPasswordIsSet,
+  fetchUserByEmail,
   ErrorCodes,
   setPassword,
 } from "../model";
 import { mocked } from "jest-mock";
 import { APIGatewayProxyResult } from "aws-lambda";
+import { createAdminUser } from "./fixtures";
 
 jest.mock("../model");
 jest.mock("@middy/core", () => {
@@ -78,23 +79,37 @@ describe("handleCheckAdminUserPasswordIsSet", () => {
     },
   });
   describe.each([
-    ["set", 200, true],
-    ["not set", 404, false],
+    [
+      "set",
+      true,
+      createAdminUser({
+        passwordHash: faker.datatype.string(20),
+        passwordSalt: faker.datatype.string(10),
+      }),
+    ],
+    [
+      "not set",
+      false,
+      createAdminUser({
+        passwordHash: "",
+        passwordSalt: "",
+      }),
+    ],
   ])(
     "when the user's password is %s",
-    (_, expectedStatusCode, expectedPasswordIsSet) => {
+    (_, expectedPasswordIsSet, adminUser) => {
       beforeEach(() => {
-        mocked(userPasswordIsSet).mockResolvedValueOnce(expectedPasswordIsSet);
+        mocked(fetchUserByEmail).mockResolvedValueOnce(adminUser);
       });
 
-      it(`returns statusCode ${expectedStatusCode}`, async () => {
+      it(`returns statusCode 200`, async () => {
         const { statusCode } = await handleCheckAdminUserPasswordIsSet(
           APIGatewayEvent,
           context,
           jest.fn()
         );
 
-        expect(statusCode).toEqual(expectedStatusCode);
+        expect(statusCode).toEqual(200);
       });
 
       it(`"returns passwordIsSet ${expectedPasswordIsSet}"`, async () => {
@@ -111,7 +126,7 @@ describe("handleCheckAdminUserPasswordIsSet", () => {
 
   describe("when the user does not exist", () => {
     beforeEach(() => {
-      mocked(userPasswordIsSet).mockRejectedValueOnce(
+      mocked(fetchUserByEmail).mockRejectedValueOnce(
         new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER)
       );
     });

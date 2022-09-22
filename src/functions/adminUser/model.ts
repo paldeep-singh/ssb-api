@@ -47,6 +47,7 @@ const adminUserSchema = new Schema({
     },
   },
   passwordHash: String,
+  passwordSalt: String,
 });
 
 interface adminUserItem extends Item, IAdminUser {}
@@ -80,12 +81,19 @@ export const documentExists = async (email: string) => {
   }
 };
 
-export const userPasswordIsSet = async (email: string) => {
+export const fetchUserByEmail = async (email: string): Promise<IAdminUser> => {
   const [adminUser] = await queryAdminUserByEmail(email).exec();
 
   if (!adminUser) throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER);
 
-  return !!adminUser.passwordHash;
+  const { userId, passwordHash, passwordSalt } = adminUser;
+
+  return {
+    userId,
+    email,
+    passwordHash,
+    passwordSalt,
+  };
 };
 
 export const setPassword = async ({

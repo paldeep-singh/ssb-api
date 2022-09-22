@@ -1,6 +1,6 @@
 import {
   documentExists,
-  userPasswordIsSet,
+  fetchUserByEmail,
   ErrorCodes,
   setPassword,
 } from "./model";
@@ -32,11 +32,11 @@ const checkAdminUserPasswordIsSet: LambdaEventWithResult<
 > = async (event) => {
   const { email } = event.body;
   try {
-    const passwordIsSet = await userPasswordIsSet(email);
+    const user = await fetchUserByEmail(email);
 
-    const statusCode = passwordIsSet ? 200 : 404;
+    const passwordIsSet = !!user.passwordHash && !!user.passwordSalt;
 
-    return formatJSONResponse(statusCode, { passwordIsSet });
+    return formatJSONResponse(200, { passwordIsSet });
   } catch (error) {
     if (!isError(error)) throw error;
 

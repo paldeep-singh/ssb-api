@@ -44,15 +44,10 @@ describe("adminUserExists", () => {
   });
 });
 
-describe("adminUserPasswordIsSet", () => {
-  describe.each([
-    ["been set", createAdminUser({ userId, email }), true],
-    [
-      "not been set",
-      createAdminUser({ userId, email, passwordHash: "", passwordSalt: "" }),
-      false,
-    ],
-  ])("when the user's password has %s", (_, adminUser, expectedResponse) => {
+describe("fetchUserByEmail", () => {
+  describe("when the user exists", () => {
+    const adminUser = createAdminUser({ userId, email });
+
     beforeEach(async () => {
       await insertTestAdminUser(adminUser);
     });
@@ -61,10 +56,10 @@ describe("adminUserPasswordIsSet", () => {
       await deleteTestAdminUser(userId);
     });
 
-    it(`returns ${expectedResponse}`, async () => {
-      const response = await dynamoDB.userPasswordIsSet(email);
+    it("returns the user", async () => {
+      const response = await dynamoDB.fetchUserByEmail(email);
 
-      expect(response).toEqual(expectedResponse);
+      expect(response).toEqual(adminUser);
     });
   });
 
@@ -72,7 +67,7 @@ describe("adminUserPasswordIsSet", () => {
     it("throws a NON_EXISTENT_ADMIN_USER error", async () => {
       expect.assertions(1);
       try {
-        await dynamoDB.userPasswordIsSet(email);
+        await dynamoDB.fetchUserByEmail(email);
       } catch (error) {
         expectError(error, dynamoDB.ErrorCodes.NON_EXISTENT_ADMIN_USER);
       }
