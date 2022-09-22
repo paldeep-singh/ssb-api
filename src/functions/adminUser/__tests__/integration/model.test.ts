@@ -12,6 +12,7 @@ import { mockClient } from "aws-sdk-client-mock";
 import { stringToUint8Array } from "@libs/kms";
 
 const email = faker.internet.email();
+const userId = faker.datatype.uuid();
 
 const mockedKMS = mockClient(KMSClient as any);
 
@@ -25,14 +26,14 @@ describe("adminUserExists", () => {
   });
 
   describe("if the admin user exists", () => {
-    const adminUser = createAdminUser({ email });
+    const adminUser = createAdminUser({ userId, email });
 
     beforeEach(async () => {
       await insertTestAdminUser(adminUser);
     });
 
     afterEach(async () => {
-      await deleteTestAdminUser(email);
+      await deleteTestAdminUser(userId);
     });
 
     it("returns true", async () => {
@@ -45,10 +46,10 @@ describe("adminUserExists", () => {
 
 describe("adminUserPasswordIsSet", () => {
   describe.each([
-    ["been set", createAdminUser({ email }), true],
+    ["been set", createAdminUser({ userId, email }), true],
     [
       "not been set",
-      createAdminUser({ email, passwordHash: "", passwordSalt: "" }),
+      createAdminUser({ userId, email, passwordHash: "", passwordSalt: "" }),
       false,
     ],
   ])("when the user's password has %s", (_, adminUser, expectedResponse) => {
@@ -57,7 +58,7 @@ describe("adminUserPasswordIsSet", () => {
     });
 
     afterEach(async () => {
-      await deleteTestAdminUser(email);
+      await deleteTestAdminUser(userId);
     });
 
     it(`returns ${expectedResponse}`, async () => {
@@ -83,6 +84,7 @@ describe("setAdminUserPassword", () => {
   describe("when the user exists", () => {
     const passwordSalt = faker.datatype.string(20);
     const adminUser = createAdminUser({
+      userId,
       email,
       passwordHash: "",
       passwordSalt,
@@ -104,7 +106,7 @@ describe("setAdminUserPassword", () => {
       });
 
       afterEach(async () => {
-        await deleteTestAdminUser(email);
+        await deleteTestAdminUser(userId);
       });
 
       it(`throws a ${dynamoDB.ErrorCodes.ENCRYPTION_FAILED} error`, async () => {
@@ -130,7 +132,7 @@ describe("setAdminUserPassword", () => {
       });
 
       afterEach(async () => {
-        await deleteTestAdminUser(email);
+        await deleteTestAdminUser(userId);
       });
 
       it("sets the password", async () => {
@@ -139,7 +141,7 @@ describe("setAdminUserPassword", () => {
           newPassword: password,
         });
 
-        const { passwordHash } = await fetchTestAdminUser(email);
+        const { passwordHash } = await fetchTestAdminUser(userId);
 
         expect(passwordHash).toEqual(encryptedPassword);
       });
@@ -150,7 +152,7 @@ describe("setAdminUserPassword", () => {
           newPassword: password,
         });
 
-        const { passwordSalt: fetchedSalt } = await fetchTestAdminUser(email);
+        const { passwordSalt: fetchedSalt } = await fetchTestAdminUser(userId);
 
         expect(fetchedSalt).not.toEqual(passwordSalt);
       });
@@ -180,14 +182,19 @@ describe("verifyPassword", () => {
     const passwordSalt = faker.datatype.string(20);
     const passwordHash = faker.datatype.string(50);
 
-    const adminUser = createAdminUser({ email, passwordHash, passwordSalt });
+    const adminUser = createAdminUser({
+      userId,
+      email,
+      passwordHash,
+      passwordSalt,
+    });
 
     beforeEach(async () => {
       await insertTestAdminUser(adminUser);
     });
 
     afterEach(async () => {
-      await deleteTestAdminUser(email);
+      await deleteTestAdminUser(userId);
     });
 
     describe("when the password is correct", () => {

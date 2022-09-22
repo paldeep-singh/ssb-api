@@ -2,6 +2,7 @@ import { Schema, model, aws } from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 import { LOCAL_DYNAMODB_ENDPOINT } from "@libs/env";
 import {
+  ADMIN_USER_EMAIL_INDEX_NAME,
   ADMIN_USER_PASSWORD_KEY_ALIAS,
   ADMIN_USER_TABLE_NAME,
 } from "./resources";
@@ -26,15 +27,24 @@ if (LOCAL_DYNAMODB_ENDPOINT) {
   kmsClient = new KMSClient({});
 }
 export interface IAdminUser {
+  userId: string;
   email: string;
   passwordHash: string;
   passwordSalt: string;
 }
 
 const adminUserSchema = new Schema({
-  email: {
+  userId: {
     type: String,
     hashKey: true,
+  },
+  email: {
+    type: String,
+    index: {
+      type: "global",
+      name: ADMIN_USER_EMAIL_INDEX_NAME,
+      project: true,
+    },
   },
   passwordHash: String,
 });
@@ -56,14 +66,13 @@ export enum ErrorCodes {
   ENCRYPTION_FAILED = "ENCRYPTION_FAILED",
 }
 
+const queryAdminUserByEmail = (email: string) => {
+  return adminUserModel.query("email").eq(email);
+};
+
 export const documentExists = async (email: string) => {
   try {
-    const response = await adminUserModel
-      .query("email")
-      .eq(email)
-      .consistent()
-      .count()
-      .exec();
+    const response = await queryAdminUserByEmail(email).count().exec();
 
     return response.count !== 0;
   } catch (error) {
@@ -72,7 +81,7 @@ export const documentExists = async (email: string) => {
 };
 
 export const userPasswordIsSet = async (email: string) => {
-  const adminUser = await adminUserModel.get(email);
+  const [adminUser] = await queryAdminUserByEmail(email).exec();
 
   if (!adminUser) throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER);
 
@@ -86,7 +95,7 @@ export const setPassword = async ({
   email: string;
   newPassword: string;
 }) => {
-  const adminUser = await adminUserModel.get(email);
+  const [adminUser] = await queryAdminUserByEmail(email).exec();
 
   if (!adminUser) {
     throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER);
@@ -112,7 +121,7 @@ export const setPassword = async ({
 };
 
 export const verifyPassword = async (email: string, password: string) => {
-  const adminUser = await adminUserModel.get(email);
+  const [adminUser] = await queryAdminUserByEmail(email).exec();
 
   if (!adminUser) {
     throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER);

@@ -4,6 +4,7 @@ import { faker } from "@faker-js/faker";
 export const createAdminUser = (
   adminUserAttributes: Partial<IAdminUser>
 ): IAdminUser => ({
+  userId: faker.datatype.uuid(),
   email: faker.internet.email(),
   passwordHash: faker.internet.password(),
   passwordSalt: faker.datatype.string(20),

@@ -4,6 +4,7 @@ import { defaultKeyPolicy, KMSAlias, KMSKey } from "@libs/kms";
 
 export const ADMIN_USER_TABLE_NAME = `${STAGE}-admin-users-table`;
 export const ADMIN_USER_TABLE_REF = "AdminUsersTable";
+export const ADMIN_USER_EMAIL_INDEX_NAME = "email-index";
 
 export const VERIFICATION_CODE_TABLE_NAME = `${STAGE}admin-users-verification-codes-table`;
 export const VERIFICATION_CODE_TABLE_REF = "VerificationCodesTable";
@@ -17,14 +18,28 @@ const AdminUsersTable: Table = {
     TableName: ADMIN_USER_TABLE_NAME,
     AttributeDefinitions: [
       {
-        AttributeName: "email",
+        AttributeName: "userId",
         AttributeType: "S",
       },
     ],
     KeySchema: [
       {
-        AttributeName: "email",
+        AttributeName: "userId",
         KeyType: "HASH",
+      },
+    ],
+    GlobalSecondaryIndexes: [
+      {
+        IndexName: ADMIN_USER_EMAIL_INDEX_NAME,
+        KeySchema: [
+          {
+            AttributeName: "email",
+            KeyType: "HASH",
+          },
+        ],
+        Projection: {
+          ProjectionType: "ALL",
+        },
       },
     ],
     ProvisionedThroughput: {
@@ -42,13 +57,13 @@ const AdminUsersVerficiationCodeTable: Table = {
     TableName: VERIFICATION_CODE_TABLE_NAME,
     AttributeDefinitions: [
       {
-        AttributeName: "adminUserId",
+        AttributeName: "userId",
         AttributeType: "S",
       },
     ],
     KeySchema: [
       {
-        AttributeName: "adminUserId",
+        AttributeName: "userId",
         KeyType: "HASH",
       },
     ],

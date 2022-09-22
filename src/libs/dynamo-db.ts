@@ -25,7 +25,7 @@ type ProvisionedThroughput = {
 };
 
 type GlobalSecondaryIndex = {
-  ContributorInsightsSpecification: ContributorInsightsSpecification;
+  ContributorInsightsSpecification?: ContributorInsightsSpecification;
   IndexName: string;
   KeySchema: KeySchema[];
   Projection: Projection;
