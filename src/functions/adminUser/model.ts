@@ -110,3 +110,26 @@ export const setPassword = async ({
 
   await adminUser.save();
 };
+
+export const verifyPassword = async (email: string, password: string) => {
+  const adminUser = await adminUserModel.get(email);
+
+  if (!adminUser) {
+    throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER);
+  }
+
+  const Plaintext = stringToUint8Array(password + adminUser.passwordSalt);
+
+  const encrypt = new EncryptCommand({
+    KeyId: ADMIN_USER_PASSWORD_KEY_ALIAS,
+    Plaintext,
+  });
+
+  const { CiphertextBlob } = await kmsClient.send(encrypt);
+
+  if (!CiphertextBlob) throw new Error(ErrorCodes.ENCRYPTION_FAILED);
+
+  const encryptedPassword = Uint8ArrayToStr(CiphertextBlob);
+
+  return encryptedPassword === adminUser.passwordHash;
+};

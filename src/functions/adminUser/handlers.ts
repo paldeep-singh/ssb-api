@@ -12,7 +12,6 @@ import {
 import { adminUserEmailInput, adminUserSetPasswordInput } from "./schema";
 import { middyfy } from "@libs/lambda";
 import { isError } from "@libs/utils";
-import { stubTrue } from "lodash";
 
 const checkAdminUserExists: LambdaEventWithResult<
   typeof adminUserEmailInput

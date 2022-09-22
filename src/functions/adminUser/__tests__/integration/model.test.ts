@@ -120,7 +120,7 @@ describe("setAdminUserPassword", () => {
       });
     });
 
-    describe.only("when KMS succeeds in returning the hash", () => {
+    describe("when KMS succeeds in returning the hash", () => {
       beforeEach(async () => {
         await insertTestAdminUser(adminUser);
 
@@ -167,6 +167,89 @@ describe("setAdminUserPassword", () => {
           email,
           newPassword: password,
         });
+      } catch (error) {
+        expectError(error, dynamoDB.ErrorCodes.NON_EXISTENT_ADMIN_USER);
+      }
+    });
+  });
+});
+
+describe("verifyPassword", () => {
+  describe("when the user exists", () => {
+    const password = faker.internet.password();
+    const passwordSalt = faker.datatype.string(20);
+    const passwordHash = faker.datatype.string(50);
+
+    const adminUser = createAdminUser({ email, passwordHash, passwordSalt });
+
+    beforeEach(async () => {
+      await insertTestAdminUser(adminUser);
+    });
+
+    afterEach(async () => {
+      await deleteTestAdminUser(email);
+    });
+
+    describe("when the password is correct", () => {
+      const passwordHashPlaintext = stringToUint8Array(passwordHash);
+
+      beforeEach(() => {
+        mockedKMS.on(EncryptCommand as any).resolves({
+          CiphertextBlob: passwordHashPlaintext,
+        } as any);
+      });
+
+      it("returns true", async () => {
+        const response = await dynamoDB.verifyPassword(email, password);
+
+        expect(response).toEqual(true);
+      });
+    });
+
+    describe("when the password is incorrect", () => {
+      const wrongPassword = faker.internet.password();
+      const wrongPasswordHashPlainText = stringToUint8Array(
+        faker.datatype.string(50)
+      );
+
+      beforeEach(() => {
+        mockedKMS.on(EncryptCommand as any).resolves({
+          CiphertextBlob: wrongPasswordHashPlainText,
+        } as any);
+      });
+
+      it("returns false", async () => {
+        const response = await dynamoDB.verifyPassword(email, wrongPassword);
+
+        expect(response).toEqual(false);
+      });
+    });
+
+    describe("when the encryption fails", () => {
+      beforeEach(() => {
+        mockedKMS.on(EncryptCommand as any).resolves({
+          CiphertextBlob: undefined,
+        } as any);
+      });
+
+      it(`throws a ${dynamoDB.ErrorCodes.ENCRYPTION_FAILED} error`, async () => {
+        expect.assertions(1);
+        try {
+          await dynamoDB.verifyPassword(email, password);
+        } catch (error) {
+          expectError(error, dynamoDB.ErrorCodes.ENCRYPTION_FAILED);
+        }
+      });
+    });
+  });
+
+  describe("when the user does not exist", () => {
+    const password = faker.internet.password();
+
+    it(`throws a ${dynamoDB.ErrorCodes.NON_EXISTENT_ADMIN_USER} error`, async () => {
+      expect.assertions(1);
+      try {
+        await dynamoDB.verifyPassword(email, password);
       } catch (error) {
         expectError(error, dynamoDB.ErrorCodes.NON_EXISTENT_ADMIN_USER);
       }
