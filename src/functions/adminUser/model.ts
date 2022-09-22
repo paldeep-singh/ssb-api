@@ -77,19 +77,13 @@ export const userPasswordIsSet = async (email: string) => {
   return !!adminUser.passwordHash;
 };
 
-export const setUserPassword = async ({
+export const setPassword = async ({
   email,
   newPassword,
-  confirmNewPassword,
 }: {
   email: string;
   newPassword: string;
-  confirmNewPassword: string;
 }) => {
-  if (newPassword !== confirmNewPassword) {
-    throw new Error(ErrorCodes.PASSWORD_MISMATCH);
-  }
-
   const adminUser = await adminUserModel.get(email);
 
   if (!adminUser) {

@@ -80,90 +80,60 @@ describe("setAdminUserPassword", () => {
   describe("when the user exists", () => {
     const adminUser = createAdminUser({ email, passwordHash: "" });
 
-    describe("when the passwords match", () => {
+    const password = faker.internet.password();
+    const encryptedPassword = faker.datatype.string(20);
+    const encryptedPasswordPlaintext = stringToUint8Array(encryptedPassword);
+
+    describe("when KMS fails to return the hash", () => {
       const password = faker.internet.password();
-      const encryptedPassword = faker.datatype.string(20);
-      const encryptedPasswordPlaintext = stringToUint8Array(encryptedPassword);
-
-      describe("when KMS failes to return the hash", () => {
-        const password = faker.internet.password();
-
-        beforeEach(async () => {
-          await insertTestAdminUser(adminUser);
-
-          mockedKMS.on(EncryptCommand as any).resolves({
-            CiphertextBlob: undefined,
-          } as any);
-        });
-
-        afterEach(async () => {
-          await deleteTestAdminUser(email);
-        });
-
-        it(`throws a ${dynamoDB.ErrorCodes.ENCRYPTION_FAILED} error`, async () => {
-          expect.assertions(1);
-          try {
-            await dynamoDB.setUserPassword({
-              email,
-              newPassword: password,
-              confirmNewPassword: password,
-            });
-          } catch (error) {
-            expectError(error, dynamoDB.ErrorCodes.ENCRYPTION_FAILED);
-          }
-        });
-      });
-
-      describe("when KMS succeeds in returning the hash", () => {
-        beforeEach(async () => {
-          await insertTestAdminUser(adminUser);
-
-          mockedKMS.on(EncryptCommand as any).resolves({
-            CiphertextBlob: encryptedPasswordPlaintext,
-          } as any);
-        });
-
-        afterEach(async () => {
-          await deleteTestAdminUser(email);
-        });
-
-        it("sets the password", async () => {
-          await dynamoDB.setUserPassword({
-            email,
-            newPassword: password,
-            confirmNewPassword: password,
-          });
-
-          const { passwordHash } = await fetchTestAdminUser(email);
-
-          expect(passwordHash).toEqual(encryptedPassword);
-        });
-      });
-    });
-
-    describe("when the passwords do not match", () => {
-      const newPassword = faker.internet.password();
-      const confirmNewPassword = faker.internet.password();
 
       beforeEach(async () => {
         await insertTestAdminUser(adminUser);
+
+        mockedKMS.on(EncryptCommand as any).resolves({
+          CiphertextBlob: undefined,
+        } as any);
       });
 
       afterEach(async () => {
         await deleteTestAdminUser(email);
       });
 
-      it(`throws a ${dynamoDB.ErrorCodes.PASSWORD_MISMATCH} error`, async () => {
+      it(`throws a ${dynamoDB.ErrorCodes.ENCRYPTION_FAILED} error`, async () => {
         expect.assertions(1);
         try {
-          await dynamoDB.setUserPassword({
+          await dynamoDB.setPassword({
             email,
-            newPassword,
-            confirmNewPassword,
+            newPassword: password,
           });
         } catch (error) {
-          expectError(error, dynamoDB.ErrorCodes.PASSWORD_MISMATCH);
+          expectError(error, dynamoDB.ErrorCodes.ENCRYPTION_FAILED);
         }
+      });
+    });
+
+    describe("when KMS succeeds in returning the hash", () => {
+      beforeEach(async () => {
+        await insertTestAdminUser(adminUser);
+
+        mockedKMS.on(EncryptCommand as any).resolves({
+          CiphertextBlob: encryptedPasswordPlaintext,
+        } as any);
+      });
+
+      afterEach(async () => {
+        await deleteTestAdminUser(email);
+      });
+
+      it("sets the password", async () => {
+        await dynamoDB.setPassword({
+          email,
+          newPassword: password,
+        });
+
+        const { passwordHash } = await fetchTestAdminUser(email);
+
+        expect(passwordHash).toEqual(encryptedPassword);
       });
     });
   });
@@ -174,10 +144,9 @@ describe("setAdminUserPassword", () => {
     it(`throws a ${dynamoDB.ErrorCodes.NON_EXISTENT_ADMIN_USER} error`, async () => {
       expect.assertions(1);
       try {
-        await dynamoDB.setUserPassword({
+        await dynamoDB.setPassword({
           email,
           newPassword: password,
-          confirmNewPassword: password,
         });
       } catch (error) {
         expectError(error, dynamoDB.ErrorCodes.NON_EXISTENT_ADMIN_USER);

@@ -1,10 +1,15 @@
-import { documentExists, userPasswordIsSet, ErrorCodes } from "./model";
+import {
+  documentExists,
+  userPasswordIsSet,
+  ErrorCodes,
+  setPassword,
+} from "./model";
 import {
   LambdaEventWithResult,
   formatJSONResponse,
   formatJSONErrorResponse,
 } from "@libs/api-gateway";
-import { adminUserEmailInput } from "./schema";
+import { adminUserEmailInput, adminUserSetPasswordInput } from "./schema";
 import { middyfy } from "@libs/lambda";
 import { isError } from "@libs/utils";
 import { stubTrue } from "lodash";
@@ -44,8 +49,37 @@ const checkAdminUserPasswordIsSet: LambdaEventWithResult<
   }
 };
 
+const setAdminUserPassword: LambdaEventWithResult<
+  typeof adminUserSetPasswordInput
+> = async (event) => {
+  const { email, newPassword, confirmNewPassword } = event.body;
+
+  if (newPassword !== confirmNewPassword) {
+    return formatJSONErrorResponse(400, ErrorCodes.PASSWORD_MISMATCH);
+  }
+
+  if (!(await documentExists(email))) {
+    return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER);
+  }
+
+  try {
+    await setPassword({ email, newPassword });
+    return formatJSONResponse(200, { passwordSet: true });
+  } catch (error) {
+    if (!isError(error)) throw error;
+
+    if (error.message === ErrorCodes.ENCRYPTION_FAILED) {
+      return formatJSONErrorResponse(502, error.message);
+    }
+
+    throw error;
+  }
+};
+
 export const handleCheckAdminUserExists = middyfy(checkAdminUserExists);
 
 export const handleCheckAdminUserPasswordIsSet = middyfy(
   checkAdminUserPasswordIsSet
 );
+
+export const handleSetAdminUserPassword = middyfy(setAdminUserPassword);
