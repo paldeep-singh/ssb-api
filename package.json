@@ -26,6 +26,7 @@
   "scripts": {
     "start": "STAGE=local serverless offline start",
     "deploy:dev": "STAGE=dev time serverless",
+    "teardown:dev": "STAGE=dev serverless remove",
     "test": "./scripts/runTests.sh unit",
     "test:integration": "./scripts/runTests.sh integration",
     "test:all": "./scripts/runTests.sh all"
