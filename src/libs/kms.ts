@@ -4,6 +4,7 @@ import { Tag, AwsStrings } from "./misc-aws-utils";
 export const defaultKeyPolicy: PolicyDocument = {
   Version: "2012-10-17",
   Statement: {
+    Sid: "Enable IAM policies",
     Effect: "Allow",
     Principal: {
       AWS: { "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:root" },

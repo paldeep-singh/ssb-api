@@ -25,7 +25,7 @@
   },
   "scripts": {
     "start": "SLS_STAGE=local serverless offline start",
-    "deploy:dev": "SLS_STAGE=dev serverless",
+    "deploy:dev": "SLS_STAGE=dev time serverless",
     "test": "./scripts/runTests.sh unit",
     "test:integration": "./scripts/runTests.sh integration",
     "test:all": "./scripts/runTests.sh all"

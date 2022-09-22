@@ -15,6 +15,7 @@ type Principal =
 type Resource = AwsStrings;
 
 export type Statement = {
+  Sid?: string;
   Effect: "Allow" | "Deny";
   Action: string | string[];
   NotAction?: string | string[];
