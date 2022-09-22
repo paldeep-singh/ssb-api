@@ -1,4 +1,4 @@
-import { adminUserEmailInput } from "./schema";
+import { adminUserEmailInput, adminUserSetPasswordInput } from "./schema";
 import { handlerPath, handlerRoute } from "@libs/handler-resolver";
 import { AWS } from "@serverless/typescript";
 
@@ -39,6 +39,23 @@ const adminUserFunctions: AWS["functions"] = {
       },
     ],
     role: "adminUserPasswordIsSetRole",
+  },
+  setAdminUserPassword: {
+    handler: `${path}/handlers.handleSetAdminUserPassword`,
+    events: [
+      {
+        http: {
+          method: "post",
+          path: `${route}/password/set`,
+          request: {
+            schemas: {
+              "application/json": adminUserSetPasswordInput,
+            },
+          },
+        },
+      },
+    ],
+    role: "setAdminUserPasswordRole",
   },
 };
 

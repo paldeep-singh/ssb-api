@@ -1,5 +1,5 @@
 import { Statement, createLambdaRole } from "@libs/iam";
-import { ADMIN_USER_TABLE_REF } from "./resources";
+import { ADMIN_USER_TABLE_REF, ADMIN_USER_PASSWORD_KEY_REF } from "./resources";
 
 const adminUsersTableARN = [{ "Fn::GetAtt": [ADMIN_USER_TABLE_REF, "Arn"] }];
 
@@ -15,6 +15,18 @@ const getAdminUserStatement: Statement = {
   Resource: adminUsersTableARN,
 };
 
+const putAdminUserStatement: Statement = {
+  Effect: "Allow",
+  Action: ["dynamodb:PutItem"],
+  Resource: adminUsersTableARN,
+};
+
+const encryptPasswordStatement: Statement = {
+  Effect: "Allow",
+  Action: ["kms:Encrypt"],
+  Resource: [{ "Fn::GetAtt": [ADMIN_USER_PASSWORD_KEY_REF, "Arn"] }],
+};
+
 const adminUserExistsRole = createLambdaRole({
   statements: [queryAdminUsersStatement],
   roleName: "adminUserExistsRole",
@@ -27,9 +39,21 @@ const adminUserPasswordIsSetRole = createLambdaRole({
   policyName: "adminUserPasswordIsSetPolicy",
 });
 
+const setAdminUserPasswordRole = createLambdaRole({
+  statements: [
+    getAdminUserStatement,
+    encryptPasswordStatement,
+    queryAdminUsersStatement,
+    putAdminUserStatement,
+  ],
+  roleName: "setAdminUserPasswordRole",
+  policyName: "setAdminUserPasswordPolicy",
+});
+
 const adminUserRoles = {
   adminUserExistsRole,
   adminUserPasswordIsSetRole,
+  setAdminUserPasswordRole,
 };
 
 export default adminUserRoles;

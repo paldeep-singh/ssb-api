@@ -5,6 +5,7 @@ import { defaultKeyPolicy, KMSAlias, KMSKey } from "@libs/kms";
 export const ADMIN_USER_TABLE_NAME = `${STAGE}-admin-users-table`;
 export const ADMIN_USER_PASSWORD_KEY_ALIAS = `alias/${STAGE}-admin-user-password-key`;
 export const ADMIN_USER_TABLE_REF = "AdminUsersTable";
+export const ADMIN_USER_PASSWORD_KEY_REF = "AdminUserPasswordKey";
 
 const AdminUsersTable: Table = {
   Type: "AWS::DynamoDB::Table",
