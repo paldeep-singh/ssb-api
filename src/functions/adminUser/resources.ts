@@ -1,11 +1,16 @@
 import { Table } from "@libs/dynamo-db";
+import { STAGE } from "@libs/env";
 import { defaultKeyPolicy, KMSAlias, KMSKey } from "@libs/kms";
+
+export const ADMIN_USER_TABLE_NAME = `${STAGE}-admin-users-table`;
+export const ADMIN_USER_PASSWORD_KEY_ALIAS = `${STAGE}-admin-user-password-key`;
+export const ADMIN_USER_TABLE_REF = "AdminUsersTable";
 
 const AdminUsersTable: Table = {
   Type: "AWS::DynamoDB::Table",
 
   Properties: {
-    TableName: "admin-users-table",
+    TableName: ADMIN_USER_TABLE_NAME,
     AttributeDefinitions: [
       {
         AttributeName: "email",
@@ -38,7 +43,7 @@ const AdminUserPasswordKey: KMSKey = {
 const AdminUserPasswordKeyAliasResource: KMSAlias = {
   Type: "AWS::KMS::Alias",
   Properties: {
-    AliasName: "alias/admin-user-password-key",
+    AliasName: `alias/${ADMIN_USER_PASSWORD_KEY_ALIAS}`,
     TargetKeyId: { Ref: "AdminUserPasswordKey" },
   },
 };

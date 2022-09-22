@@ -2,10 +2,12 @@ import type { AWS } from "@serverless/typescript";
 import functions from "@functions/index";
 import resources from "@functions/resources";
 import roles from "@functions/roles";
+import environment from "@libs/env";
 
-const stage = process.env.SLS_STAGE ?? "dev";
+const stage = environment.STAGE;
+if (!stage) throw new Error("STAGE environment variable is not set");
+
 const local = "local";
-const localStage = stage === "local";
 const dynamoDbPort = 8448;
 
 const serverlessConfiguration: AWS = {
@@ -22,9 +24,7 @@ const serverlessConfiguration: AWS = {
     runtime: "nodejs16.x",
     region: "ap-southeast-2",
     environment: {
-      ...(localStage && {
-        LOCAL_DYNAMODB_ENDPOINT: `http://localhost:${dynamoDbPort}`,
-      }),
+      STAGE: stage,
     },
   },
   functions,

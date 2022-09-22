@@ -1,19 +1,16 @@
 import { Schema, model, aws } from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
+import { LOCAL_DYNAMODB_ENDPOINT } from "@libs/env";
+import { ADMIN_USER_TABLE_NAME } from "./resources";
 
-const localDynamoDBEndpoint = process.env.LOCAL_DYNAMODB_ENDPOINT;
-
-if (localDynamoDBEndpoint) {
+if (LOCAL_DYNAMODB_ENDPOINT) {
   const localDDB = new aws.ddb.DynamoDB({
     region: "local",
-    endpoint: localDynamoDBEndpoint,
+    endpoint: LOCAL_DYNAMODB_ENDPOINT,
   });
 
   aws.ddb.set(localDDB);
 }
-
-export const ADMIN_USERS_TABLE_NAME = "admin-users-table";
-
 export interface IAdminUser {
   email: string;
   passwordHash: string;
@@ -30,11 +27,11 @@ const adminUserSchema = new Schema({
 interface adminUserItem extends Item, IAdminUser {}
 
 export const adminUserModel = model<adminUserItem>(
-  ADMIN_USERS_TABLE_NAME,
+  ADMIN_USER_TABLE_NAME,
   adminUserSchema,
   {
-    create: !!localDynamoDBEndpoint,
-    waitForActive: !!localDynamoDBEndpoint,
+    create: !!LOCAL_DYNAMODB_ENDPOINT,
+    waitForActive: !!LOCAL_DYNAMODB_ENDPOINT,
   }
 );
 

@@ -1,7 +1,7 @@
 import { Statement, createLambdaRole } from "@libs/iam";
-import { ADMIN_USERS_TABLE_NAME } from "./model";
+import { ADMIN_USER_TABLE_REF } from "./resources";
 
-const adminUsersTableARN = [{ "Fn::GetAtt": ["AdminUsersTable", "Arn"] }];
+const adminUsersTableARN = [{ "Fn::GetAtt": [ADMIN_USER_TABLE_REF, "Arn"] }];
 
 const queryAdminUsersStatement: Statement = {
   Effect: "Allow",
