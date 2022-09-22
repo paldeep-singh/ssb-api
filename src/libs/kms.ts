@@ -1,5 +1,5 @@
 import { PolicyDocument } from "./iam";
-import { Tag } from "./misc-aws-utils";
+import { Tag, AwsStrings } from "./misc-aws-utils";
 
 export const defaultKeyPolicy: PolicyDocument = {
   Version: "2012-10-17",
@@ -38,5 +38,13 @@ export type KMSKey = {
     MultiRegion?: boolean;
     PendingWindowInDays?: number;
     Tags?: Tag[];
+  };
+};
+
+export type KMSAlias = {
+  Type: "AWS::KMS::Alias";
+  Properties: {
+    AliasName: AwsStrings;
+    TargetKeyId: AwsStrings;
   };
 };
