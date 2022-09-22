@@ -1,4 +1,4 @@
-import { adminUserExists, adminUserPasswordIsSet, ErrorCodes } from "./model";
+import { documentExists, userPasswordIsSet, ErrorCodes } from "./model";
 import {
   LambdaEventWithResult,
   formatJSONResponse,
@@ -14,7 +14,7 @@ const checkAdminUserExists: LambdaEventWithResult<
 > = async (event) => {
   const { email } = event.body;
 
-  const userExists = await adminUserExists(email);
+  const userExists = await documentExists(email);
 
   const statusCode = userExists ? 200 : 404;
 
@@ -28,7 +28,7 @@ const checkAdminUserPasswordIsSet: LambdaEventWithResult<
 > = async (event) => {
   const { email } = event.body;
   try {
-    const passwordIsSet = await adminUserPasswordIsSet(email);
+    const passwordIsSet = await userPasswordIsSet(email);
 
     const statusCode = passwordIsSet ? 200 : 404;
 

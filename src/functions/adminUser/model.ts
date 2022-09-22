@@ -54,7 +54,7 @@ export enum ErrorCodes {
   ENCRYPTION_FAILED = "ENCRYPTION_FAILED",
 }
 
-export const adminUserExists = async (email: string) => {
+export const documentExists = async (email: string) => {
   try {
     const response = await adminUserModel
       .query("email")
@@ -69,7 +69,7 @@ export const adminUserExists = async (email: string) => {
   }
 };
 
-export const adminUserPasswordIsSet = async (email: string) => {
+export const userPasswordIsSet = async (email: string) => {
   const adminUser = await adminUserModel.get(email);
 
   if (!adminUser) throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER);
@@ -77,7 +77,7 @@ export const adminUserPasswordIsSet = async (email: string) => {
   return !!adminUser.passwordHash;
 };
 
-export const setAdminUserPassword = async ({
+export const setUserPassword = async ({
   email,
   newPassword,
   confirmNewPassword,

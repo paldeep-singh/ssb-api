@@ -19,7 +19,7 @@ const mockedKMS = mockClient(KMSClient as any);
 describe("adminUserExists", () => {
   describe("if the admin user does not exist", () => {
     it("returns false", async () => {
-      const response = await dynamoDB.adminUserExists(email);
+      const response = await dynamoDB.documentExists(email);
 
       expect(response).toEqual(false);
     });
@@ -37,7 +37,7 @@ describe("adminUserExists", () => {
     });
 
     it("returns true", async () => {
-      const response = await dynamoDB.adminUserExists(email);
+      const response = await dynamoDB.documentExists(email);
 
       expect(response).toEqual(true);
     });
@@ -58,7 +58,7 @@ describe("adminUserPasswordIsSet", () => {
     });
 
     it(`returns ${expectedResponse}`, async () => {
-      const response = await dynamoDB.adminUserPasswordIsSet(email);
+      const response = await dynamoDB.userPasswordIsSet(email);
 
       expect(response).toEqual(expectedResponse);
     });
@@ -68,7 +68,7 @@ describe("adminUserPasswordIsSet", () => {
     it("throws a NON_EXISTENT_ADMIN_USER error", async () => {
       expect.assertions(1);
       try {
-        await dynamoDB.adminUserPasswordIsSet(email);
+        await dynamoDB.userPasswordIsSet(email);
       } catch (error) {
         expectError(error, dynamoDB.ErrorCodes.NON_EXISTENT_ADMIN_USER);
       }
@@ -103,7 +103,7 @@ describe("setAdminUserPassword", () => {
         it(`throws a ${dynamoDB.ErrorCodes.ENCRYPTION_FAILED} error`, async () => {
           expect.assertions(1);
           try {
-            await dynamoDB.setAdminUserPassword({
+            await dynamoDB.setUserPassword({
               email,
               newPassword: password,
               confirmNewPassword: password,
@@ -128,7 +128,7 @@ describe("setAdminUserPassword", () => {
         });
 
         it("sets the password", async () => {
-          await dynamoDB.setAdminUserPassword({
+          await dynamoDB.setUserPassword({
             email,
             newPassword: password,
             confirmNewPassword: password,
@@ -156,7 +156,7 @@ describe("setAdminUserPassword", () => {
       it(`throws a ${dynamoDB.ErrorCodes.PASSWORD_MISMATCH} error`, async () => {
         expect.assertions(1);
         try {
-          await dynamoDB.setAdminUserPassword({
+          await dynamoDB.setUserPassword({
             email,
             newPassword,
             confirmNewPassword,
@@ -174,7 +174,7 @@ describe("setAdminUserPassword", () => {
     it(`throws a ${dynamoDB.ErrorCodes.NON_EXISTENT_ADMIN_USER} error`, async () => {
       expect.assertions(1);
       try {
-        await dynamoDB.setAdminUserPassword({
+        await dynamoDB.setUserPassword({
           email,
           newPassword: password,
           confirmNewPassword: password,

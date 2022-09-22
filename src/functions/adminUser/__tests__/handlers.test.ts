@@ -8,7 +8,7 @@ import {
   createAPIGatewayProxyEventContext,
 } from "@libs/fixtures";
 import { adminUserEmailInput } from "../schema";
-import { adminUserExists, adminUserPasswordIsSet, ErrorCodes } from "../model";
+import { documentExists, userPasswordIsSet, ErrorCodes } from "../model";
 import { mocked } from "jest-mock";
 import { APIGatewayProxyResult } from "aws-lambda";
 
@@ -41,7 +41,7 @@ describe("handleAdminUserExists", () => {
     ["does not exist", 404, false],
   ])("when the user %s", (_, expectedStatusCode, expectedAdminUserExists) => {
     beforeEach(() => {
-      mocked(adminUserExists).mockResolvedValueOnce(expectedAdminUserExists);
+      mocked(documentExists).mockResolvedValueOnce(expectedAdminUserExists);
     });
 
     it(`returns statusCode ${expectedStatusCode}`, async () => {
@@ -71,9 +71,7 @@ describe("handleCheckAdminUserPasswordIsSet", () => {
     "when the user's password is %s",
     (_, expectedStatusCode, expectedPasswordIsSet) => {
       beforeEach(() => {
-        mocked(adminUserPasswordIsSet).mockResolvedValueOnce(
-          expectedPasswordIsSet
-        );
+        mocked(userPasswordIsSet).mockResolvedValueOnce(expectedPasswordIsSet);
       });
 
       it(`returns statusCode ${expectedStatusCode}`, async () => {
@@ -100,7 +98,7 @@ describe("handleCheckAdminUserPasswordIsSet", () => {
 
   describe("when the user does not exist", () => {
     beforeEach(() => {
-      mocked(adminUserPasswordIsSet).mockRejectedValueOnce(
+      mocked(userPasswordIsSet).mockRejectedValueOnce(
         new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER)
       );
     });
