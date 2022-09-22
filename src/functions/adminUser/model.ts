@@ -7,6 +7,7 @@ import {
 } from "./resources";
 import { KMSClient, EncryptCommand } from "@aws-sdk/client-kms";
 import { stringToUint8Array, Uint8ArrayToStr } from "@libs/kms";
+import { randomBytes } from "crypto";
 
 let kmsClient: KMSClient;
 
@@ -27,6 +28,7 @@ if (LOCAL_DYNAMODB_ENDPOINT) {
 export interface IAdminUser {
   email: string;
   passwordHash: string;
+  passwordSalt: string;
 }
 
 const adminUserSchema = new Schema({
@@ -90,7 +92,9 @@ export const setPassword = async ({
     throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER);
   }
 
-  const Plaintext = stringToUint8Array(newPassword);
+  const salt = randomBytes(256).toString();
+
+  const Plaintext = stringToUint8Array(newPassword + salt);
 
   const encrypt = new EncryptCommand({
     KeyId: ADMIN_USER_PASSWORD_KEY_ALIAS,
@@ -102,6 +106,7 @@ export const setPassword = async ({
   if (!CiphertextBlob) throw new Error(ErrorCodes.ENCRYPTION_FAILED);
 
   adminUser.passwordHash = Uint8ArrayToStr(CiphertextBlob);
+  adminUser.passwordSalt = salt;
 
   await adminUser.save();
 };

@@ -6,6 +6,7 @@ export const createAdminUser = (
 ): IAdminUser => ({
   email: faker.internet.email(),
   passwordHash: faker.internet.password(),
+  passwordSalt: faker.datatype.string(20),
   ...adminUserAttributes,
 });
 

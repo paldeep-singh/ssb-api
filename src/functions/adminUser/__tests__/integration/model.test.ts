@@ -47,7 +47,11 @@ describe("adminUserExists", () => {
 describe("adminUserPasswordIsSet", () => {
   describe.each([
     ["been set", createAdminUser({ email }), true],
-    ["not been set", createAdminUser({ email, passwordHash: "" }), false],
+    [
+      "not been set",
+      createAdminUser({ email, passwordHash: "", passwordSalt: "" }),
+      false,
+    ],
   ])("when the user's password has %s", (_, adminUser, expectedResponse) => {
     beforeEach(async () => {
       await insertTestAdminUser(adminUser);
@@ -78,7 +82,12 @@ describe("adminUserPasswordIsSet", () => {
 
 describe("setAdminUserPassword", () => {
   describe("when the user exists", () => {
-    const adminUser = createAdminUser({ email, passwordHash: "" });
+    const passwordSalt = faker.datatype.string(20);
+    const adminUser = createAdminUser({
+      email,
+      passwordHash: "",
+      passwordSalt,
+    });
 
     const password = faker.internet.password();
     const encryptedPassword = faker.datatype.string(20);
@@ -112,7 +121,7 @@ describe("setAdminUserPassword", () => {
       });
     });
 
-    describe("when KMS succeeds in returning the hash", () => {
+    describe.only("when KMS succeeds in returning the hash", () => {
       beforeEach(async () => {
         await insertTestAdminUser(adminUser);
 
@@ -134,6 +143,17 @@ describe("setAdminUserPassword", () => {
         const { passwordHash } = await fetchTestAdminUser(email);
 
         expect(passwordHash).toEqual(encryptedPassword);
+      });
+
+      it("sets new passwordSalt", async () => {
+        await dynamoDB.setPassword({
+          email,
+          newPassword: password,
+        });
+
+        const { passwordSalt: fetchedSalt } = await fetchTestAdminUser(email);
+
+        expect(fetchedSalt).not.toEqual(passwordSalt);
       });
     });
   });
