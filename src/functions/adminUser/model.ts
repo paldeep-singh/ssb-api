@@ -1,7 +1,14 @@
 import { Schema, model, aws } from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 import { LOCAL_DYNAMODB_ENDPOINT } from "@libs/env";
-import { ADMIN_USER_TABLE_NAME } from "./resources";
+import {
+  ADMIN_USER_PASSWORD_KEY_ALIAS,
+  ADMIN_USER_TABLE_NAME,
+} from "./resources";
+import { KMSClient, EncryptCommand } from "@aws-sdk/client-kms";
+import { stringToUint8Array, Uint8ArrayToStr } from "@libs/kms";
+
+let kmsClient: KMSClient;
 
 if (LOCAL_DYNAMODB_ENDPOINT) {
   const localDDB = new aws.ddb.DynamoDB({
@@ -10,6 +17,12 @@ if (LOCAL_DYNAMODB_ENDPOINT) {
   });
 
   aws.ddb.set(localDDB);
+
+  kmsClient = new KMSClient({
+    region: "local",
+  });
+} else {
+  kmsClient = new KMSClient({});
 }
 export interface IAdminUser {
   email: string;
@@ -37,6 +50,8 @@ export const adminUserModel = model<adminUserItem>(
 
 export enum ErrorCodes {
   NON_EXISTENT_ADMIN_USER = "NON_EXISTENT_ADMIN_USER",
+  PASSWORD_MISMATCH = "PASSWORD_MISMATCH",
+  ENCRYPTION_FAILED = "ENCRYPTION_FAILED",
 }
 
 export const adminUserExists = async (email: string) => {
@@ -72,16 +87,27 @@ export const setAdminUserPassword = async ({
   confirmNewPassword: string;
 }) => {
   if (newPassword !== confirmNewPassword) {
-    throw new Error("Passwords do not match");
+    throw new Error(ErrorCodes.PASSWORD_MISMATCH);
   }
 
   const adminUser = await adminUserModel.get(email);
 
   if (!adminUser) {
-    throw new Error("Admin user does not exist");
+    throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER);
   }
 
-  adminUser.passwordHash = newPassword;
+  const Plaintext = stringToUint8Array(newPassword);
+
+  const encrypt = new EncryptCommand({
+    KeyId: ADMIN_USER_PASSWORD_KEY_ALIAS,
+    Plaintext,
+  });
+
+  const { CiphertextBlob } = await kmsClient.send(encrypt);
+
+  if (!CiphertextBlob) throw new Error(ErrorCodes.ENCRYPTION_FAILED);
+
+  adminUser.passwordHash = Uint8ArrayToStr(CiphertextBlob);
 
   await adminUser.save();
 };

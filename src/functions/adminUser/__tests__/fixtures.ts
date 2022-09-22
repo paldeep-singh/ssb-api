@@ -18,3 +18,7 @@ export const insertTestAdminUser = async (
 export const deleteTestAdminUser = async (email: string) => {
   await adminUserModel.delete(email);
 };
+
+export const fetchTestAdminUser = async (email: string) => {
+  return await adminUserModel.get(email);
+};
