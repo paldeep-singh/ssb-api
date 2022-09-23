@@ -145,3 +145,15 @@ export const createVerificationCode = async ({
     codeSalt,
   });
 };
+
+export const fetchVerificationCode = async (
+  email: string
+): Promise<IVerificationCode> => {
+  const verificationCode = await verificationCodeModel.get(email);
+
+  if (!verificationCode) {
+    throw new Error(Codes.NO_ACTIVE_VERIFICATION_CODE);
+  }
+
+  return verificationCode;
+};

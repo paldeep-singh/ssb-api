@@ -166,3 +166,46 @@ describe("createVerificationCode", () => {
     );
   });
 });
+
+describe("fetchVerificationCode", () => {
+  describe("when a verification code for the user exists", () => {
+    const email = faker.internet.email();
+    const codeHash = faker.datatype.string(30);
+    const codeSalt = faker.datatype.string(10);
+
+    beforeEach(async () => {
+      await dynamoDB.createVerificationCode({
+        email,
+        codeHash,
+        codeSalt,
+      });
+    });
+
+    afterEach(async () => {
+      await deleteTestVerificationCode(email);
+    });
+
+    it("returns the verification code", async () => {
+      const response = await dynamoDB.fetchVerificationCode(email);
+
+      expect(response).toEqual(
+        expect.objectContaining({
+          email,
+          codeHash,
+          codeSalt,
+        })
+      );
+    });
+  });
+
+  describe("when a verification code for the user does not exist", () => {
+    it(`throws a ${ErrorCodes.Codes.NO_ACTIVE_VERIFICATION_CODE} error`, async () => {
+      expect.assertions(1);
+      try {
+        await dynamoDB.fetchVerificationCode(email);
+      } catch (error) {
+        expectError(error, ErrorCodes.Codes.NO_ACTIVE_VERIFICATION_CODE);
+      }
+    });
+  });
+});

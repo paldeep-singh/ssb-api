@@ -1,4 +1,9 @@
-import { adminUserModel, IAdminUser, verificationCodeModel } from "../model";
+import {
+  adminUserModel,
+  IAdminUser,
+  IVerificationCode,
+  verificationCodeModel,
+} from "../model";
 import { faker } from "@faker-js/faker";
 
 export const createAdminUser = (
@@ -6,9 +11,17 @@ export const createAdminUser = (
 ): IAdminUser => ({
   userId: faker.datatype.uuid(),
   email: faker.internet.email(),
-  passwordHash: faker.internet.password(),
-  passwordSalt: faker.datatype.string(20),
+  passwordHash: faker.datatype.string(20),
+  passwordSalt: faker.datatype.string(10),
   ...adminUserAttributes,
+});
+
+export const createVerificationCode = (
+  verficationCodeAttributes: Partial<IVerificationCode>
+): IVerificationCode => ({
+  email: faker.internet.email(),
+  codeHash: faker.datatype.string(20),
+  codeSalt: faker.datatype.string(10),
 });
 
 export const insertTestAdminUser = async (
