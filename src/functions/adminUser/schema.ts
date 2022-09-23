@@ -15,3 +15,12 @@ export const adminUserSetPasswordInput = {
   },
   required: ["email", "newPassword", "confirmNewPassword"],
 } as const;
+
+export const adminUserVerifyPasswordInput = {
+  type: "object",
+  properties: {
+    email: { type: "string" },
+    password: { type: "string" },
+  },
+  required: ["email", "password"],
+} as const;

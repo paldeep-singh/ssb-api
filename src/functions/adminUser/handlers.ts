@@ -9,7 +9,11 @@ import {
   formatJSONResponse,
   formatJSONErrorResponse,
 } from "@libs/api-gateway";
-import { adminUserEmailInput, adminUserSetPasswordInput } from "./schema";
+import {
+  adminUserEmailInput,
+  adminUserSetPasswordInput,
+  adminUserVerifyPasswordInput,
+} from "./schema";
 import { middyfy } from "@libs/lambda";
 import { isError } from "@libs/utils";
 import { randomBytes } from "crypto";
@@ -85,6 +89,38 @@ const setAdminUserPassword: LambdaEventWithResult<
   return formatJSONResponse(200, { passwordSet: true });
 };
 
+// TODO: Rework into login function
+// export const verifyAdminUserPassword: LambdaEventWithResult<
+//   typeof adminUserVerifyPasswordInput
+// > = async ({ body: { email, password } }) => {
+//   const adminUser = await fetchUserByEmail(email);
+
+//   if (!adminUser) {
+//     return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER);
+//   }
+
+//   if (!!adminUser.passwordHash || !!adminUser.passwordSalt) {
+//     return formatJSONErrorResponse(400, ErrorCodes.ACCOUNT_UNCLAIMED);
+//   }
+//   const Plaintext = stringToUint8Array(password + adminUser.passwordSalt);
+
+//   const encrypt = new EncryptCommand({
+//     KeyId: ADMIN_USER_PASSWORD_KEY_ALIAS,
+//     Plaintext,
+//   });
+
+//   const { CiphertextBlob } = await kmsClient.send(encrypt);
+
+//   if (!CiphertextBlob)
+//     return formatJSONErrorResponse(502, ErrorCodes.ENCRYPTION_FAILED);
+
+//   const encryptedPassword = Uint8ArrayToStr(CiphertextBlob);
+
+//   const passwordVerified = encryptedPassword === adminUser.passwordHash;
+
+//   return formatJSONResponse(200, { passwordVerified });
+// };
+
 export const handleCheckAdminUserExists = middyfy(checkAdminUserExists);
 
 export const handleCheckAdminUserAccountIsClaimed = middyfy(
@@ -92,3 +128,5 @@ export const handleCheckAdminUserAccountIsClaimed = middyfy(
 );
 
 export const handleSetAdminUserPassword = middyfy(setAdminUserPassword);
+
+// export const handleVerifyAdminUserPassword = middyfy(verifyAdminUserPassword);

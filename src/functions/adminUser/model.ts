@@ -57,6 +57,7 @@ export enum ErrorCodes {
   NON_EXISTENT_ADMIN_USER = "NON_EXISTENT_ADMIN_USER",
   PASSWORD_MISMATCH = "PASSWORD_MISMATCH",
   ENCRYPTION_FAILED = "ENCRYPTION_FAILED",
+  ACCOUNT_UNCLAIMED = "ACCOUNT_UNCLAIMED",
 }
 
 const queryAdminUserByEmail = (email: string) => {
@@ -109,27 +110,4 @@ export const setPassword = async ({
   );
 
   await transaction([updateTransaction]);
-};
-
-export const verifyPassword = async (email: string, password: string) => {
-  const [adminUser] = await queryAdminUserByEmail(email).exec();
-
-  if (!adminUser) {
-    throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER);
-  }
-
-  const Plaintext = stringToUint8Array(password + adminUser.passwordSalt);
-
-  const encrypt = new EncryptCommand({
-    KeyId: ADMIN_USER_PASSWORD_KEY_ALIAS,
-    Plaintext,
-  });
-
-  const { CiphertextBlob } = await kmsClient.send(encrypt);
-
-  if (!CiphertextBlob) throw new Error(ErrorCodes.ENCRYPTION_FAILED);
-
-  const encryptedPassword = Uint8ArrayToStr(CiphertextBlob);
-
-  return encryptedPassword === adminUser.passwordHash;
 };
