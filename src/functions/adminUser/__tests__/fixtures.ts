@@ -1,4 +1,4 @@
-import { adminUserModel, IAdminUser } from "../model";
+import { adminUserModel, IAdminUser, verificationCodeModel } from "../model";
 import { faker } from "@faker-js/faker";
 
 export const createAdminUser = (
@@ -17,10 +17,18 @@ export const insertTestAdminUser = async (
   await adminUserModel.create(adminUser);
 };
 
-export const deleteTestAdminUser = async (email: string) => {
-  await adminUserModel.delete(email);
+export const deleteTestAdminUser = async (userId: string) => {
+  await adminUserModel.delete(userId);
 };
 
-export const fetchTestAdminUser = async (email: string) => {
-  return await adminUserModel.get(email);
+export const fetchTestAdminUser = async (userId: string) => {
+  return await adminUserModel.get(userId);
+};
+
+export const fetchTestVerificationCode = async (email: string) => {
+  return await verificationCodeModel.get(email);
+};
+
+export const deleteTestVerificationCode = async (email: string) => {
+  await verificationCodeModel.delete(email);
 };

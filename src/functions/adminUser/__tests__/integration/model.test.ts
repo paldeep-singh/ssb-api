@@ -2,7 +2,9 @@ import { faker } from "@faker-js/faker";
 import {
   createAdminUser,
   deleteTestAdminUser,
+  deleteTestVerificationCode,
   fetchTestAdminUser,
+  fetchTestVerificationCode,
   insertTestAdminUser,
 } from "../fixtures";
 import * as dynamoDB from "../../model";
@@ -134,5 +136,33 @@ describe("setAdminUserPassword", () => {
         expectError(error, ErrorCodes.Codes.NON_EXISTENT_ADMIN_USER);
       }
     });
+  });
+});
+
+describe("createVerificationCode", () => {
+  const email = faker.internet.email();
+  const codeHash = faker.datatype.string(30);
+  const codeSalt = faker.datatype.string(10);
+
+  afterEach(async () => {
+    await deleteTestVerificationCode(email);
+  });
+
+  it("creates a verification code", async () => {
+    await dynamoDB.createVerificationCode({
+      email,
+      codeHash,
+      codeSalt,
+    });
+
+    const response = await fetchTestVerificationCode(email);
+
+    expect(response).toEqual(
+      expect.objectContaining({
+        email,
+        codeHash,
+        codeSalt,
+      })
+    );
   });
 });

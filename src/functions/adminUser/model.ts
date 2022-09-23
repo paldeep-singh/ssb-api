@@ -5,6 +5,7 @@ import {
   ADMIN_USER_EMAIL_INDEX_NAME,
   ADMIN_USER_PASSWORD_KEY_ALIAS,
   ADMIN_USER_TABLE_NAME,
+  VERIFICATION_CODE_TABLE_NAME,
 } from "./resources";
 import { Codes } from "./Error";
 
@@ -16,11 +17,23 @@ if (LOCAL_DYNAMODB_ENDPOINT) {
 
   aws.ddb.set(localDDB);
 }
+
+const baseTableConfig = {
+  create: !!LOCAL_DYNAMODB_ENDPOINT,
+  waitForActive: !!LOCAL_DYNAMODB_ENDPOINT,
+};
+
 export interface IAdminUser {
   userId: string;
   email: string;
   passwordHash: string;
   passwordSalt: string;
+}
+
+export interface IVerificationCode {
+  email: string;
+  codeHash: string;
+  codeSalt: string;
 }
 
 const adminUserSchema = new Schema({
@@ -40,14 +53,32 @@ const adminUserSchema = new Schema({
   passwordSalt: String,
 });
 
+const verificationCodeSchema = new Schema({
+  email: {
+    type: String,
+    hashKey: true,
+  },
+  codeHash: String,
+  codeSalt: String,
+});
+
 interface adminUserItem extends Item, IAdminUser {}
+
+interface verificationCodeItem extends Item, IVerificationCode {}
 
 export const adminUserModel = model<adminUserItem>(
   ADMIN_USER_TABLE_NAME,
   adminUserSchema,
+  baseTableConfig
+);
+
+export const verificationCodeModel = model<verificationCodeItem>(
+  VERIFICATION_CODE_TABLE_NAME,
+  verificationCodeSchema,
   {
-    create: !!LOCAL_DYNAMODB_ENDPOINT,
-    waitForActive: !!LOCAL_DYNAMODB_ENDPOINT,
+    expires: {
+      ttl: 60 * 10, // 5 minutes
+    },
   }
 );
 
@@ -101,4 +132,16 @@ export const setPassword = async ({
   );
 
   await transaction([updateTransaction]);
+};
+
+export const createVerificationCode = async ({
+  email,
+  codeHash,
+  codeSalt,
+}: IVerificationCode) => {
+  await verificationCodeModel.create({
+    email,
+    codeHash,
+    codeSalt,
+  });
 };
