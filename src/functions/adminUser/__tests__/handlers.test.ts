@@ -1,6 +1,6 @@
 import {
   handleCheckAdminUserExists,
-  handleCheckAdminUserPasswordIsSet,
+  handleCheckAdminUserAccountIsClaimed,
   handleSetAdminUserPassword,
 } from "../handlers";
 import { faker } from "@faker-js/faker";
@@ -76,7 +76,7 @@ describe("handleAdminUserExists", () => {
   });
 });
 
-describe("handleCheckAdminUserPasswordIsSet", () => {
+describe("handleCheckAdminUserAccountIsClaimed", () => {
   const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
     typeof adminUserEmailInput
   >({
@@ -103,13 +103,13 @@ describe("handleCheckAdminUserPasswordIsSet", () => {
     ],
   ])(
     "when the user's password is %s",
-    (_, expectedPasswordIsSet, adminUser) => {
+    (_, expectedAccountClaimed, adminUser) => {
       beforeEach(() => {
         mocked(fetchUserByEmail).mockResolvedValueOnce(adminUser);
       });
 
       it(`returns statusCode 200`, async () => {
-        const { statusCode } = await handleCheckAdminUserPasswordIsSet(
+        const { statusCode } = await handleCheckAdminUserAccountIsClaimed(
           APIGatewayEvent,
           context,
           jest.fn()
@@ -118,14 +118,14 @@ describe("handleCheckAdminUserPasswordIsSet", () => {
         expect(statusCode).toEqual(200);
       });
 
-      it(`"returns passwordIsSet ${expectedPasswordIsSet}"`, async () => {
-        const { body } = await handleCheckAdminUserPasswordIsSet(
+      it(`"returns accountIsClaimed ${expectedAccountClaimed}"`, async () => {
+        const { body } = await handleCheckAdminUserAccountIsClaimed(
           APIGatewayEvent,
           context,
           jest.fn()
         );
 
-        expect(JSON.parse(body).passwordIsSet).toEqual(expectedPasswordIsSet);
+        expect(JSON.parse(body).accountClaimed).toEqual(expectedAccountClaimed);
       });
     }
   );
@@ -138,7 +138,7 @@ describe("handleCheckAdminUserPasswordIsSet", () => {
     });
 
     it("returns statusCode 404", async () => {
-      const { statusCode } = await handleCheckAdminUserPasswordIsSet(
+      const { statusCode } = await handleCheckAdminUserAccountIsClaimed(
         APIGatewayEvent,
         context,
         jest.fn()
@@ -148,7 +148,7 @@ describe("handleCheckAdminUserPasswordIsSet", () => {
     });
 
     it(`returns ${ErrorCodes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
-      const { body } = await handleCheckAdminUserPasswordIsSet(
+      const { body } = await handleCheckAdminUserAccountIsClaimed(
         APIGatewayEvent,
         context,
         jest.fn()

@@ -31,16 +31,16 @@ const checkAdminUserExists: LambdaEventWithResult<
   });
 };
 
-const checkAdminUserPasswordIsSet: LambdaEventWithResult<
+const checkAdminUserAccountIsClaimed: LambdaEventWithResult<
   typeof adminUserEmailInput
 > = async (event) => {
   const { email } = event.body;
   try {
     const user = await fetchUserByEmail(email);
 
-    const passwordIsSet = !!user.passwordHash && !!user.passwordSalt;
+    const accountClaimed = !!user.passwordHash && !!user.passwordSalt;
 
-    return formatJSONResponse(200, { passwordIsSet });
+    return formatJSONResponse(200, { accountClaimed });
   } catch (error) {
     if (!isError(error)) throw error;
 
@@ -87,8 +87,8 @@ const setAdminUserPassword: LambdaEventWithResult<
 
 export const handleCheckAdminUserExists = middyfy(checkAdminUserExists);
 
-export const handleCheckAdminUserPasswordIsSet = middyfy(
-  checkAdminUserPasswordIsSet
+export const handleCheckAdminUserAccountIsClaimed = middyfy(
+  checkAdminUserAccountIsClaimed
 );
 
 export const handleSetAdminUserPassword = middyfy(setAdminUserPassword);
