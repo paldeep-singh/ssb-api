@@ -12,6 +12,10 @@ import {
 import { adminUserEmailInput, adminUserSetPasswordInput } from "./schema";
 import { middyfy } from "@libs/lambda";
 import { isError } from "@libs/utils";
+import { randomBytes } from "crypto";
+import { kmsClient, stringToUint8Array, Uint8ArrayToStr } from "@libs/kms";
+import { ADMIN_USER_PASSWORD_KEY_ALIAS } from "./resources";
+import { EncryptCommand } from "@aws-sdk/client-kms";
 
 const checkAdminUserExists: LambdaEventWithResult<
   typeof adminUserEmailInput
@@ -53,26 +57,32 @@ const setAdminUserPassword: LambdaEventWithResult<
 > = async (event) => {
   const { email, newPassword, confirmNewPassword } = event.body;
 
-  if (newPassword !== confirmNewPassword) {
-    return formatJSONErrorResponse(400, ErrorCodes.PASSWORD_MISMATCH);
-  }
-
   if (!(await documentExists(email))) {
     return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER);
   }
 
-  try {
-    await setPassword({ email, newPassword });
-    return formatJSONResponse(200, { passwordSet: true });
-  } catch (error) {
-    if (!isError(error)) throw error;
-
-    if (error.message === ErrorCodes.ENCRYPTION_FAILED) {
-      return formatJSONErrorResponse(502, error.message);
-    }
-
-    throw error;
+  if (newPassword !== confirmNewPassword) {
+    return formatJSONErrorResponse(400, ErrorCodes.PASSWORD_MISMATCH);
   }
+
+  const newPasswordSalt = randomBytes(256).toString();
+
+  const Plaintext = stringToUint8Array(newPassword + newPasswordSalt);
+
+  const encrypt = new EncryptCommand({
+    KeyId: ADMIN_USER_PASSWORD_KEY_ALIAS,
+    Plaintext,
+  });
+
+  const { CiphertextBlob } = await kmsClient.send(encrypt);
+
+  if (!CiphertextBlob)
+    return formatJSONErrorResponse(502, ErrorCodes.ENCRYPTION_FAILED);
+
+  const newPasswordHash = Uint8ArrayToStr(CiphertextBlob);
+
+  await setPassword({ email, newPasswordHash, newPasswordSalt });
+  return formatJSONResponse(200, { passwordSet: true });
 };
 
 export const handleCheckAdminUserExists = middyfy(checkAdminUserExists);

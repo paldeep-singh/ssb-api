@@ -1,4 +1,4 @@
-import { Schema, model, aws } from "dynamoose";
+import { Schema, model, aws, transaction } from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 import { LOCAL_DYNAMODB_ENDPOINT } from "@libs/env";
 import {
@@ -6,11 +6,9 @@ import {
   ADMIN_USER_PASSWORD_KEY_ALIAS,
   ADMIN_USER_TABLE_NAME,
 } from "./resources";
-import { KMSClient, EncryptCommand } from "@aws-sdk/client-kms";
+import { EncryptCommand } from "@aws-sdk/client-kms";
 import { stringToUint8Array, Uint8ArrayToStr } from "@libs/kms";
-import { randomBytes } from "crypto";
-
-let kmsClient: KMSClient;
+import { kmsClient } from "@libs/kms";
 
 if (LOCAL_DYNAMODB_ENDPOINT) {
   const localDDB = new aws.ddb.DynamoDB({
@@ -19,12 +17,6 @@ if (LOCAL_DYNAMODB_ENDPOINT) {
   });
 
   aws.ddb.set(localDDB);
-
-  kmsClient = new KMSClient({
-    region: "local",
-  });
-} else {
-  kmsClient = new KMSClient({});
 }
 export interface IAdminUser {
   userId: string;
@@ -86,22 +78,17 @@ export const fetchUserByEmail = async (email: string): Promise<IAdminUser> => {
 
   if (!adminUser) throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER);
 
-  const { userId, passwordHash, passwordSalt } = adminUser;
-
-  return {
-    userId,
-    email,
-    passwordHash,
-    passwordSalt,
-  };
+  return adminUser;
 };
 
 export const setPassword = async ({
   email,
-  newPassword,
+  newPasswordHash,
+  newPasswordSalt,
 }: {
   email: string;
-  newPassword: string;
+  newPasswordHash: string;
+  newPasswordSalt: string;
 }) => {
   const [adminUser] = await queryAdminUserByEmail(email).exec();
 
@@ -109,23 +96,19 @@ export const setPassword = async ({
     throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER);
   }
 
-  const salt = randomBytes(256).toString();
+  const updateTransaction = adminUserModel.transaction.update(
+    {
+      userId: adminUser.userId,
+    },
+    {
+      $SET: {
+        passwordHash: newPasswordHash,
+        passwordSalt: newPasswordSalt,
+      },
+    }
+  );
 
-  const Plaintext = stringToUint8Array(newPassword + salt);
-
-  const encrypt = new EncryptCommand({
-    KeyId: ADMIN_USER_PASSWORD_KEY_ALIAS,
-    Plaintext,
-  });
-
-  const { CiphertextBlob } = await kmsClient.send(encrypt);
-
-  if (!CiphertextBlob) throw new Error(ErrorCodes.ENCRYPTION_FAILED);
-
-  adminUser.passwordHash = Uint8ArrayToStr(CiphertextBlob);
-  adminUser.passwordSalt = salt;
-
-  await adminUser.save();
+  await transaction([updateTransaction]);
 };
 
 export const verifyPassword = async (email: string, password: string) => {

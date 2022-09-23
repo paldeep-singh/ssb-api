@@ -18,8 +18,14 @@ import {
 import { mocked } from "jest-mock";
 import { APIGatewayProxyResult } from "aws-lambda";
 import { createAdminUser } from "./fixtures";
+import { KMSClient, EncryptCommand } from "@aws-sdk/client-kms";
+import { mockClient } from "aws-sdk-client-mock";
+import { stringToUint8Array } from "@libs/kms";
+import crypto from "crypto";
+const mockedKMSClient = mockClient(KMSClient as any);
 
 jest.mock("../model");
+jest.mock("crypto");
 jest.mock("@middy/core", () => {
   return (handler: any) => {
     return {
@@ -158,6 +164,7 @@ describe("handleCheckAdminUserPasswordIsSet", () => {
 describe("handleSetAdminUserPassword", () => {
   describe("when the user does not exist", () => {
     const password = faker.internet.password();
+
     const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
       typeof adminUserSetPasswordInput
     >({
@@ -197,6 +204,10 @@ describe("handleSetAdminUserPassword", () => {
   describe("when the user exists", () => {
     describe("when the passwords match", () => {
       const password = faker.internet.password();
+      const encryptedPassword = faker.datatype.string(20);
+      const encryptedPasswordPlaintext = stringToUint8Array(encryptedPassword);
+      const passwordSalt = faker.datatype.string(10);
+
       const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
         typeof adminUserSetPasswordInput
       >({
@@ -210,6 +221,15 @@ describe("handleSetAdminUserPassword", () => {
       describe("when encryption is successful", () => {
         beforeEach(() => {
           mocked(documentExists).mockResolvedValueOnce(true);
+
+          mockedKMSClient.on(EncryptCommand as any).resolves({
+            CiphertextBlob: encryptedPasswordPlaintext,
+          } as any);
+
+          mocked(crypto.randomBytes).mockReturnValueOnce({
+            toString: () => passwordSalt,
+          } as any);
+
           mocked(setPassword).mockResolvedValueOnce();
         });
 
@@ -221,6 +241,16 @@ describe("handleSetAdminUserPassword", () => {
           );
 
           expect(statusCode).toEqual(200);
+        });
+
+        it("calls setPassword with the correct arguments", async () => {
+          await handleSetAdminUserPassword(APIGatewayEvent, context, jest.fn());
+
+          expect(setPassword).toHaveBeenCalledWith({
+            email,
+            newPasswordHash: encryptedPassword,
+            newPasswordSalt: passwordSalt,
+          });
         });
 
         it(`returns passwordSet true`, async () => {
@@ -237,9 +267,14 @@ describe("handleSetAdminUserPassword", () => {
       describe("when encryption is unsuccessful", () => {
         beforeEach(() => {
           mocked(documentExists).mockResolvedValueOnce(true);
-          mocked(setPassword).mockRejectedValueOnce(
-            new Error(ErrorCodes.ENCRYPTION_FAILED)
-          );
+
+          mockedKMSClient.on(EncryptCommand as any).resolves({
+            CiphertextBlob: undefined,
+          } as any);
+
+          mocked(crypto.randomBytes).mockReturnValueOnce({
+            toString: () => passwordSalt,
+          } as any);
         });
 
         it("returns statusCode 502", async () => {

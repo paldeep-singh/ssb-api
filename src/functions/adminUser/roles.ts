@@ -15,9 +15,9 @@ const getAdminUserStatement: Statement = {
   Resource: adminUsersTableARN,
 };
 
-const putAdminUserStatement: Statement = {
+const updateAdminUserStatement: Statement = {
   Effect: "Allow",
-  Action: ["dynamodb:PutItem"],
+  Action: ["dynamodb:UpdateItem"],
   Resource: adminUsersTableARN,
 };
 
@@ -41,10 +41,9 @@ const adminUserPasswordIsSetRole = createLambdaRole({
 
 const setAdminUserPasswordRole = createLambdaRole({
   statements: [
-    getAdminUserStatement,
     encryptPasswordStatement,
     queryAdminUsersStatement,
-    putAdminUserStatement,
+    updateAdminUserStatement,
   ],
   roleName: "setAdminUserPasswordRole",
   policyName: "setAdminUserPasswordPolicy",
