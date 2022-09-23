@@ -16,10 +16,10 @@ const userId = faker.datatype.uuid();
 
 const mockedKMS = mockClient(KMSClient as any);
 
-describe("adminUserExists", () => {
+describe("userDocumentExists", () => {
   describe("if the admin user does not exist", () => {
     it("returns false", async () => {
-      const response = await dynamoDB.documentExists(email);
+      const response = await dynamoDB.userDocumentExists(email);
 
       expect(response).toEqual(false);
     });
@@ -37,7 +37,7 @@ describe("adminUserExists", () => {
     });
 
     it("returns true", async () => {
-      const response = await dynamoDB.documentExists(email);
+      const response = await dynamoDB.userDocumentExists(email);
 
       expect(response).toEqual(true);
     });

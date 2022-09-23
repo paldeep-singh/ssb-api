@@ -10,7 +10,7 @@ import {
 } from "@libs/fixtures";
 import { adminUserEmailInput, adminUserSetPasswordInput } from "../schema";
 import {
-  documentExists,
+  userDocumentExists,
   fetchUserByEmail,
   ErrorCodes,
   setPassword,
@@ -54,7 +54,7 @@ describe("handleAdminUserExists", () => {
     ["does not exist", 404, false],
   ])("when the user %s", (_, expectedStatusCode, expectedAdminUserExists) => {
     beforeEach(() => {
-      mocked(documentExists).mockResolvedValueOnce(expectedAdminUserExists);
+      mocked(userDocumentExists).mockResolvedValueOnce(expectedAdminUserExists);
     });
 
     it(`returns statusCode ${expectedStatusCode}`, async () => {
@@ -175,7 +175,7 @@ describe("handleSetAdminUserPassword", () => {
       },
     });
     beforeEach(() => {
-      mocked(documentExists).mockResolvedValueOnce(false);
+      mocked(userDocumentExists).mockResolvedValueOnce(false);
     });
 
     it("returns statusCode 404", async () => {
@@ -220,7 +220,7 @@ describe("handleSetAdminUserPassword", () => {
 
       describe("when encryption is successful", () => {
         beforeEach(() => {
-          mocked(documentExists).mockResolvedValueOnce(true);
+          mocked(userDocumentExists).mockResolvedValueOnce(true);
 
           mockedKMSClient.on(EncryptCommand as any).resolves({
             CiphertextBlob: encryptedPasswordPlaintext,
@@ -266,7 +266,7 @@ describe("handleSetAdminUserPassword", () => {
 
       describe("when encryption is unsuccessful", () => {
         beforeEach(() => {
-          mocked(documentExists).mockResolvedValueOnce(true);
+          mocked(userDocumentExists).mockResolvedValueOnce(true);
 
           mockedKMSClient.on(EncryptCommand as any).resolves({
             CiphertextBlob: undefined,
@@ -314,7 +314,7 @@ describe("handleSetAdminUserPassword", () => {
       },
     });
     beforeEach(() => {
-      mocked(documentExists).mockResolvedValueOnce(true);
+      mocked(userDocumentExists).mockResolvedValueOnce(true);
     });
 
     it("returns statusCode 400", async () => {

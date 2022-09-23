@@ -1,5 +1,5 @@
 import {
-  documentExists,
+  userDocumentExists,
   fetchUserByEmail,
   ErrorCodes,
   setPassword,
@@ -26,7 +26,7 @@ const checkAdminUserExists: LambdaEventWithResult<
 > = async (event) => {
   const { email } = event.body;
 
-  const userExists = await documentExists(email);
+  const userExists = await userDocumentExists(email);
 
   const statusCode = userExists ? 200 : 404;
 
@@ -61,7 +61,7 @@ const setAdminUserPassword: LambdaEventWithResult<
 > = async (event) => {
   const { email, newPassword, confirmNewPassword } = event.body;
 
-  if (!(await documentExists(email))) {
+  if (!(await userDocumentExists(email))) {
     return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER);
   }
 

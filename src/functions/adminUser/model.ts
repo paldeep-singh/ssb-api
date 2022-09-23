@@ -64,7 +64,7 @@ const queryAdminUserByEmail = (email: string) => {
   return adminUserModel.query("email").eq(email);
 };
 
-export const documentExists = async (email: string) => {
+export const userDocumentExists = async (email: string) => {
   try {
     const response = await queryAdminUserByEmail(email).count().exec();
 
