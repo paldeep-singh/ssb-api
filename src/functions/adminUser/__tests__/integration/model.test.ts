@@ -6,6 +6,7 @@ import {
   insertTestAdminUser,
 } from "../fixtures";
 import * as dynamoDB from "../../model";
+import * as ErrorCodes from "../../Error";
 import { expectError } from "@libs/testUtils";
 import { EncryptCommand, KMSClient } from "@aws-sdk/client-kms";
 import { mockClient } from "aws-sdk-client-mock";
@@ -69,7 +70,7 @@ describe("fetchUserByEmail", () => {
       try {
         await dynamoDB.fetchUserByEmail(email);
       } catch (error) {
-        expectError(error, dynamoDB.ErrorCodes.NON_EXISTENT_ADMIN_USER);
+        expectError(error, ErrorCodes.Codes.NON_EXISTENT_ADMIN_USER);
       }
     });
   });
@@ -121,7 +122,7 @@ describe("setAdminUserPassword", () => {
   });
 
   describe("when the user does not exist", () => {
-    it(`throws a ${dynamoDB.ErrorCodes.NON_EXISTENT_ADMIN_USER} error`, async () => {
+    it(`throws a ${ErrorCodes.Codes.NON_EXISTENT_ADMIN_USER} error`, async () => {
       expect.assertions(1);
       try {
         await dynamoDB.setPassword({
@@ -130,7 +131,7 @@ describe("setAdminUserPassword", () => {
           newPasswordSalt,
         });
       } catch (error) {
-        expectError(error, dynamoDB.ErrorCodes.NON_EXISTENT_ADMIN_USER);
+        expectError(error, ErrorCodes.Codes.NON_EXISTENT_ADMIN_USER);
       }
     });
   });

@@ -6,9 +6,7 @@ import {
   ADMIN_USER_PASSWORD_KEY_ALIAS,
   ADMIN_USER_TABLE_NAME,
 } from "./resources";
-import { EncryptCommand } from "@aws-sdk/client-kms";
-import { stringToUint8Array, Uint8ArrayToStr } from "@libs/kms";
-import { kmsClient } from "@libs/kms";
+import { Codes } from "./Error";
 
 if (LOCAL_DYNAMODB_ENDPOINT) {
   const localDDB = new aws.ddb.DynamoDB({
@@ -53,13 +51,6 @@ export const adminUserModel = model<adminUserItem>(
   }
 );
 
-export enum ErrorCodes {
-  NON_EXISTENT_ADMIN_USER = "NON_EXISTENT_ADMIN_USER",
-  PASSWORD_MISMATCH = "PASSWORD_MISMATCH",
-  ENCRYPTION_FAILED = "ENCRYPTION_FAILED",
-  ACCOUNT_UNCLAIMED = "ACCOUNT_UNCLAIMED",
-}
-
 const queryAdminUserByEmail = (email: string) => {
   return adminUserModel.query("email").eq(email);
 };
@@ -77,7 +68,7 @@ export const userDocumentExists = async (email: string) => {
 export const fetchUserByEmail = async (email: string): Promise<IAdminUser> => {
   const [adminUser] = await queryAdminUserByEmail(email).exec();
 
-  if (!adminUser) throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER);
+  if (!adminUser) throw new Error(Codes.NON_EXISTENT_ADMIN_USER);
 
   return adminUser;
 };
@@ -94,7 +85,7 @@ export const setPassword = async ({
   const [adminUser] = await queryAdminUserByEmail(email).exec();
 
   if (!adminUser) {
-    throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER);
+    throw new Error(Codes.NON_EXISTENT_ADMIN_USER);
   }
 
   const updateTransaction = adminUserModel.transaction.update(

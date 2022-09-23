@@ -23,7 +23,7 @@ const adminUserFunctions: AWS["functions"] = {
     ],
     role: "adminUserExistsRole",
   },
-  adminUserPasswordIsSet: {
+  adminUserAccountIsClaimed: {
     handler: `${path}/handlers.handleCheckAdminUserAccountIsClaimed`,
     events: [
       {

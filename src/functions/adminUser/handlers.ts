@@ -1,9 +1,5 @@
-import {
-  userDocumentExists,
-  fetchUserByEmail,
-  ErrorCodes,
-  setPassword,
-} from "./model";
+import { userDocumentExists, fetchUserByEmail, setPassword } from "./model";
+import { Codes } from "./Error";
 import {
   LambdaEventWithResult,
   formatJSONResponse,
@@ -20,6 +16,9 @@ import { randomBytes } from "crypto";
 import { kmsClient, stringToUint8Array, Uint8ArrayToStr } from "@libs/kms";
 import { ADMIN_USER_PASSWORD_KEY_ALIAS } from "./resources";
 import { EncryptCommand } from "@aws-sdk/client-kms";
+
+export const passwordValidationRegex =
+  /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$/;
 
 const checkAdminUserExists: LambdaEventWithResult<
   typeof adminUserEmailInput
@@ -48,7 +47,7 @@ const checkAdminUserAccountIsClaimed: LambdaEventWithResult<
   } catch (error) {
     if (!isError(error)) throw error;
 
-    if (error.message === ErrorCodes.NON_EXISTENT_ADMIN_USER) {
+    if (error.message === Codes.NON_EXISTENT_ADMIN_USER) {
       return formatJSONErrorResponse(404, error.message);
     }
 
@@ -62,11 +61,18 @@ const setAdminUserPassword: LambdaEventWithResult<
   const { email, newPassword, confirmNewPassword } = event.body;
 
   if (!(await userDocumentExists(email))) {
-    return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER);
+    return formatJSONErrorResponse(404, Codes.NON_EXISTENT_ADMIN_USER);
   }
 
   if (newPassword !== confirmNewPassword) {
-    return formatJSONErrorResponse(400, ErrorCodes.PASSWORD_MISMATCH);
+    return formatJSONErrorResponse(400, Codes.PASSWORD_MISMATCH);
+  }
+
+  // Password must contain one number, one lowercase letter, one uppercase letter,
+  // and be at least 8 characters long
+  if (!passwordValidationRegex.test(newPassword)) {
+    console.log(newPassword);
+    return formatJSONErrorResponse(400, Codes.INVALID_PASSWORD);
   }
 
   const newPasswordSalt = randomBytes(256).toString();
@@ -81,7 +87,7 @@ const setAdminUserPassword: LambdaEventWithResult<
   const { CiphertextBlob } = await kmsClient.send(encrypt);
 
   if (!CiphertextBlob)
-    return formatJSONErrorResponse(502, ErrorCodes.ENCRYPTION_FAILED);
+    return formatJSONErrorResponse(502, Codes.ENCRYPTION_FAILED);
 
   const newPasswordHash = Uint8ArrayToStr(CiphertextBlob);
 

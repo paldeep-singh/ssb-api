@@ -2,6 +2,7 @@ import {
   handleCheckAdminUserExists,
   handleCheckAdminUserAccountIsClaimed,
   handleSetAdminUserPassword,
+  passwordValidationRegex,
 } from "../handlers";
 import { faker } from "@faker-js/faker";
 import {
@@ -9,12 +10,8 @@ import {
   createAPIGatewayProxyEventContext,
 } from "@libs/fixtures";
 import { adminUserEmailInput, adminUserSetPasswordInput } from "../schema";
-import {
-  userDocumentExists,
-  fetchUserByEmail,
-  ErrorCodes,
-  setPassword,
-} from "../model";
+import { userDocumentExists, fetchUserByEmail, setPassword } from "../model";
+import { Codes } from "../Error";
 import { mocked } from "jest-mock";
 import { APIGatewayProxyResult } from "aws-lambda";
 import { createAdminUser } from "./fixtures";
@@ -133,7 +130,7 @@ describe("handleCheckAdminUserAccountIsClaimed", () => {
   describe("when the user does not exist", () => {
     beforeEach(() => {
       mocked(fetchUserByEmail).mockRejectedValueOnce(
-        new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER)
+        new Error(Codes.NON_EXISTENT_ADMIN_USER)
       );
     });
 
@@ -147,16 +144,14 @@ describe("handleCheckAdminUserAccountIsClaimed", () => {
       expect(statusCode).toEqual(404);
     });
 
-    it(`returns ${ErrorCodes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
+    it(`returns ${Codes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
       const { body } = await handleCheckAdminUserAccountIsClaimed(
         APIGatewayEvent,
         context,
         jest.fn()
       );
 
-      expect(JSON.parse(body).message).toEqual(
-        ErrorCodes.NON_EXISTENT_ADMIN_USER
-      );
+      expect(JSON.parse(body).message).toEqual(Codes.NON_EXISTENT_ADMIN_USER);
     });
   });
 });
@@ -188,115 +183,165 @@ describe("handleSetAdminUserPassword", () => {
       expect(statusCode).toEqual(404);
     });
 
-    it(`returns ${ErrorCodes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
+    it(`returns ${Codes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
       const { body } = await handleSetAdminUserPassword(
         APIGatewayEvent,
         context,
         jest.fn()
       );
 
-      expect(JSON.parse(body).message).toEqual(
-        ErrorCodes.NON_EXISTENT_ADMIN_USER
-      );
+      expect(JSON.parse(body).message).toEqual(Codes.NON_EXISTENT_ADMIN_USER);
     });
   });
 
   describe("when the user exists", () => {
     describe("when the passwords match", () => {
-      const password = faker.internet.password();
-      const encryptedPassword = faker.datatype.string(20);
-      const encryptedPasswordPlaintext = stringToUint8Array(encryptedPassword);
-      const passwordSalt = faker.datatype.string(10);
+      describe("when the password is valid", () => {
+        const password = faker.random.alphaNumeric(5) + "Aa1";
 
-      const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
-        typeof adminUserSetPasswordInput
-      >({
-        body: {
-          email,
-          newPassword: password,
-          confirmNewPassword: password,
-        },
-      });
+        const encryptedPassword = faker.datatype.string(20);
+        const encryptedPasswordPlaintext =
+          stringToUint8Array(encryptedPassword);
+        const passwordSalt = faker.datatype.string(10);
 
-      describe("when encryption is successful", () => {
-        beforeEach(() => {
-          mocked(userDocumentExists).mockResolvedValueOnce(true);
-
-          mockedKMSClient.on(EncryptCommand as any).resolves({
-            CiphertextBlob: encryptedPasswordPlaintext,
-          } as any);
-
-          mocked(crypto.randomBytes).mockReturnValueOnce({
-            toString: () => passwordSalt,
-          } as any);
-
-          mocked(setPassword).mockResolvedValueOnce();
-        });
-
-        it("returns statusCode 200", async () => {
-          const { statusCode } = await handleSetAdminUserPassword(
-            APIGatewayEvent,
-            context,
-            jest.fn()
-          );
-
-          expect(statusCode).toEqual(200);
-        });
-
-        it("calls setPassword with the correct arguments", async () => {
-          await handleSetAdminUserPassword(APIGatewayEvent, context, jest.fn());
-
-          expect(setPassword).toHaveBeenCalledWith({
+        const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
+          typeof adminUserSetPasswordInput
+        >({
+          body: {
             email,
-            newPasswordHash: encryptedPassword,
-            newPasswordSalt: passwordSalt,
+            newPassword: password,
+            confirmNewPassword: password,
+          },
+        });
+
+        describe("when encryption is successful", () => {
+          beforeEach(() => {
+            mocked(userDocumentExists).mockResolvedValueOnce(true);
+
+            mockedKMSClient.on(EncryptCommand as any).resolves({
+              CiphertextBlob: encryptedPasswordPlaintext,
+            } as any);
+
+            mocked(crypto.randomBytes).mockReturnValueOnce({
+              toString: () => passwordSalt,
+            } as any);
+
+            mocked(setPassword).mockResolvedValueOnce();
+          });
+
+          it("returns statusCode 200", async () => {
+            const { statusCode } = await handleSetAdminUserPassword(
+              APIGatewayEvent,
+              context,
+              jest.fn()
+            );
+
+            expect(statusCode).toEqual(200);
+          });
+
+          it("calls setPassword with the correct arguments", async () => {
+            await handleSetAdminUserPassword(
+              APIGatewayEvent,
+              context,
+              jest.fn()
+            );
+
+            expect(setPassword).toHaveBeenCalledWith({
+              email,
+              newPasswordHash: encryptedPassword,
+              newPasswordSalt: passwordSalt,
+            });
+          });
+
+          it(`returns passwordSet true`, async () => {
+            const { body } = await handleSetAdminUserPassword(
+              APIGatewayEvent,
+              context,
+              jest.fn()
+            );
+
+            expect(JSON.parse(body).passwordSet).toEqual(true);
           });
         });
 
-        it(`returns passwordSet true`, async () => {
-          const { body } = await handleSetAdminUserPassword(
-            APIGatewayEvent,
-            context,
-            jest.fn()
-          );
+        describe("when encryption is unsuccessful", () => {
+          beforeEach(() => {
+            mocked(userDocumentExists).mockResolvedValueOnce(true);
 
-          expect(JSON.parse(body).passwordSet).toEqual(true);
+            mockedKMSClient.on(EncryptCommand as any).resolves({
+              CiphertextBlob: undefined,
+            } as any);
+
+            mocked(crypto.randomBytes).mockReturnValueOnce({
+              toString: () => passwordSalt,
+            } as any);
+          });
+
+          it("returns statusCode 502", async () => {
+            const { statusCode } = await handleSetAdminUserPassword(
+              APIGatewayEvent,
+              context,
+              jest.fn()
+            );
+
+            expect(statusCode).toEqual(502);
+          });
+
+          it(`returns ${Codes.ENCRYPTION_FAILED} error message`, async () => {
+            const { body } = await handleSetAdminUserPassword(
+              APIGatewayEvent,
+              context,
+              jest.fn()
+            );
+
+            expect(JSON.parse(body).message).toEqual(Codes.ENCRYPTION_FAILED);
+          });
         });
       });
 
-      describe("when encryption is unsuccessful", () => {
+      describe("when the password is invalid", () => {
         beforeEach(() => {
           mocked(userDocumentExists).mockResolvedValueOnce(true);
-
-          mockedKMSClient.on(EncryptCommand as any).resolves({
-            CiphertextBlob: undefined,
-          } as any);
-
-          mocked(crypto.randomBytes).mockReturnValueOnce({
-            toString: () => passwordSalt,
-          } as any);
         });
 
-        it("returns statusCode 502", async () => {
-          const { statusCode } = await handleSetAdminUserPassword(
-            APIGatewayEvent,
-            context,
-            jest.fn()
-          );
+        describe.each([
+          ["is too short", faker.random.alphaNumeric(4) + "Aa1"],
+          ["has no uppercase letters", faker.random.alphaNumeric(6) + "a1"],
+          [
+            "has no lowercase letters",
+            faker.random.alphaNumeric(6, { casing: "upper" }) + "A1",
+          ],
+          ["has no numbers", faker.random.alpha(6)],
+        ])(`when the password %s`, (_, password) => {
+          const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
+            typeof adminUserSetPasswordInput
+          >({
+            body: {
+              email,
+              newPassword: password,
+              confirmNewPassword: password,
+            },
+          });
 
-          expect(statusCode).toEqual(502);
-        });
+          it("returns statusCode 400", async () => {
+            const { statusCode } = await handleSetAdminUserPassword(
+              APIGatewayEvent,
+              context,
+              jest.fn()
+            );
 
-        it(`returns ${ErrorCodes.ENCRYPTION_FAILED} error message`, async () => {
-          const { body } = await handleSetAdminUserPassword(
-            APIGatewayEvent,
-            context,
-            jest.fn()
-          );
+            expect(statusCode).toEqual(400);
+          });
 
-          expect(JSON.parse(body).message).toEqual(
-            ErrorCodes.ENCRYPTION_FAILED
-          );
+          it(`returns ${Codes.INVALID_PASSWORD} error message`, async () => {
+            const { body } = await handleSetAdminUserPassword(
+              APIGatewayEvent,
+              context,
+              jest.fn()
+            );
+
+            expect(JSON.parse(body).message).toEqual(Codes.INVALID_PASSWORD);
+          });
         });
       });
     });
@@ -327,14 +372,14 @@ describe("handleSetAdminUserPassword", () => {
       expect(statusCode).toEqual(400);
     });
 
-    it(`returns ${ErrorCodes.PASSWORD_MISMATCH} error message`, async () => {
+    it(`returns ${Codes.PASSWORD_MISMATCH} error message`, async () => {
       const { body } = await handleSetAdminUserPassword(
         APIGatewayEvent,
         context,
         jest.fn()
       );
 
-      expect(JSON.parse(body).message).toEqual(ErrorCodes.PASSWORD_MISMATCH);
+      expect(JSON.parse(body).message).toEqual(Codes.PASSWORD_MISMATCH);
     });
   });
 });

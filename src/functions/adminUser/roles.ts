@@ -51,7 +51,7 @@ const setAdminUserPasswordRole = createLambdaRole({
 
 const adminUserRoles = {
   adminUserExistsRole,
-  adminUserAccountIsClaimed: adminUserAccountIsClaimedRole,
+  adminUserAccountIsClaimedRole,
   setAdminUserPasswordRole,
 };
 
