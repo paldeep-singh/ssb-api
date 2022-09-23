@@ -209,3 +209,25 @@ describe("fetchVerificationCode", () => {
     });
   });
 });
+
+describe("deleteVerificationCode", () => {
+  const email = faker.internet.email();
+  const codeHash = faker.datatype.string(30);
+  const codeSalt = faker.datatype.string(10);
+
+  beforeEach(async () => {
+    await dynamoDB.createVerificationCode({
+      email,
+      codeHash,
+      codeSalt,
+    });
+  });
+
+  it("deletes the verification code", async () => {
+    await dynamoDB.deleteVerificationCode(email);
+
+    const response = await fetchTestVerificationCode(email);
+
+    expect(response).toEqual(undefined);
+  });
+});

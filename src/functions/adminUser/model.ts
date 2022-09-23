@@ -157,3 +157,7 @@ export const fetchVerificationCode = async (
 
   return verificationCode;
 };
+
+export const deleteVerificationCode = async (email: string) => {
+  await verificationCodeModel.delete(email);
+};
