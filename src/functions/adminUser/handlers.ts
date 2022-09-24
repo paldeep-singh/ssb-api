@@ -1,4 +1,11 @@
-import { userDocumentExists, fetchUserByEmail, setPassword } from "./model";
+import {
+  userDocumentExists,
+  fetchUserByEmail,
+  setPassword,
+  putVerificationCode,
+  fetchVerificationCode,
+  deleteVerificationCode,
+} from "./model";
 import { Codes } from "./Error";
 import {
   LambdaEventWithResult,
@@ -14,8 +21,13 @@ import { middyfy } from "@libs/lambda";
 import { isError } from "@libs/utils";
 import { randomBytes } from "crypto";
 import { kmsClient, stringToUint8Array, Uint8ArrayToStr } from "@libs/kms";
-import { ADMIN_USER_PASSWORD_KEY_ALIAS } from "./resources";
+import {
+  ADMIN_USER_PASSWORD_KEY_ALIAS,
+  ADMIN_USER_VERIFICATION_CODE_KEY_ALIAS,
+} from "./resources";
 import { EncryptCommand } from "@aws-sdk/client-kms";
+import { sesClient } from "@libs/ses";
+import { SendEmailCommand } from "@aws-sdk/client-ses";
 
 export const passwordValidationRegex =
   /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$/;
@@ -95,6 +107,62 @@ const setAdminUserPassword: LambdaEventWithResult<
   return formatJSONResponse(200, { passwordSet: true });
 };
 
+export const sendAdminUserVerificationCode: LambdaEventWithResult<
+  typeof adminUserEmailInput
+> = async (event) => {
+  const { email } = event.body;
+  console.log("email", email);
+  if (!(await userDocumentExists(email)))
+    return formatJSONErrorResponse(404, Codes.NON_EXISTENT_ADMIN_USER);
+
+  const verificationCode = randomBytes(3).toString("hex").toUpperCase();
+
+  const codeSalt = randomBytes(256).toString();
+
+  const Plaintext = stringToUint8Array(verificationCode + codeSalt);
+
+  const encrypt = new EncryptCommand({
+    KeyId: ADMIN_USER_VERIFICATION_CODE_KEY_ALIAS,
+    Plaintext,
+  });
+
+  const { CiphertextBlob } = await kmsClient.send(encrypt);
+
+  if (!CiphertextBlob)
+    return formatJSONErrorResponse(502, Codes.ENCRYPTION_FAILED);
+
+  const codeHash = Uint8ArrayToStr(CiphertextBlob);
+
+  const { userId } = await fetchUserByEmail(email);
+
+  const oldVerificationCode = await fetchVerificationCode(userId);
+
+  if (oldVerificationCode) await deleteVerificationCode(userId);
+
+  await putVerificationCode({ userId, codeHash, codeSalt });
+
+  const sendEmail = new SendEmailCommand({
+    Destination: {
+      ToAddresses: [email],
+    },
+    Message: {
+      Subject: {
+        Data: "Spice Spice Baby Verification Code",
+      },
+      Body: {
+        Text: {
+          Data: `Your verification code is: ${verificationCode}`,
+        },
+      },
+    },
+    Source: "spicespicebaby01@gmail.com",
+  });
+
+  await sesClient.send(sendEmail);
+
+  return formatJSONResponse(200, {});
+};
+
 // TODO: Rework into login function
 // export const verifyAdminUserPassword: LambdaEventWithResult<
 //   typeof adminUserVerifyPasswordInput
@@ -134,5 +202,9 @@ export const handleCheckAdminUserAccountIsClaimed = middyfy(
 );
 
 export const handleSetAdminUserPassword = middyfy(setAdminUserPassword);
+
+export const handleSendAdminUserVerificationCode = middyfy(
+  sendAdminUserVerificationCode
+);
 
 // export const handleVerifyAdminUserPassword = middyfy(verifyAdminUserPassword);

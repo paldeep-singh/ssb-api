@@ -2,7 +2,7 @@ import {
   handleCheckAdminUserExists,
   handleCheckAdminUserAccountIsClaimed,
   handleSetAdminUserPassword,
-  passwordValidationRegex,
+  handleCreateNewVerificationCode,
 } from "../handlers";
 import { faker } from "@faker-js/faker";
 import {
@@ -10,11 +10,18 @@ import {
   createAPIGatewayProxyEventContext,
 } from "@libs/fixtures";
 import { adminUserEmailInput, adminUserSetPasswordInput } from "../schema";
-import { userDocumentExists, fetchUserByEmail, setPassword } from "../model";
+import {
+  userDocumentExists,
+  fetchUserByEmail,
+  setPassword,
+  putVerificationCode,
+  fetchVerificationCode,
+  deleteVerificationCode,
+} from "../model";
 import { Codes } from "../Error";
 import { mocked } from "jest-mock";
-import { APIGatewayProxyResult } from "aws-lambda";
-import { createAdminUser } from "./fixtures";
+import { APIGatewayProxyResult, Context } from "aws-lambda";
+import { createAdminUser, createVerificationCode } from "./fixtures";
 import { KMSClient, EncryptCommand } from "@aws-sdk/client-kms";
 import { mockClient } from "aws-sdk-client-mock";
 import { stringToUint8Array } from "@libs/kms";
@@ -380,6 +387,110 @@ describe("handleSetAdminUserPassword", () => {
       );
 
       expect(JSON.parse(body).message).toEqual(Codes.PASSWORD_MISMATCH);
+    });
+  });
+});
+
+describe("handleCreateVerificationCode", () => {
+  const email = faker.internet.email();
+  const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
+    typeof adminUserEmailInput
+  >({
+    body: {
+      email,
+    },
+  });
+
+  describe("when the user does not exist", () => {
+    beforeEach(() => {
+      mocked(userDocumentExists).mockResolvedValueOnce(false);
+    });
+
+    it("returns statusCode 404", async () => {
+      const { statusCode } = await handleCreateNewVerificationCode(
+        APIGatewayEvent,
+        context,
+        jest.fn()
+      );
+
+      expect(statusCode).toEqual(404);
+    });
+
+    it(`returns ${Codes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
+      const { body } = await handleCreateNewVerificationCode(
+        APIGatewayEvent,
+        context,
+        jest.fn()
+      );
+
+      expect(JSON.parse(body).message).toEqual(Codes.NON_EXISTENT_ADMIN_USER);
+    });
+  });
+
+  describe("when the user exists", () => {
+    jest.unmock("crypto");
+    const codeHash = faker.datatype.string(20);
+    const codeSalt = faker.datatype.string(10);
+    const codeHashPlaintext = stringToUint8Array(codeHash);
+
+    beforeEach(() => {
+      mocked(userDocumentExists).mockResolvedValueOnce(true);
+
+      mockedKMSClient.on(EncryptCommand as any).resolves({
+        CiphertextBlob: codeHashPlaintext,
+      } as any);
+    });
+
+    describe("when a verification code already exists", () => {
+      beforeEach(() => {
+        mocked(fetchVerificationCode).mockResolvedValueOnce(
+          createVerificationCode()
+        );
+
+        it("deletes the old verification code", async () => {
+          await handleCreateNewVerificationCode(
+            APIGatewayEvent,
+            context,
+            jest.fn()
+          );
+
+          expect(mocked(deleteVerificationCode)).toHaveBeenCalledWith(email);
+        });
+
+        it("returns statusCode 200", async () => {
+          const { statusCode } = await handleCreateNewVerificationCode(
+            APIGatewayEvent,
+            context,
+            jest.fn()
+          );
+
+          expect(statusCode).toEqual(200);
+        });
+
+        it("inserts the verification code into the table", async () => {
+          await handleCreateNewVerificationCode(
+            APIGatewayEvent,
+            context,
+            jest.fn()
+          );
+
+          expect(mocked(putVerificationCode)).toHaveBeenCalledWith({
+            email,
+            codeHash: codeHashPlaintext,
+            codeSalt,
+          });
+        });
+
+        it(`returns verificationCodeCreated true`, async () => {
+          const { body } = await handleCreateNewVerificationCode(
+            APIGatewayEvent,
+            context,
+            jest.fn()
+          );
+
+          expect(JSON.parse(body).verificationCodeCreated).toEqual(true);
+        });
+      });
     });
   });
 });

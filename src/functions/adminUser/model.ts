@@ -31,7 +31,7 @@ export interface IAdminUser {
 }
 
 export interface IVerificationCode {
-  email: string;
+  userId: string;
   codeHash: string;
   codeSalt: string;
 }
@@ -54,7 +54,7 @@ const adminUserSchema = new Schema({
 });
 
 const verificationCodeSchema = new Schema({
-  email: {
+  userId: {
     type: String,
     hashKey: true,
   },
@@ -76,6 +76,7 @@ export const verificationCodeModel = model<verificationCodeItem>(
   VERIFICATION_CODE_TABLE_NAME,
   verificationCodeSchema,
   {
+    ...baseTableConfig,
     expires: {
       ttl: 60 * 10, // 5 minutes
     },
@@ -134,26 +135,22 @@ export const setPassword = async ({
   await transaction([updateTransaction]);
 };
 
-export const createVerificationCode = async ({
-  email,
+export const putVerificationCode = async ({
+  userId,
   codeHash,
   codeSalt,
 }: IVerificationCode) => {
   await verificationCodeModel.create({
-    email,
+    userId,
     codeHash,
     codeSalt,
   });
 };
 
 export const fetchVerificationCode = async (
-  email: string
-): Promise<IVerificationCode> => {
-  const verificationCode = await verificationCodeModel.get(email);
-
-  if (!verificationCode) {
-    throw new Error(Codes.NO_ACTIVE_VERIFICATION_CODE);
-  }
+  userId: string
+): Promise<IVerificationCode | undefined> => {
+  const verificationCode = await verificationCodeModel.get(userId);
 
   return verificationCode;
 };

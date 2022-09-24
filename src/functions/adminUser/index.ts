@@ -57,6 +57,23 @@ const adminUserFunctions: AWS["functions"] = {
     ],
     role: "setAdminUserPasswordRole",
   },
+  sendAdminUserVerificationCode: {
+    handler: `${path}/handlers.handleSendAdminUserVerificationCode`,
+    events: [
+      {
+        http: {
+          method: "post",
+          path: `${route}/verification-code/send`,
+          request: {
+            schemas: {
+              "application/json": adminUserEmailInput,
+            },
+          },
+        },
+      },
+    ],
+    role: "sendAdminUserVerificationCodeRole",
+  },
 };
 
 export default adminUserFunctions;

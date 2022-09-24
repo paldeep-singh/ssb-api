@@ -29,7 +29,7 @@ type GlobalSecondaryIndex = {
   IndexName: string;
   KeySchema: KeySchema[];
   Projection: Projection;
-  ProvisionedThroughput?: ProvisionedThroughput;
+  ProvisionedThroughput: ProvisionedThroughput;
 };
 
 type LocalSecondaryIndex = {

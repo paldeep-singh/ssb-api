@@ -139,7 +139,7 @@ describe("setAdminUserPassword", () => {
   });
 });
 
-describe("createVerificationCode", () => {
+describe("putVerificationCode", () => {
   const email = faker.internet.email();
   const codeHash = faker.datatype.string(30);
   const codeSalt = faker.datatype.string(10);
@@ -149,7 +149,7 @@ describe("createVerificationCode", () => {
   });
 
   it("creates a verification code", async () => {
-    await dynamoDB.createVerificationCode({
+    await dynamoDB.putVerificationCode({
       email,
       codeHash,
       codeSalt,
@@ -174,7 +174,7 @@ describe("fetchVerificationCode", () => {
     const codeSalt = faker.datatype.string(10);
 
     beforeEach(async () => {
-      await dynamoDB.createVerificationCode({
+      await dynamoDB.putVerificationCode({
         email,
         codeHash,
         codeSalt,
@@ -199,13 +199,10 @@ describe("fetchVerificationCode", () => {
   });
 
   describe("when a verification code for the user does not exist", () => {
-    it(`throws a ${ErrorCodes.Codes.NO_ACTIVE_VERIFICATION_CODE} error`, async () => {
-      expect.assertions(1);
-      try {
-        await dynamoDB.fetchVerificationCode(email);
-      } catch (error) {
-        expectError(error, ErrorCodes.Codes.NO_ACTIVE_VERIFICATION_CODE);
-      }
+    it(`returns undefined`, async () => {
+      const response = await dynamoDB.fetchVerificationCode(email);
+
+      expect(response).toEqual(undefined);
     });
   });
 });
@@ -216,7 +213,7 @@ describe("deleteVerificationCode", () => {
   const codeSalt = faker.datatype.string(10);
 
   beforeEach(async () => {
-    await dynamoDB.createVerificationCode({
+    await dynamoDB.putVerificationCode({
       email,
       codeHash,
       codeSalt,

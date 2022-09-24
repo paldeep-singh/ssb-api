@@ -7,7 +7,7 @@ import {
 import { faker } from "@faker-js/faker";
 
 export const createAdminUser = (
-  adminUserAttributes: Partial<IAdminUser>
+  adminUserAttributes: Partial<IAdminUser> = {}
 ): IAdminUser => ({
   userId: faker.datatype.uuid(),
   email: faker.internet.email(),
@@ -17,7 +17,7 @@ export const createAdminUser = (
 });
 
 export const createVerificationCode = (
-  verficationCodeAttributes: Partial<IVerificationCode>
+  verficationCodeAttributes: Partial<IVerificationCode> = {}
 ): IVerificationCode => ({
   email: faker.internet.email(),
   codeHash: faker.datatype.string(20),

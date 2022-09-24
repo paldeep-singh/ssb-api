@@ -21,8 +21,8 @@ export type Statement = {
   NotAction?: string | string[];
   Principal?: Principal;
   NotPrincipal?: Principal;
-  Resource?: Resource;
-  NotResource?: Resource;
+  Resource?: Resource | Resource[];
+  NotResource?: Resource | Resource[];
   Condition?: {
     [key: string]: string;
   };
