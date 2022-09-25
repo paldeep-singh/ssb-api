@@ -39,6 +39,7 @@
     "@middy/http-json-body-parser": "^3.3.2",
     "@tsconfig/node16": "^1.0.3",
     "@types/aws-lambda": "^8.10.103",
+    "dayjs": "^1.11.5",
     "dynamoose": "^3.1.0",
     "lodash": "^4.17.21"
   }

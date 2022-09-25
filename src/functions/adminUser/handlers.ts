@@ -15,7 +15,7 @@ import {
 import {
   adminUserEmailInput,
   adminUserSetPasswordInput,
-  adminUserVerifyPasswordInput,
+  adminUserVerifyEmailInput,
 } from "./schema";
 import { middyfy } from "@libs/lambda";
 import { isError } from "@libs/utils";
@@ -162,6 +162,60 @@ export const sendAdminUserVerificationCode: LambdaEventWithResult<
 
     if (error.message === Codes.NON_EXISTENT_ADMIN_USER)
       return formatJSONErrorResponse(404, Codes.NON_EXISTENT_ADMIN_USER);
+
+    throw error;
+  }
+};
+
+export const verifyAdminUserEmail: LambdaEventWithResult<
+  typeof adminUserVerifyEmailInput
+> = async (event) => {
+  const { email, verificationCode: providedCode } = event.body;
+
+  try {
+    const { userId } = await fetchUserByEmail(email);
+
+    const { codeHash, codeSalt, ttl } = await fetchVerificationCode(userId);
+
+    if (!ttl)
+      return formatJSONErrorResponse(500, Codes.INVALID_VERIFICATION_CODE);
+
+    const now = new Date().getTime();
+    const codeExpiry = new Date(ttl).getTime();
+
+    if (now > codeExpiry) {
+      return formatJSONErrorResponse(400, Codes.VERIFICATION_CODE_EXPIRED);
+    }
+
+    const Plaintext = stringToUint8Array(providedCode + codeSalt);
+
+    const encrypt = new EncryptCommand({
+      KeyId: ADMIN_USER_VERIFICATION_CODE_KEY_ALIAS,
+      Plaintext,
+    });
+
+    const { CiphertextBlob } = await kmsClient.send(encrypt);
+
+    if (!CiphertextBlob)
+      return formatJSONErrorResponse(502, Codes.ENCRYPTION_FAILED);
+
+    const codeHashToCompare = Uint8ArrayToStr(CiphertextBlob);
+
+    if (codeHashToCompare !== codeHash) {
+      return formatJSONErrorResponse(400, Codes.INVALID_VERIFICATION_CODE);
+    }
+
+    await deleteVerificationCode(userId);
+
+    return formatJSONResponse(200, {});
+  } catch (error) {
+    if (!isError(error)) throw error;
+
+    if (error.message === Codes.NON_EXISTENT_ADMIN_USER)
+      return formatJSONErrorResponse(404, Codes.NON_EXISTENT_ADMIN_USER);
+
+    if (error.message === Codes.NO_ACTIVE_VERIFICATION_CODE)
+      return formatJSONErrorResponse(404, Codes.NO_ACTIVE_VERIFICATION_CODE);
 
     throw error;
   }

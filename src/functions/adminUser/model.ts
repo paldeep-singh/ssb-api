@@ -34,7 +34,10 @@ export interface IVerificationCode {
   userId: string;
   codeHash: string;
   codeSalt: string;
+  ttl: string;
 }
+
+export type IVerificationCodeVariables = Omit<IVerificationCode, "ttl">;
 
 const adminUserSchema = new Schema({
   userId: {
@@ -78,7 +81,7 @@ export const verificationCodeModel = model<verificationCodeItem>(
   {
     ...baseTableConfig,
     expires: {
-      ttl: 60 * 10, // 5 minutes
+      ttl: 1000 * 60 * 5, // 5 minutes
     },
   }
 );
@@ -139,7 +142,7 @@ export const putVerificationCode = async ({
   userId,
   codeHash,
   codeSalt,
-}: IVerificationCode) => {
+}: IVerificationCodeVariables) => {
   await verificationCodeModel.create({
     userId,
     codeHash,

@@ -10,9 +10,9 @@ import {
 import * as dynamoDB from "../../model";
 import * as ErrorCodes from "../../Error";
 import { expectError } from "@libs/testUtils";
-import { EncryptCommand, KMSClient } from "@aws-sdk/client-kms";
+import { KMSClient } from "@aws-sdk/client-kms";
 import { mockClient } from "aws-sdk-client-mock";
-import { stringToUint8Array } from "@libs/kms";
+import dayjs from "dayjs";
 
 const email = faker.internet.email();
 const userId = faker.datatype.uuid();
@@ -164,6 +164,27 @@ describe("putVerificationCode", () => {
         codeSalt,
       })
     );
+  });
+
+  it("sets ttl to 5 minutes from now", async () => {
+    const now = dayjs();
+    const fiveMinutesFromNow = now.add(5, "minutes").startOf("second");
+    const sixMinutesFromNow = now.add(6, "minutes");
+
+    await dynamoDB.putVerificationCode({
+      userId,
+      codeHash,
+      codeSalt,
+    });
+
+    const response = await fetchTestVerificationCode(userId);
+
+    const ttlDate = dayjs(response.ttl);
+
+    expect(ttlDate.valueOf()).toBeGreaterThanOrEqual(
+      fiveMinutesFromNow.valueOf()
+    );
+    expect(ttlDate.valueOf()).toBeLessThan(sixMinutesFromNow.valueOf());
   });
 });
 

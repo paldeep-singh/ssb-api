@@ -24,3 +24,12 @@ export const adminUserVerifyPasswordInput = {
   },
   required: ["email", "password"],
 } as const;
+
+export const adminUserVerifyEmailInput = {
+  type: "object",
+  properties: {
+    email: { type: "string" },
+    verificationCode: { type: "string" },
+  },
+  required: ["email", "verificationCode"],
+} as const;

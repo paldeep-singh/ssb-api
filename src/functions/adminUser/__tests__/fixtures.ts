@@ -2,6 +2,7 @@ import {
   adminUserModel,
   IAdminUser,
   IVerificationCode,
+  IVerificationCodeVariables,
   verificationCodeModel,
 } from "../model";
 import { faker } from "@faker-js/faker";
@@ -22,6 +23,8 @@ export const createVerificationCode = (
   userId: faker.datatype.uuid(),
   codeHash: faker.datatype.string(20),
   codeSalt: faker.datatype.string(10),
+  ttl: faker.date.soon().toISOString(),
+  ...verficationCodeAttributes,
 });
 
 export const insertTestAdminUser = async (
