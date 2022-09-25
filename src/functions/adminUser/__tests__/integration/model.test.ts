@@ -1,4 +1,4 @@
-import { faker } from "@faker-js/faker";
+import { Faker, faker } from "@faker-js/faker";
 import {
   createAdminUser,
   deleteTestAdminUser,
@@ -140,26 +140,26 @@ describe("setAdminUserPassword", () => {
 });
 
 describe("putVerificationCode", () => {
-  const email = faker.internet.email();
+  const userId = faker.datatype.uuid();
   const codeHash = faker.datatype.string(30);
   const codeSalt = faker.datatype.string(10);
 
   afterEach(async () => {
-    await deleteTestVerificationCode(email);
+    await deleteTestVerificationCode(userId);
   });
 
   it("creates a verification code", async () => {
     await dynamoDB.putVerificationCode({
-      email,
+      userId,
       codeHash,
       codeSalt,
     });
 
-    const response = await fetchTestVerificationCode(email);
+    const response = await fetchTestVerificationCode(userId);
 
     expect(response).toEqual(
       expect.objectContaining({
-        email,
+        userId,
         codeHash,
         codeSalt,
       })
@@ -169,13 +169,13 @@ describe("putVerificationCode", () => {
 
 describe("fetchVerificationCode", () => {
   describe("when a verification code for the user exists", () => {
-    const email = faker.internet.email();
+    const userId = faker.datatype.uuid();
     const codeHash = faker.datatype.string(30);
     const codeSalt = faker.datatype.string(10);
 
     beforeEach(async () => {
       await dynamoDB.putVerificationCode({
-        email,
+        userId,
         codeHash,
         codeSalt,
       });
@@ -186,11 +186,11 @@ describe("fetchVerificationCode", () => {
     });
 
     it("returns the verification code", async () => {
-      const response = await dynamoDB.fetchVerificationCode(email);
+      const response = await dynamoDB.fetchVerificationCode(userId);
 
       expect(response).toEqual(
         expect.objectContaining({
-          email,
+          userId,
           codeHash,
           codeSalt,
         })
@@ -200,31 +200,42 @@ describe("fetchVerificationCode", () => {
 
   describe("when a verification code for the user does not exist", () => {
     it(`returns undefined`, async () => {
-      const response = await dynamoDB.fetchVerificationCode(email);
-
-      expect(response).toEqual(undefined);
+      expect.assertions(1);
+      try {
+        await dynamoDB.fetchVerificationCode(userId);
+      } catch (error) {
+        expectError(error, ErrorCodes.Codes.NO_ACTIVE_VERIFICATION_CODE);
+      }
     });
   });
 });
 
 describe("deleteVerificationCode", () => {
-  const email = faker.internet.email();
+  const userId = faker.datatype.uuid();
   const codeHash = faker.datatype.string(30);
   const codeSalt = faker.datatype.string(10);
 
-  beforeEach(async () => {
-    await dynamoDB.putVerificationCode({
-      email,
-      codeHash,
-      codeSalt,
+  describe("if a verification code exists", () => {
+    beforeEach(async () => {
+      await dynamoDB.putVerificationCode({
+        userId,
+        codeHash,
+        codeSalt,
+      });
+    });
+
+    it("deletes the verification code", async () => {
+      await dynamoDB.deleteVerificationCode(email);
+
+      const response = await fetchTestVerificationCode(email);
+
+      expect(response).toEqual(undefined);
     });
   });
 
-  it("deletes the verification code", async () => {
-    await dynamoDB.deleteVerificationCode(email);
-
-    const response = await fetchTestVerificationCode(email);
-
-    expect(response).toEqual(undefined);
+  describe("if no verification code exists", () => {
+    it("does not throw an error", async () => {
+      await dynamoDB.deleteVerificationCode(email);
+    });
   });
 });

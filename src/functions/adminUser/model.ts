@@ -149,8 +149,12 @@ export const putVerificationCode = async ({
 
 export const fetchVerificationCode = async (
   userId: string
-): Promise<IVerificationCode | undefined> => {
+): Promise<IVerificationCode> => {
   const verificationCode = await verificationCodeModel.get(userId);
+
+  if (!verificationCode) {
+    throw new Error(Codes.NO_ACTIVE_VERIFICATION_CODE);
+  }
 
   return verificationCode;
 };

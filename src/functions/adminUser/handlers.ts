@@ -83,7 +83,6 @@ const setAdminUserPassword: LambdaEventWithResult<
   // Password must contain one number, one lowercase letter, one uppercase letter,
   // and be at least 8 characters long
   if (!passwordValidationRegex.test(newPassword)) {
-    console.log(newPassword);
     return formatJSONErrorResponse(400, Codes.INVALID_PASSWORD);
   }
 
@@ -133,9 +132,8 @@ export const sendAdminUserVerificationCode: LambdaEventWithResult<
 
     const codeHash = Uint8ArrayToStr(CiphertextBlob);
 
-    const oldVerificationCode = await fetchVerificationCode(userId);
-
-    if (oldVerificationCode) await deleteVerificationCode(userId);
+    // delete any existing verification code
+    await deleteVerificationCode(userId);
 
     await putVerificationCode({ userId, codeHash, codeSalt });
 

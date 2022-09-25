@@ -461,140 +461,65 @@ describe("handleSendAdminUserVerificationCode", () => {
         } as any);
     });
 
-    describe("when a verification code already exists", () => {
-      beforeEach(() => {
-        mocked(fetchVerificationCode).mockResolvedValueOnce(
-          createVerificationCode()
-        );
-      });
+    it("deletes any existing codes", async () => {
+      await handleSendAdminUserVerificationCode(
+        APIGatewayEvent,
+        context,
+        jest.fn()
+      );
 
-      it("deletes the old verification code", async () => {
-        await handleSendAdminUserVerificationCode(
-          APIGatewayEvent,
-          context,
-          jest.fn()
-        );
+      expect(mocked(deleteVerificationCode)).toHaveBeenCalledWith(userId);
+    });
 
-        expect(mocked(deleteVerificationCode)).toHaveBeenCalledWith(userId);
-      });
+    it("returns statusCode 200", async () => {
+      const { statusCode } = await handleSendAdminUserVerificationCode(
+        APIGatewayEvent,
+        context,
+        jest.fn()
+      );
 
-      it("returns statusCode 200", async () => {
-        const { statusCode } = await handleSendAdminUserVerificationCode(
-          APIGatewayEvent,
-          context,
-          jest.fn()
-        );
+      expect(statusCode).toEqual(200);
+    });
 
-        expect(statusCode).toEqual(200);
-      });
+    it("inserts the verification code into the table", async () => {
+      await handleSendAdminUserVerificationCode(
+        APIGatewayEvent,
+        context,
+        jest.fn()
+      );
 
-      it("inserts the verification code into the table", async () => {
-        await handleSendAdminUserVerificationCode(
-          APIGatewayEvent,
-          context,
-          jest.fn()
-        );
-
-        expect(mocked(putVerificationCode)).toHaveBeenCalledWith({
-          userId,
-          codeHash,
-          codeSalt,
-        });
-      });
-
-      it("sends the verification code to the user's email", async () => {
-        await handleSendAdminUserVerificationCode(
-          APIGatewayEvent,
-          context,
-          jest.fn()
-        );
-
-        mockedSESCLient.calls()[0].calledWithExactly(
-          new SendEmailCommand({
-            Destination: {
-              ToAddresses: [email],
-            },
-            Message: {
-              Subject: {
-                Data: "Spice Spice Baby Verification Code",
-              },
-              Body: {
-                Text: {
-                  Data: `Your verification code is: ${verificationCode}`,
-                },
-              },
-            },
-            Source: "spicespicebaby01@gmail.com",
-          })
-        );
+      expect(mocked(putVerificationCode)).toHaveBeenCalledWith({
+        userId,
+        codeHash,
+        codeSalt,
       });
     });
 
-    describe("when no verification code exists for the user", () => {
-      beforeEach(() => {
-        mocked(fetchVerificationCode).mockResolvedValue(undefined);
-      });
+    it("sends the verification code to the user's email", async () => {
+      await handleSendAdminUserVerificationCode(
+        APIGatewayEvent,
+        context,
+        jest.fn()
+      );
 
-      it("does not attempt to delete an existing verification code", async () => {
-        await handleSendAdminUserVerificationCode(
-          APIGatewayEvent,
-          context,
-          jest.fn()
-        );
-
-        expect(mocked(deleteVerificationCode)).not.toHaveBeenCalled();
-      });
-
-      it("returns statusCode 200", async () => {
-        const { statusCode } = await handleSendAdminUserVerificationCode(
-          APIGatewayEvent,
-          context,
-          jest.fn()
-        );
-
-        expect(statusCode).toEqual(200);
-      });
-
-      it("inserts the verification code into the table", async () => {
-        await handleSendAdminUserVerificationCode(
-          APIGatewayEvent,
-          context,
-          jest.fn()
-        );
-
-        expect(mocked(putVerificationCode)).toHaveBeenCalledWith({
-          userId,
-          codeHash,
-          codeSalt,
-        });
-      });
-
-      it("sends the verification code to the user's email", async () => {
-        await handleSendAdminUserVerificationCode(
-          APIGatewayEvent,
-          context,
-          jest.fn()
-        );
-
-        mockedSESCLient.calls()[0].calledWithExactly(
-          new SendEmailCommand({
-            Destination: {
-              ToAddresses: [email],
+      mockedSESCLient.calls()[0].calledWithExactly(
+        new SendEmailCommand({
+          Destination: {
+            ToAddresses: [email],
+          },
+          Message: {
+            Subject: {
+              Data: "Spice Spice Baby Verification Code",
             },
-            Message: {
-              Subject: {
-                Data: "Spice Spice Baby Verification Code",
-              },
-              Body: {
-                Text: {
-                  Data: `Your verification code is: ${verificationCode}`,
-                },
+            Body: {
+              Text: {
+                Data: `Your verification code is: ${verificationCode}`,
               },
             },
-            Source: "spicespicebaby01@gmail.com",
-          })
-        );
-      });
+          },
+          Source: "spicespicebaby01@gmail.com",
+        })
+      );
     });
   });
 });
