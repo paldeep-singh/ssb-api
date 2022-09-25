@@ -2,7 +2,7 @@ import {
   handleCheckAdminUserExists,
   handleCheckAdminUserAccountIsClaimed,
   handleSetAdminUserPassword,
-  handleCreateNewVerificationCode,
+  handleSendAdminUserVerificationCode,
 } from "../handlers";
 import { faker } from "@faker-js/faker";
 import {
@@ -26,7 +26,10 @@ import { KMSClient, EncryptCommand } from "@aws-sdk/client-kms";
 import { mockClient } from "aws-sdk-client-mock";
 import { stringToUint8Array } from "@libs/kms";
 import crypto from "crypto";
+import { SendEmailCommand, SESClient } from "@aws-sdk/client-ses";
+
 const mockedKMSClient = mockClient(KMSClient as any);
+const mockedSESCLient = mockClient(SESClient as any);
 
 jest.mock("../model");
 jest.mock("crypto");
@@ -391,8 +394,9 @@ describe("handleSetAdminUserPassword", () => {
   });
 });
 
-describe("handleCreateVerificationCode", () => {
+describe("handleSendAdminUserVerificationCode", () => {
   const email = faker.internet.email();
+
   const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
     typeof adminUserEmailInput
   >({
@@ -403,11 +407,13 @@ describe("handleCreateVerificationCode", () => {
 
   describe("when the user does not exist", () => {
     beforeEach(() => {
-      mocked(userDocumentExists).mockResolvedValueOnce(false);
+      mocked(fetchUserByEmail).mockRejectedValueOnce(
+        new Error(Codes.NON_EXISTENT_ADMIN_USER)
+      );
     });
 
     it("returns statusCode 404", async () => {
-      const { statusCode } = await handleCreateNewVerificationCode(
+      const { statusCode } = await handleSendAdminUserVerificationCode(
         APIGatewayEvent,
         context,
         jest.fn()
@@ -417,7 +423,7 @@ describe("handleCreateVerificationCode", () => {
     });
 
     it(`returns ${Codes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
-      const { body } = await handleCreateNewVerificationCode(
+      const { body } = await handleSendAdminUserVerificationCode(
         APIGatewayEvent,
         context,
         jest.fn()
@@ -428,17 +434,31 @@ describe("handleCreateVerificationCode", () => {
   });
 
   describe("when the user exists", () => {
-    jest.unmock("crypto");
+    const verificationCode = faker.random.alphaNumeric(6).toUpperCase();
     const codeHash = faker.datatype.string(20);
     const codeSalt = faker.datatype.string(10);
     const codeHashPlaintext = stringToUint8Array(codeHash);
+    const userId = faker.datatype.uuid();
+
+    const adminUser = createAdminUser({
+      email,
+      userId,
+    });
 
     beforeEach(() => {
-      mocked(userDocumentExists).mockResolvedValueOnce(true);
+      mocked(fetchUserByEmail).mockResolvedValue(adminUser);
 
       mockedKMSClient.on(EncryptCommand as any).resolves({
         CiphertextBlob: codeHashPlaintext,
       } as any);
+
+      mocked(crypto.randomBytes)
+        .mockReturnValueOnce({
+          toString: () => verificationCode,
+        } as any)
+        .mockReturnValueOnce({
+          toString: () => codeSalt,
+        } as any);
     });
 
     describe("when a verification code already exists", () => {
@@ -446,50 +466,134 @@ describe("handleCreateVerificationCode", () => {
         mocked(fetchVerificationCode).mockResolvedValueOnce(
           createVerificationCode()
         );
+      });
 
-        it("deletes the old verification code", async () => {
-          await handleCreateNewVerificationCode(
-            APIGatewayEvent,
-            context,
-            jest.fn()
-          );
+      it("deletes the old verification code", async () => {
+        await handleSendAdminUserVerificationCode(
+          APIGatewayEvent,
+          context,
+          jest.fn()
+        );
 
-          expect(mocked(deleteVerificationCode)).toHaveBeenCalledWith(email);
+        expect(mocked(deleteVerificationCode)).toHaveBeenCalledWith(userId);
+      });
+
+      it("returns statusCode 200", async () => {
+        const { statusCode } = await handleSendAdminUserVerificationCode(
+          APIGatewayEvent,
+          context,
+          jest.fn()
+        );
+
+        expect(statusCode).toEqual(200);
+      });
+
+      it("inserts the verification code into the table", async () => {
+        await handleSendAdminUserVerificationCode(
+          APIGatewayEvent,
+          context,
+          jest.fn()
+        );
+
+        expect(mocked(putVerificationCode)).toHaveBeenCalledWith({
+          userId,
+          codeHash,
+          codeSalt,
         });
+      });
 
-        it("returns statusCode 200", async () => {
-          const { statusCode } = await handleCreateNewVerificationCode(
-            APIGatewayEvent,
-            context,
-            jest.fn()
-          );
+      it("sends the verification code to the user's email", async () => {
+        await handleSendAdminUserVerificationCode(
+          APIGatewayEvent,
+          context,
+          jest.fn()
+        );
 
-          expect(statusCode).toEqual(200);
+        mockedSESCLient.calls()[0].calledWithExactly(
+          new SendEmailCommand({
+            Destination: {
+              ToAddresses: [email],
+            },
+            Message: {
+              Subject: {
+                Data: "Spice Spice Baby Verification Code",
+              },
+              Body: {
+                Text: {
+                  Data: `Your verification code is: ${verificationCode}`,
+                },
+              },
+            },
+            Source: "spicespicebaby01@gmail.com",
+          })
+        );
+      });
+    });
+
+    describe("when no verification code exists for the user", () => {
+      beforeEach(() => {
+        mocked(fetchVerificationCode).mockResolvedValue(undefined);
+      });
+
+      it("does not attempt to delete an existing verification code", async () => {
+        await handleSendAdminUserVerificationCode(
+          APIGatewayEvent,
+          context,
+          jest.fn()
+        );
+
+        expect(mocked(deleteVerificationCode)).not.toHaveBeenCalled();
+      });
+
+      it("returns statusCode 200", async () => {
+        const { statusCode } = await handleSendAdminUserVerificationCode(
+          APIGatewayEvent,
+          context,
+          jest.fn()
+        );
+
+        expect(statusCode).toEqual(200);
+      });
+
+      it("inserts the verification code into the table", async () => {
+        await handleSendAdminUserVerificationCode(
+          APIGatewayEvent,
+          context,
+          jest.fn()
+        );
+
+        expect(mocked(putVerificationCode)).toHaveBeenCalledWith({
+          userId,
+          codeHash,
+          codeSalt,
         });
+      });
 
-        it("inserts the verification code into the table", async () => {
-          await handleCreateNewVerificationCode(
-            APIGatewayEvent,
-            context,
-            jest.fn()
-          );
+      it("sends the verification code to the user's email", async () => {
+        await handleSendAdminUserVerificationCode(
+          APIGatewayEvent,
+          context,
+          jest.fn()
+        );
 
-          expect(mocked(putVerificationCode)).toHaveBeenCalledWith({
-            email,
-            codeHash: codeHashPlaintext,
-            codeSalt,
-          });
-        });
-
-        it(`returns verificationCodeCreated true`, async () => {
-          const { body } = await handleCreateNewVerificationCode(
-            APIGatewayEvent,
-            context,
-            jest.fn()
-          );
-
-          expect(JSON.parse(body).verificationCodeCreated).toEqual(true);
-        });
+        mockedSESCLient.calls()[0].calledWithExactly(
+          new SendEmailCommand({
+            Destination: {
+              ToAddresses: [email],
+            },
+            Message: {
+              Subject: {
+                Data: "Spice Spice Baby Verification Code",
+              },
+              Body: {
+                Text: {
+                  Data: `Your verification code is: ${verificationCode}`,
+                },
+              },
+            },
+            Source: "spicespicebaby01@gmail.com",
+          })
+        );
       });
     });
   });

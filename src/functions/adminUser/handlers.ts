@@ -111,56 +111,62 @@ export const sendAdminUserVerificationCode: LambdaEventWithResult<
   typeof adminUserEmailInput
 > = async (event) => {
   const { email } = event.body;
-  console.log("email", email);
-  if (!(await userDocumentExists(email)))
-    return formatJSONErrorResponse(404, Codes.NON_EXISTENT_ADMIN_USER);
 
-  const verificationCode = randomBytes(3).toString("hex").toUpperCase();
+  try {
+    const { userId } = await fetchUserByEmail(email);
 
-  const codeSalt = randomBytes(256).toString();
+    const verificationCode = randomBytes(3).toString("hex").toUpperCase();
 
-  const Plaintext = stringToUint8Array(verificationCode + codeSalt);
+    const codeSalt = randomBytes(256).toString();
 
-  const encrypt = new EncryptCommand({
-    KeyId: ADMIN_USER_VERIFICATION_CODE_KEY_ALIAS,
-    Plaintext,
-  });
+    const Plaintext = stringToUint8Array(verificationCode + codeSalt);
 
-  const { CiphertextBlob } = await kmsClient.send(encrypt);
+    const encrypt = new EncryptCommand({
+      KeyId: ADMIN_USER_VERIFICATION_CODE_KEY_ALIAS,
+      Plaintext,
+    });
 
-  if (!CiphertextBlob)
-    return formatJSONErrorResponse(502, Codes.ENCRYPTION_FAILED);
+    const { CiphertextBlob } = await kmsClient.send(encrypt);
 
-  const codeHash = Uint8ArrayToStr(CiphertextBlob);
+    if (!CiphertextBlob)
+      return formatJSONErrorResponse(502, Codes.ENCRYPTION_FAILED);
 
-  const { userId } = await fetchUserByEmail(email);
+    const codeHash = Uint8ArrayToStr(CiphertextBlob);
 
-  const oldVerificationCode = await fetchVerificationCode(userId);
+    const oldVerificationCode = await fetchVerificationCode(userId);
 
-  if (oldVerificationCode) await deleteVerificationCode(userId);
+    if (oldVerificationCode) await deleteVerificationCode(userId);
 
-  await putVerificationCode({ userId, codeHash, codeSalt });
+    await putVerificationCode({ userId, codeHash, codeSalt });
 
-  const sendEmail = new SendEmailCommand({
-    Destination: {
-      ToAddresses: [email],
-    },
-    Message: {
-      Subject: {
-        Data: "Spice Spice Baby Verification Code",
+    const sendEmail = new SendEmailCommand({
+      Destination: {
+        ToAddresses: [email],
       },
-      Body: {
-        Text: {
-          Data: `Your verification code is: ${verificationCode}`,
+      Message: {
+        Subject: {
+          Data: "Spice Spice Baby Verification Code",
+        },
+        Body: {
+          Text: {
+            Data: `Your verification code is: ${verificationCode}`,
+          },
         },
       },
-    },
-    Source: "spicespicebaby01@gmail.com",
-  });
+      Source: "spicespicebaby01@gmail.com",
+    });
 
-  await sesClient.send(sendEmail);
+    await sesClient.send(sendEmail);
 
-  return formatJSONResponse(200, {});
+    return formatJSONResponse(200, {});
+  } catch (error) {
+    if (!isError(error)) throw error;
+
+    if (error.message === Codes.NON_EXISTENT_ADMIN_USER)
+      return formatJSONErrorResponse(404, Codes.NON_EXISTENT_ADMIN_USER);
+
+    throw error;
+  }
 };
 
 // TODO: Rework into login function

@@ -19,7 +19,7 @@ export const createAdminUser = (
 export const createVerificationCode = (
   verficationCodeAttributes: Partial<IVerificationCode> = {}
 ): IVerificationCode => ({
-  email: faker.internet.email(),
+  userId: faker.datatype.uuid(),
   codeHash: faker.datatype.string(20),
   codeSalt: faker.datatype.string(10),
 });
