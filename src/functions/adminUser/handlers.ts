@@ -167,7 +167,7 @@ export const sendAdminUserVerificationCode: LambdaEventWithResult<
   }
 };
 
-export const verifyAdminUserEmail: LambdaEventWithResult<
+const verifyAdminUserEmail: LambdaEventWithResult<
   typeof adminUserVerifyEmailInput
 > = async (event) => {
   const { email, verificationCode: providedCode } = event.body;
@@ -177,13 +177,11 @@ export const verifyAdminUserEmail: LambdaEventWithResult<
 
     const { codeHash, codeSalt, ttl } = await fetchVerificationCode(userId);
 
-    if (!ttl)
-      return formatJSONErrorResponse(500, Codes.INVALID_VERIFICATION_CODE);
-
     const now = new Date().getTime();
     const codeExpiry = new Date(ttl).getTime();
 
     if (now > codeExpiry) {
+      await deleteVerificationCode(userId);
       return formatJSONErrorResponse(400, Codes.VERIFICATION_CODE_EXPIRED);
     }
 
@@ -264,5 +262,7 @@ export const handleSetAdminUserPassword = middyfy(setAdminUserPassword);
 export const handleSendAdminUserVerificationCode = middyfy(
   sendAdminUserVerificationCode
 );
+
+export const handleVerifyAdminUserEmail = middyfy(verifyAdminUserEmail);
 
 // export const handleVerifyAdminUserPassword = middyfy(verifyAdminUserPassword);

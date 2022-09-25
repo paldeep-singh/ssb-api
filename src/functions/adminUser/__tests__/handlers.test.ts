@@ -3,13 +3,18 @@ import {
   handleCheckAdminUserAccountIsClaimed,
   handleSetAdminUserPassword,
   handleSendAdminUserVerificationCode,
+  handleVerifyAdminUserEmail,
 } from "../handlers";
 import { faker } from "@faker-js/faker";
 import {
   createParsedAPIGatewayProxyEvent,
   createAPIGatewayProxyEventContext,
 } from "@libs/fixtures";
-import { adminUserEmailInput, adminUserSetPasswordInput } from "../schema";
+import {
+  adminUserEmailInput,
+  adminUserSetPasswordInput,
+  adminUserVerifyEmailInput,
+} from "../schema";
 import {
   userDocumentExists,
   fetchUserByEmail,
@@ -22,11 +27,12 @@ import { Codes } from "../Error";
 import { mocked } from "jest-mock";
 import { APIGatewayProxyResult, Context } from "aws-lambda";
 import { createAdminUser, createVerificationCode } from "./fixtures";
-import { KMSClient, EncryptCommand } from "@aws-sdk/client-kms";
+import { KMSClient, EncryptCommand, DataKeySpec } from "@aws-sdk/client-kms";
 import { mockClient } from "aws-sdk-client-mock";
 import { stringToUint8Array } from "@libs/kms";
 import crypto from "crypto";
 import { SendEmailCommand, SESClient } from "@aws-sdk/client-ses";
+import dayjs from "dayjs";
 
 const mockedKMSClient = mockClient(KMSClient as any);
 const mockedSESCLient = mockClient(SESClient as any);
@@ -520,6 +526,233 @@ describe("handleSendAdminUserVerificationCode", () => {
           Source: "spicespicebaby01@gmail.com",
         })
       );
+    });
+  });
+});
+
+describe("handleVerifyAdminUserEmail", () => {
+  const email = faker.internet.email();
+  const verificationCode = faker.random.alphaNumeric(6).toUpperCase();
+
+  const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
+    typeof adminUserVerifyEmailInput
+  >({
+    body: {
+      email,
+      verificationCode,
+    },
+  });
+
+  describe("when the user does not exist", () => {
+    beforeEach(() => {
+      mocked(fetchUserByEmail).mockRejectedValueOnce(
+        new Error(Codes.NON_EXISTENT_ADMIN_USER)
+      );
+    });
+
+    it("returns statusCode 404", async () => {
+      const { statusCode } = await handleVerifyAdminUserEmail(
+        APIGatewayEvent,
+        context,
+        jest.fn()
+      );
+
+      expect(statusCode).toEqual(404);
+    });
+
+    it(`returns ${Codes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
+      const { body } = await handleVerifyAdminUserEmail(
+        APIGatewayEvent,
+        context,
+        jest.fn()
+      );
+
+      expect(JSON.parse(body).message).toEqual(Codes.NON_EXISTENT_ADMIN_USER);
+    });
+  });
+
+  describe("when the user exists", () => {
+    const userId = faker.datatype.uuid();
+
+    const adminUser = createAdminUser({
+      email,
+      userId,
+    });
+
+    beforeEach(() => {
+      mocked(fetchUserByEmail).mockResolvedValue(adminUser);
+    });
+
+    describe("when no verification code exists for the user", () => {
+      beforeEach(() => {
+        mocked(fetchVerificationCode).mockRejectedValueOnce(
+          new Error(Codes.NO_ACTIVE_VERIFICATION_CODE)
+        );
+      });
+
+      it("returns statusCode 404", async () => {
+        const { statusCode } = await handleVerifyAdminUserEmail(
+          APIGatewayEvent,
+          context,
+          jest.fn()
+        );
+
+        expect(statusCode).toEqual(404);
+      });
+
+      it(`returns ${Codes.NO_ACTIVE_VERIFICATION_CODE} error message`, async () => {
+        const { body } = await handleVerifyAdminUserEmail(
+          APIGatewayEvent,
+          context,
+          jest.fn()
+        );
+
+        expect(JSON.parse(body).message).toEqual(
+          Codes.NO_ACTIVE_VERIFICATION_CODE
+        );
+      });
+    });
+
+    describe("when a verification code exists for the user", () => {
+      const expiredCode = createVerificationCode({
+        userId,
+        ttl: new Date().toISOString(),
+      });
+      describe("when the verification code is expired", () => {
+        beforeEach(() => {
+          mocked(fetchVerificationCode).mockResolvedValueOnce(expiredCode);
+        });
+
+        it("returns statusCode 400", async () => {
+          const { statusCode } = await handleVerifyAdminUserEmail(
+            APIGatewayEvent,
+            context,
+            jest.fn()
+          );
+
+          expect(statusCode).toEqual(400);
+        });
+
+        it(`returns ${Codes.VERIFICATION_CODE_EXPIRED} error message`, async () => {
+          const { body } = await handleVerifyAdminUserEmail(
+            APIGatewayEvent,
+            context,
+            jest.fn()
+          );
+
+          expect(JSON.parse(body).message).toEqual(
+            Codes.VERIFICATION_CODE_EXPIRED
+          );
+        });
+      });
+    });
+
+    describe("when the verification code has not expired", () => {
+      const codeHash = faker.datatype.string(20);
+      const storedCode = createVerificationCode({
+        userId,
+        ttl: dayjs().add(5, "minute").toISOString(),
+        codeHash,
+      });
+
+      beforeEach(() => {
+        mocked(fetchVerificationCode).mockResolvedValueOnce(storedCode);
+      });
+
+      describe("if the encryption fails", () => {
+        beforeEach(() => {
+          mockedKMSClient.on(EncryptCommand as any).resolves({
+            CipherTextBlob: undefined,
+          } as any);
+        });
+
+        it("returns statusCode 500", async () => {
+          const { statusCode } = await handleVerifyAdminUserEmail(
+            APIGatewayEvent,
+            context,
+            jest.fn()
+          );
+
+          expect(statusCode).toEqual(502);
+        });
+
+        it(`returns ${Codes.ENCRYPTION_FAILED} error message`, async () => {
+          const { body } = await handleVerifyAdminUserEmail(
+            APIGatewayEvent,
+            context,
+            jest.fn()
+          );
+
+          expect(JSON.parse(body).message).toEqual(Codes.ENCRYPTION_FAILED);
+        });
+      });
+
+      describe("if the encryption succeeds", () => {
+        describe("if the verification code does not match", () => {
+          beforeEach(() => {
+            mockedKMSClient.on(EncryptCommand as any).resolves({
+              CiphertextBlob: stringToUint8Array(faker.datatype.string(20)),
+            } as any);
+          });
+
+          it("returns statusCode 400", async () => {
+            const { statusCode } = await handleVerifyAdminUserEmail(
+              APIGatewayEvent,
+              context,
+              jest.fn()
+            );
+
+            expect(statusCode).toEqual(400);
+          });
+
+          it(`returns ${Codes.INVALID_VERIFICATION_CODE} error message`, async () => {
+            const { body } = await handleVerifyAdminUserEmail(
+              APIGatewayEvent,
+              context,
+              jest.fn()
+            );
+
+            expect(JSON.parse(body).message).toEqual(
+              Codes.INVALID_VERIFICATION_CODE
+            );
+          });
+
+          it("does not delete the verification code", async () => {
+            await handleVerifyAdminUserEmail(
+              APIGatewayEvent,
+              context,
+              jest.fn()
+            );
+
+            expect(mocked(deleteVerificationCode)).not.toHaveBeenCalled();
+          });
+        });
+      });
+
+      describe('if the verification code matches"', () => {
+        const codeHashPlaintext = stringToUint8Array(codeHash);
+        beforeEach(() => {
+          mockedKMSClient.on(EncryptCommand as any).resolves({
+            CiphertextBlob: codeHashPlaintext,
+          } as any);
+        });
+
+        it("returns statusCode 200", async () => {
+          const { statusCode } = await handleVerifyAdminUserEmail(
+            APIGatewayEvent,
+            context,
+            jest.fn()
+          );
+
+          expect(statusCode).toEqual(200);
+        });
+
+        it("deletes the verification code", async () => {
+          await handleVerifyAdminUserEmail(APIGatewayEvent, context, jest.fn());
+
+          expect(mocked(deleteVerificationCode)).toHaveBeenCalledWith(userId);
+        });
+      });
     });
   });
 });
