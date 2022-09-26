@@ -1,4 +1,7 @@
-export enum Codes {
+import { LOCAL_DYNAMODB_ENDPOINT } from "@libs/env";
+import { aws } from "dynamoose";
+
+export enum ErrorCodes {
   NON_EXISTENT_ADMIN_USER = "NON_EXISTENT_ADMIN_USER",
   PASSWORD_MISMATCH = "PASSWORD_MISMATCH",
   ENCRYPTION_FAILED = "ENCRYPTION_FAILED",
@@ -8,3 +11,17 @@ export enum Codes {
   INVALID_VERIFICATION_CODE = "INVALID_VERIFICATION_CODE",
   VERIFICATION_CODE_EXPIRED = "VERIFICATION_CODE_EXPIRED",
 }
+
+if (LOCAL_DYNAMODB_ENDPOINT) {
+  const localDDB = new aws.ddb.DynamoDB({
+    region: "local",
+    endpoint: LOCAL_DYNAMODB_ENDPOINT,
+  });
+
+  aws.ddb.set(localDDB);
+}
+
+export const baseTableConfig = {
+  create: !!LOCAL_DYNAMODB_ENDPOINT,
+  waitForActive: !!LOCAL_DYNAMODB_ENDPOINT,
+};

@@ -16,28 +16,31 @@ import {
   adminUserVerifyEmailInput,
 } from "../schema";
 import {
-  userDocumentExists,
-  fetchUserByEmail,
-  setPassword,
   putVerificationCode,
   fetchVerificationCode,
   deleteVerificationCode,
-} from "../model";
-import { Codes } from "../Error";
+} from "../models/verificationCodes";
+import { ErrorCodes } from "../misc";
 import { mocked } from "jest-mock";
-import { APIGatewayProxyResult, Context } from "aws-lambda";
+import { APIGatewayProxyResult } from "aws-lambda";
 import { createAdminUser, createVerificationCode } from "./fixtures";
-import { KMSClient, EncryptCommand, DataKeySpec } from "@aws-sdk/client-kms";
+import { KMSClient, EncryptCommand } from "@aws-sdk/client-kms";
 import { mockClient } from "aws-sdk-client-mock";
 import { stringToUint8Array } from "@libs/kms";
 import crypto from "crypto";
 import { SendEmailCommand, SESClient } from "@aws-sdk/client-ses";
 import dayjs from "dayjs";
+import {
+  userDocumentExists,
+  fetchUserByEmail,
+  setPassword,
+} from "../models/adminUsers";
 
 const mockedKMSClient = mockClient(KMSClient as any);
 const mockedSESCLient = mockClient(SESClient as any);
 
-jest.mock("../model");
+jest.mock("../models/verificationCodes");
+jest.mock("../models/adminUsers");
 jest.mock("crypto");
 jest.mock("@middy/core", () => {
   return (handler: any) => {
@@ -146,7 +149,7 @@ describe("handleCheckAdminUserAccountIsClaimed", () => {
   describe("when the user does not exist", () => {
     beforeEach(() => {
       mocked(fetchUserByEmail).mockRejectedValueOnce(
-        new Error(Codes.NON_EXISTENT_ADMIN_USER)
+        new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER)
       );
     });
 
@@ -160,14 +163,16 @@ describe("handleCheckAdminUserAccountIsClaimed", () => {
       expect(statusCode).toEqual(404);
     });
 
-    it(`returns ${Codes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
+    it(`returns ${ErrorCodes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
       const { body } = await handleCheckAdminUserAccountIsClaimed(
         APIGatewayEvent,
         context,
         jest.fn()
       );
 
-      expect(JSON.parse(body).message).toEqual(Codes.NON_EXISTENT_ADMIN_USER);
+      expect(JSON.parse(body).message).toEqual(
+        ErrorCodes.NON_EXISTENT_ADMIN_USER
+      );
     });
   });
 });
@@ -199,14 +204,16 @@ describe("handleSetAdminUserPassword", () => {
       expect(statusCode).toEqual(404);
     });
 
-    it(`returns ${Codes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
+    it(`returns ${ErrorCodes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
       const { body } = await handleSetAdminUserPassword(
         APIGatewayEvent,
         context,
         jest.fn()
       );
 
-      expect(JSON.parse(body).message).toEqual(Codes.NON_EXISTENT_ADMIN_USER);
+      expect(JSON.parse(body).message).toEqual(
+        ErrorCodes.NON_EXISTENT_ADMIN_USER
+      );
     });
   });
 
@@ -303,14 +310,16 @@ describe("handleSetAdminUserPassword", () => {
             expect(statusCode).toEqual(502);
           });
 
-          it(`returns ${Codes.ENCRYPTION_FAILED} error message`, async () => {
+          it(`returns ${ErrorCodes.ENCRYPTION_FAILED} error message`, async () => {
             const { body } = await handleSetAdminUserPassword(
               APIGatewayEvent,
               context,
               jest.fn()
             );
 
-            expect(JSON.parse(body).message).toEqual(Codes.ENCRYPTION_FAILED);
+            expect(JSON.parse(body).message).toEqual(
+              ErrorCodes.ENCRYPTION_FAILED
+            );
           });
         });
       });
@@ -349,14 +358,16 @@ describe("handleSetAdminUserPassword", () => {
             expect(statusCode).toEqual(400);
           });
 
-          it(`returns ${Codes.INVALID_PASSWORD} error message`, async () => {
+          it(`returns ${ErrorCodes.INVALID_PASSWORD} error message`, async () => {
             const { body } = await handleSetAdminUserPassword(
               APIGatewayEvent,
               context,
               jest.fn()
             );
 
-            expect(JSON.parse(body).message).toEqual(Codes.INVALID_PASSWORD);
+            expect(JSON.parse(body).message).toEqual(
+              ErrorCodes.INVALID_PASSWORD
+            );
           });
         });
       });
@@ -388,14 +399,14 @@ describe("handleSetAdminUserPassword", () => {
       expect(statusCode).toEqual(400);
     });
 
-    it(`returns ${Codes.PASSWORD_MISMATCH} error message`, async () => {
+    it(`returns ${ErrorCodes.PASSWORD_MISMATCH} error message`, async () => {
       const { body } = await handleSetAdminUserPassword(
         APIGatewayEvent,
         context,
         jest.fn()
       );
 
-      expect(JSON.parse(body).message).toEqual(Codes.PASSWORD_MISMATCH);
+      expect(JSON.parse(body).message).toEqual(ErrorCodes.PASSWORD_MISMATCH);
     });
   });
 });
@@ -414,7 +425,7 @@ describe("handleSendAdminUserVerificationCode", () => {
   describe("when the user does not exist", () => {
     beforeEach(() => {
       mocked(fetchUserByEmail).mockRejectedValueOnce(
-        new Error(Codes.NON_EXISTENT_ADMIN_USER)
+        new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER)
       );
     });
 
@@ -428,14 +439,16 @@ describe("handleSendAdminUserVerificationCode", () => {
       expect(statusCode).toEqual(404);
     });
 
-    it(`returns ${Codes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
+    it(`returns ${ErrorCodes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
       const { body } = await handleSendAdminUserVerificationCode(
         APIGatewayEvent,
         context,
         jest.fn()
       );
 
-      expect(JSON.parse(body).message).toEqual(Codes.NON_EXISTENT_ADMIN_USER);
+      expect(JSON.parse(body).message).toEqual(
+        ErrorCodes.NON_EXISTENT_ADMIN_USER
+      );
     });
   });
 
@@ -546,7 +559,7 @@ describe("handleVerifyAdminUserEmail", () => {
   describe("when the user does not exist", () => {
     beforeEach(() => {
       mocked(fetchUserByEmail).mockRejectedValueOnce(
-        new Error(Codes.NON_EXISTENT_ADMIN_USER)
+        new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER)
       );
     });
 
@@ -560,14 +573,16 @@ describe("handleVerifyAdminUserEmail", () => {
       expect(statusCode).toEqual(404);
     });
 
-    it(`returns ${Codes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
+    it(`returns ${ErrorCodes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
       const { body } = await handleVerifyAdminUserEmail(
         APIGatewayEvent,
         context,
         jest.fn()
       );
 
-      expect(JSON.parse(body).message).toEqual(Codes.NON_EXISTENT_ADMIN_USER);
+      expect(JSON.parse(body).message).toEqual(
+        ErrorCodes.NON_EXISTENT_ADMIN_USER
+      );
     });
   });
 
@@ -586,7 +601,7 @@ describe("handleVerifyAdminUserEmail", () => {
     describe("when no verification code exists for the user", () => {
       beforeEach(() => {
         mocked(fetchVerificationCode).mockRejectedValueOnce(
-          new Error(Codes.NO_ACTIVE_VERIFICATION_CODE)
+          new Error(ErrorCodes.NO_ACTIVE_VERIFICATION_CODE)
         );
       });
 
@@ -600,7 +615,7 @@ describe("handleVerifyAdminUserEmail", () => {
         expect(statusCode).toEqual(404);
       });
 
-      it(`returns ${Codes.NO_ACTIVE_VERIFICATION_CODE} error message`, async () => {
+      it(`returns ${ErrorCodes.NO_ACTIVE_VERIFICATION_CODE} error message`, async () => {
         const { body } = await handleVerifyAdminUserEmail(
           APIGatewayEvent,
           context,
@@ -608,7 +623,7 @@ describe("handleVerifyAdminUserEmail", () => {
         );
 
         expect(JSON.parse(body).message).toEqual(
-          Codes.NO_ACTIVE_VERIFICATION_CODE
+          ErrorCodes.NO_ACTIVE_VERIFICATION_CODE
         );
       });
     });
@@ -633,7 +648,7 @@ describe("handleVerifyAdminUserEmail", () => {
           expect(statusCode).toEqual(400);
         });
 
-        it(`returns ${Codes.VERIFICATION_CODE_EXPIRED} error message`, async () => {
+        it(`returns ${ErrorCodes.VERIFICATION_CODE_EXPIRED} error message`, async () => {
           const { body } = await handleVerifyAdminUserEmail(
             APIGatewayEvent,
             context,
@@ -641,7 +656,7 @@ describe("handleVerifyAdminUserEmail", () => {
           );
 
           expect(JSON.parse(body).message).toEqual(
-            Codes.VERIFICATION_CODE_EXPIRED
+            ErrorCodes.VERIFICATION_CODE_EXPIRED
           );
         });
       });
@@ -676,14 +691,16 @@ describe("handleVerifyAdminUserEmail", () => {
           expect(statusCode).toEqual(502);
         });
 
-        it(`returns ${Codes.ENCRYPTION_FAILED} error message`, async () => {
+        it(`returns ${ErrorCodes.ENCRYPTION_FAILED} error message`, async () => {
           const { body } = await handleVerifyAdminUserEmail(
             APIGatewayEvent,
             context,
             jest.fn()
           );
 
-          expect(JSON.parse(body).message).toEqual(Codes.ENCRYPTION_FAILED);
+          expect(JSON.parse(body).message).toEqual(
+            ErrorCodes.ENCRYPTION_FAILED
+          );
         });
       });
 
@@ -705,7 +722,7 @@ describe("handleVerifyAdminUserEmail", () => {
             expect(statusCode).toEqual(400);
           });
 
-          it(`returns ${Codes.INVALID_VERIFICATION_CODE} error message`, async () => {
+          it(`returns ${ErrorCodes.INVALID_VERIFICATION_CODE} error message`, async () => {
             const { body } = await handleVerifyAdminUserEmail(
               APIGatewayEvent,
               context,
@@ -713,7 +730,7 @@ describe("handleVerifyAdminUserEmail", () => {
             );
 
             expect(JSON.parse(body).message).toEqual(
-              Codes.INVALID_VERIFICATION_CODE
+              ErrorCodes.INVALID_VERIFICATION_CODE
             );
           });
 

@@ -1,10 +1,9 @@
 import {
-  adminUserModel,
-  IAdminUser,
   IVerificationCode,
   IVerificationCodeVariables,
   verificationCodeModel,
-} from "../model";
+} from "../models/verificationCodes";
+import { IAdminUser, adminUserModel } from "../models/adminUsers";
 import { faker } from "@faker-js/faker";
 
 export const createAdminUser = (

@@ -1,12 +1,9 @@
 import {
-  userDocumentExists,
-  fetchUserByEmail,
-  setPassword,
   putVerificationCode,
   fetchVerificationCode,
   deleteVerificationCode,
-} from "./model";
-import { Codes } from "./Error";
+} from "./models/verificationCodes";
+import { ErrorCodes } from "./misc";
 import {
   LambdaEventWithResult,
   formatJSONResponse,
@@ -28,6 +25,11 @@ import {
 import { EncryptCommand } from "@aws-sdk/client-kms";
 import { sesClient } from "@libs/ses";
 import { SendEmailCommand } from "@aws-sdk/client-ses";
+import {
+  userDocumentExists,
+  fetchUserByEmail,
+  setPassword,
+} from "./models/adminUsers";
 
 export const passwordValidationRegex =
   /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$/;
@@ -59,7 +61,7 @@ const checkAdminUserAccountIsClaimed: LambdaEventWithResult<
   } catch (error) {
     if (!isError(error)) throw error;
 
-    if (error.message === Codes.NON_EXISTENT_ADMIN_USER) {
+    if (error.message === ErrorCodes.NON_EXISTENT_ADMIN_USER) {
       return formatJSONErrorResponse(404, error.message);
     }
 
@@ -73,17 +75,17 @@ const setAdminUserPassword: LambdaEventWithResult<
   const { email, newPassword, confirmNewPassword } = event.body;
 
   if (!(await userDocumentExists(email))) {
-    return formatJSONErrorResponse(404, Codes.NON_EXISTENT_ADMIN_USER);
+    return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER);
   }
 
   if (newPassword !== confirmNewPassword) {
-    return formatJSONErrorResponse(400, Codes.PASSWORD_MISMATCH);
+    return formatJSONErrorResponse(400, ErrorCodes.PASSWORD_MISMATCH);
   }
 
   // Password must contain one number, one lowercase letter, one uppercase letter,
   // and be at least 8 characters long
   if (!passwordValidationRegex.test(newPassword)) {
-    return formatJSONErrorResponse(400, Codes.INVALID_PASSWORD);
+    return formatJSONErrorResponse(400, ErrorCodes.INVALID_PASSWORD);
   }
 
   const newPasswordSalt = randomBytes(256).toString();
@@ -98,7 +100,7 @@ const setAdminUserPassword: LambdaEventWithResult<
   const { CiphertextBlob } = await kmsClient.send(encrypt);
 
   if (!CiphertextBlob)
-    return formatJSONErrorResponse(502, Codes.ENCRYPTION_FAILED);
+    return formatJSONErrorResponse(502, ErrorCodes.ENCRYPTION_FAILED);
 
   const newPasswordHash = Uint8ArrayToStr(CiphertextBlob);
 
@@ -128,7 +130,7 @@ export const sendAdminUserVerificationCode: LambdaEventWithResult<
     const { CiphertextBlob } = await kmsClient.send(encrypt);
 
     if (!CiphertextBlob)
-      return formatJSONErrorResponse(502, Codes.ENCRYPTION_FAILED);
+      return formatJSONErrorResponse(502, ErrorCodes.ENCRYPTION_FAILED);
 
     const codeHash = Uint8ArrayToStr(CiphertextBlob);
 
@@ -160,8 +162,8 @@ export const sendAdminUserVerificationCode: LambdaEventWithResult<
   } catch (error) {
     if (!isError(error)) throw error;
 
-    if (error.message === Codes.NON_EXISTENT_ADMIN_USER)
-      return formatJSONErrorResponse(404, Codes.NON_EXISTENT_ADMIN_USER);
+    if (error.message === ErrorCodes.NON_EXISTENT_ADMIN_USER)
+      return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER);
 
     throw error;
   }
@@ -182,7 +184,7 @@ const verifyAdminUserEmail: LambdaEventWithResult<
 
     if (now > codeExpiry) {
       await deleteVerificationCode(userId);
-      return formatJSONErrorResponse(400, Codes.VERIFICATION_CODE_EXPIRED);
+      return formatJSONErrorResponse(400, ErrorCodes.VERIFICATION_CODE_EXPIRED);
     }
 
     const Plaintext = stringToUint8Array(providedCode + codeSalt);
@@ -195,12 +197,12 @@ const verifyAdminUserEmail: LambdaEventWithResult<
     const { CiphertextBlob } = await kmsClient.send(encrypt);
 
     if (!CiphertextBlob)
-      return formatJSONErrorResponse(502, Codes.ENCRYPTION_FAILED);
+      return formatJSONErrorResponse(502, ErrorCodes.ENCRYPTION_FAILED);
 
     const codeHashToCompare = Uint8ArrayToStr(CiphertextBlob);
 
     if (codeHashToCompare !== codeHash) {
-      return formatJSONErrorResponse(400, Codes.INVALID_VERIFICATION_CODE);
+      return formatJSONErrorResponse(400, ErrorCodes.INVALID_VERIFICATION_CODE);
     }
 
     await deleteVerificationCode(userId);
@@ -209,11 +211,14 @@ const verifyAdminUserEmail: LambdaEventWithResult<
   } catch (error) {
     if (!isError(error)) throw error;
 
-    if (error.message === Codes.NON_EXISTENT_ADMIN_USER)
-      return formatJSONErrorResponse(404, Codes.NON_EXISTENT_ADMIN_USER);
+    if (error.message === ErrorCodes.NON_EXISTENT_ADMIN_USER)
+      return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER);
 
-    if (error.message === Codes.NO_ACTIVE_VERIFICATION_CODE)
-      return formatJSONErrorResponse(404, Codes.NO_ACTIVE_VERIFICATION_CODE);
+    if (error.message === ErrorCodes.NO_ACTIVE_VERIFICATION_CODE)
+      return formatJSONErrorResponse(
+        404,
+        ErrorCodes.NO_ACTIVE_VERIFICATION_CODE
+      );
 
     throw error;
   }
