@@ -1,4 +1,8 @@
-import { adminUserEmailInput, adminUserSetPasswordInput } from "./schema";
+import {
+  adminUserEmailInput,
+  adminUserSetPasswordInput,
+  adminUserVerifyEmailInput,
+} from "./schema";
 import { handlerPath, handlerRoute } from "@libs/handler-resolver";
 import { AWS } from "@serverless/typescript";
 
@@ -46,7 +50,7 @@ const adminUserFunctions: AWS["functions"] = {
       {
         http: {
           method: "post",
-          path: `${route}/password/set`,
+          path: `${route}/set-password`,
           request: {
             schemas: {
               "application/json": adminUserSetPasswordInput,
@@ -63,7 +67,7 @@ const adminUserFunctions: AWS["functions"] = {
       {
         http: {
           method: "post",
-          path: `${route}/verification-code/send`,
+          path: `${route}/request-verification`,
           request: {
             schemas: {
               "application/json": adminUserEmailInput,
@@ -73,6 +77,23 @@ const adminUserFunctions: AWS["functions"] = {
       },
     ],
     role: "sendAdminUserVerificationCodeRole",
+  },
+  verifyAdminUserEmail: {
+    handler: `${path}/handlers.handleVerifyAdminUserEmail`,
+    events: [
+      {
+        http: {
+          method: "post",
+          path: `${route}/verify-email`,
+          request: {
+            schemas: {
+              "application/json": adminUserVerifyEmailInput,
+            },
+          },
+        },
+      },
+    ],
+    role: "verifyAdminUserEmailRole",
   },
 };
 

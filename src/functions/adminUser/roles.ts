@@ -102,11 +102,23 @@ const sendAdminUserVerificationCodeRole = createLambdaRole({
   policyName: "sendAdminUserVerificationCodePolicy",
 });
 
+const verifyAdminUserEmailRole = createLambdaRole({
+  statements: [
+    queryAdminUsersStatement,
+    getVerificationCodeStatement,
+    deleteVerificationCodeStatement,
+    encryptVerificationCodeStatement,
+  ],
+  roleName: "verifyAdminUserEmailRole",
+  policyName: "verifyAdminUserEmailPolicy",
+});
+
 const adminUserRoles = {
   adminUserExistsRole,
   adminUserAccountIsClaimedRole,
   setAdminUserPasswordRole,
   sendAdminUserVerificationCodeRole,
+  verifyAdminUserEmailRole,
 };
 
 export default adminUserRoles;
