@@ -8,7 +8,6 @@ import { baseTableConfig } from "../misc";
 export interface IVerificationCode {
   userId: string;
   codeHash: string;
-  codeSalt: string;
   ttl: string;
 }
 
@@ -39,12 +38,10 @@ export const verificationCodeModel = model<verificationCodeItem>(
 export const putVerificationCode = async ({
   userId,
   codeHash,
-  codeSalt,
 }: IVerificationCodeVariables) => {
   await verificationCodeModel.create({
     userId,
     codeHash,
-    codeSalt,
   });
 };
 

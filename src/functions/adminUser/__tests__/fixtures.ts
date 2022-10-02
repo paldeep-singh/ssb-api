@@ -21,7 +21,6 @@ export const createVerificationCode = (
 ): IVerificationCode => ({
   userId: faker.datatype.uuid(),
   codeHash: faker.datatype.string(20),
-  codeSalt: faker.datatype.string(10),
   ttl: faker.date.soon().toISOString(),
   ...verficationCodeAttributes,
 });

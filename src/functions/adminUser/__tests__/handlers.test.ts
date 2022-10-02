@@ -35,13 +35,14 @@ import {
   fetchUserByEmail,
   setPassword,
 } from "../models/adminUsers";
+import bcrypt from "bcryptjs";
 
 const mockedKMSClient = mockClient(KMSClient as any);
 const mockedSESCLient = mockClient(SESClient as any);
 
 jest.mock("../models/verificationCodes");
 jest.mock("../models/adminUsers");
-jest.mock("crypto");
+jest.mock("bcryptjs");
 jest.mock("@middy/core", () => {
   return (handler: any) => {
     return {
@@ -455,8 +456,6 @@ describe("handleSendAdminUserVerificationCode", () => {
   describe("when the user exists", () => {
     const verificationCode = faker.random.alphaNumeric(6).toUpperCase();
     const codeHash = faker.datatype.string(20);
-    const codeSalt = faker.datatype.string(10);
-    const codeHashPlaintext = stringToUint8Array(codeHash);
     const userId = faker.datatype.uuid();
 
     const adminUser = createAdminUser({
@@ -467,17 +466,7 @@ describe("handleSendAdminUserVerificationCode", () => {
     beforeEach(() => {
       mocked(fetchUserByEmail).mockResolvedValue(adminUser);
 
-      mockedKMSClient.on(EncryptCommand as any).resolves({
-        CiphertextBlob: codeHashPlaintext,
-      } as any);
-
-      mocked(crypto.randomBytes)
-        .mockReturnValueOnce({
-          toString: () => verificationCode,
-        } as any)
-        .mockReturnValueOnce({
-          toString: () => codeSalt,
-        } as any);
+      mocked(bcrypt.hash).mockResolvedValueOnce(codeHash as never);
     });
 
     it("deletes any existing codes", async () => {
@@ -510,7 +499,6 @@ describe("handleSendAdminUserVerificationCode", () => {
       expect(mocked(putVerificationCode)).toHaveBeenCalledWith({
         userId,
         codeHash,
-        codeSalt,
       });
     });
 
@@ -674,24 +662,22 @@ describe("handleVerifyAdminUserEmail", () => {
         mocked(fetchVerificationCode).mockResolvedValueOnce(storedCode);
       });
 
-      describe("if the encryption fails", () => {
+      describe("if the verification code does not match", () => {
         beforeEach(() => {
-          mockedKMSClient.on(EncryptCommand as any).resolves({
-            CipherTextBlob: undefined,
-          } as any);
+          mocked(bcrypt.compare).mockResolvedValueOnce(false as never);
         });
 
-        it("returns statusCode 500", async () => {
+        it("returns statusCode 400", async () => {
           const { statusCode } = await handleVerifyAdminUserEmail(
             APIGatewayEvent,
             context,
             jest.fn()
           );
 
-          expect(statusCode).toEqual(502);
+          expect(statusCode).toEqual(400);
         });
 
-        it(`returns ${ErrorCodes.ENCRYPTION_FAILED} error message`, async () => {
+        it(`returns ${ErrorCodes.INVALID_VERIFICATION_CODE} error message`, async () => {
           const { body } = await handleVerifyAdminUserEmail(
             APIGatewayEvent,
             context,
@@ -699,59 +685,21 @@ describe("handleVerifyAdminUserEmail", () => {
           );
 
           expect(JSON.parse(body).message).toEqual(
-            ErrorCodes.ENCRYPTION_FAILED
+            ErrorCodes.INVALID_VERIFICATION_CODE
           );
         });
-      });
 
-      describe("if the encryption succeeds", () => {
-        describe("if the verification code does not match", () => {
-          beforeEach(() => {
-            mockedKMSClient.on(EncryptCommand as any).resolves({
-              CiphertextBlob: stringToUint8Array(faker.datatype.string(20)),
-            } as any);
-          });
+        it("does not delete the verification code", async () => {
+          await handleVerifyAdminUserEmail(APIGatewayEvent, context, jest.fn());
 
-          it("returns statusCode 400", async () => {
-            const { statusCode } = await handleVerifyAdminUserEmail(
-              APIGatewayEvent,
-              context,
-              jest.fn()
-            );
-
-            expect(statusCode).toEqual(400);
-          });
-
-          it(`returns ${ErrorCodes.INVALID_VERIFICATION_CODE} error message`, async () => {
-            const { body } = await handleVerifyAdminUserEmail(
-              APIGatewayEvent,
-              context,
-              jest.fn()
-            );
-
-            expect(JSON.parse(body).message).toEqual(
-              ErrorCodes.INVALID_VERIFICATION_CODE
-            );
-          });
-
-          it("does not delete the verification code", async () => {
-            await handleVerifyAdminUserEmail(
-              APIGatewayEvent,
-              context,
-              jest.fn()
-            );
-
-            expect(mocked(deleteVerificationCode)).not.toHaveBeenCalled();
-          });
+          expect(mocked(deleteVerificationCode)).not.toHaveBeenCalled();
         });
       });
 
       describe('if the verification code matches"', () => {
         const codeHashPlaintext = stringToUint8Array(codeHash);
         beforeEach(() => {
-          mockedKMSClient.on(EncryptCommand as any).resolves({
-            CiphertextBlob: codeHashPlaintext,
-          } as any);
+          mocked(bcrypt.compare).mockResolvedValueOnce(true as never);
         });
 
         it("returns statusCode 200", async () => {

@@ -30,6 +30,7 @@ import {
   fetchUserByEmail,
   setPassword,
 } from "./models/adminUsers";
+import bcrypt from "bcryptjs";
 
 export const passwordValidationRegex =
   /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$/;
@@ -118,26 +119,12 @@ export const sendAdminUserVerificationCode: LambdaEventWithResult<
 
     const verificationCode = randomBytes(3).toString("hex").toUpperCase();
 
-    const codeSalt = randomBytes(256).toString();
-
-    const Plaintext = stringToUint8Array(verificationCode + codeSalt);
-
-    const encrypt = new EncryptCommand({
-      KeyId: ADMIN_USER_VERIFICATION_CODE_KEY_ALIAS,
-      Plaintext,
-    });
-
-    const { CiphertextBlob } = await kmsClient.send(encrypt);
-
-    if (!CiphertextBlob)
-      return formatJSONErrorResponse(502, ErrorCodes.ENCRYPTION_FAILED);
-
-    const codeHash = Uint8ArrayToStr(CiphertextBlob);
+    const codeHash = await bcrypt.hash(verificationCode, 10);
 
     // delete any existing verification code
     await deleteVerificationCode(userId);
 
-    await putVerificationCode({ userId, codeHash, codeSalt });
+    await putVerificationCode({ userId, codeHash });
 
     const sendEmail = new SendEmailCommand({
       Destination: {
@@ -177,7 +164,7 @@ const verifyAdminUserEmail: LambdaEventWithResult<
   try {
     const { userId } = await fetchUserByEmail(email);
 
-    const { codeHash, codeSalt, ttl } = await fetchVerificationCode(userId);
+    const { codeHash, ttl } = await fetchVerificationCode(userId);
 
     const now = new Date().getTime();
     const codeExpiry = new Date(ttl).getTime();
@@ -187,21 +174,9 @@ const verifyAdminUserEmail: LambdaEventWithResult<
       return formatJSONErrorResponse(400, ErrorCodes.VERIFICATION_CODE_EXPIRED);
     }
 
-    const Plaintext = stringToUint8Array(providedCode + codeSalt);
+    const codeMatch = await bcrypt.compare(providedCode, codeHash);
 
-    const encrypt = new EncryptCommand({
-      KeyId: ADMIN_USER_VERIFICATION_CODE_KEY_ALIAS,
-      Plaintext,
-    });
-
-    const { CiphertextBlob } = await kmsClient.send(encrypt);
-
-    if (!CiphertextBlob)
-      return formatJSONErrorResponse(502, ErrorCodes.ENCRYPTION_FAILED);
-
-    const codeHashToCompare = Uint8ArrayToStr(CiphertextBlob);
-
-    if (codeHashToCompare !== codeHash) {
+    if (!codeMatch) {
       return formatJSONErrorResponse(400, ErrorCodes.INVALID_VERIFICATION_CODE);
     }
 

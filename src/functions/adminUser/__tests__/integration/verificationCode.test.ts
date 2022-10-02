@@ -14,7 +14,6 @@ const userId = faker.datatype.uuid();
 describe("putVerificationCode", () => {
   const userId = faker.datatype.uuid();
   const codeHash = faker.datatype.string(30);
-  const codeSalt = faker.datatype.string(10);
 
   afterEach(async () => {
     await deleteTestVerificationCode(userId);
@@ -24,7 +23,6 @@ describe("putVerificationCode", () => {
     await dynamoDB.putVerificationCode({
       userId,
       codeHash,
-      codeSalt,
     });
 
     const response = await fetchTestVerificationCode(userId);
@@ -33,7 +31,6 @@ describe("putVerificationCode", () => {
       expect.objectContaining({
         userId,
         codeHash,
-        codeSalt,
       })
     );
   });
@@ -46,7 +43,6 @@ describe("putVerificationCode", () => {
     await dynamoDB.putVerificationCode({
       userId,
       codeHash,
-      codeSalt,
     });
 
     const response = await fetchTestVerificationCode(userId);
@@ -64,13 +60,11 @@ describe("fetchVerificationCode", () => {
   describe("when a verification code for the user exists", () => {
     const userId = faker.datatype.uuid();
     const codeHash = faker.datatype.string(30);
-    const codeSalt = faker.datatype.string(10);
 
     beforeEach(async () => {
       await dynamoDB.putVerificationCode({
         userId,
         codeHash,
-        codeSalt,
       });
     });
 
@@ -85,7 +79,6 @@ describe("fetchVerificationCode", () => {
         expect.objectContaining({
           userId,
           codeHash,
-          codeSalt,
         })
       );
     });
@@ -106,14 +99,12 @@ describe("fetchVerificationCode", () => {
 describe("deleteVerificationCode", () => {
   const userId = faker.datatype.uuid();
   const codeHash = faker.datatype.string(30);
-  const codeSalt = faker.datatype.string(10);
 
   describe("if a verification code exists", () => {
     beforeEach(async () => {
       await dynamoDB.putVerificationCode({
         userId,
         codeHash,
-        codeSalt,
       });
     });
 
