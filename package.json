@@ -8,6 +8,7 @@
   "devDependencies": {
     "@faker-js/faker": "^7.5.0",
     "@serverless/typescript": "^3.21.0",
+    "@types/bcryptjs": "^2.4.2",
     "@types/jest": "^29.0.1",
     "@types/lodash": "^4.14.185",
     "@types/node": "^18.7.16",
@@ -39,6 +40,7 @@
     "@middy/http-json-body-parser": "^3.3.2",
     "@tsconfig/node16": "^1.0.3",
     "@types/aws-lambda": "^8.10.103",
+    "bcryptjs": "^2.4.3",
     "dayjs": "^1.11.5",
     "dynamoose": "^3.1.0",
     "lodash": "^4.17.21"
