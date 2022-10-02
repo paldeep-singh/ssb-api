@@ -84,7 +84,6 @@ describe("setAdminUserPassword", () => {
       userId,
       email,
       passwordHash: "",
-      passwordSalt: "",
     });
 
     beforeEach(async () => {
@@ -99,24 +98,11 @@ describe("setAdminUserPassword", () => {
       await setPassword({
         email,
         newPasswordHash: newPasswordHash,
-        newPasswordSalt: newPasswordSalt,
       });
 
       const { passwordHash } = await fetchTestAdminUser(userId);
 
       expect(passwordHash).toEqual(newPasswordHash);
-    });
-
-    it("sets new password Salt", async () => {
-      await setPassword({
-        email,
-        newPasswordHash: newPasswordHash,
-        newPasswordSalt: newPasswordSalt,
-      });
-
-      const { passwordSalt } = await fetchTestAdminUser(userId);
-
-      expect(passwordSalt).toEqual(newPasswordSalt);
     });
   });
 
@@ -127,7 +113,6 @@ describe("setAdminUserPassword", () => {
         await setPassword({
           email,
           newPasswordHash,
-          newPasswordSalt,
         });
       } catch (error) {
         expectError(error, ErrorCodes.NON_EXISTENT_ADMIN_USER);

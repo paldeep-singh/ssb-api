@@ -17,9 +17,6 @@ import {
 import { middyfy } from "@libs/lambda";
 import { isError } from "@libs/utils";
 import { randomBytes } from "crypto";
-import { kmsClient, stringToUint8Array, Uint8ArrayToStr } from "@libs/kms";
-import { ADMIN_USER_PASSWORD_KEY_ALIAS } from "./resources";
-import { EncryptCommand } from "@aws-sdk/client-kms";
 import { sesClient } from "@libs/ses";
 import { SendEmailCommand } from "@aws-sdk/client-ses";
 import {
@@ -53,7 +50,7 @@ const checkAdminUserAccountIsClaimed: LambdaEventWithResult<
   try {
     const user = await fetchUserByEmail(email);
 
-    const accountClaimed = !!user.passwordHash && !!user.passwordSalt;
+    const accountClaimed = !!user.passwordHash;
 
     return formatJSONResponse(200, { accountClaimed });
   } catch (error) {
@@ -86,23 +83,9 @@ const setAdminUserPassword: LambdaEventWithResult<
     return formatJSONErrorResponse(400, ErrorCodes.INVALID_PASSWORD);
   }
 
-  const newPasswordSalt = randomBytes(256).toString();
+  const newPasswordHash = await bcrypt.hash(newPassword, 10);
 
-  const Plaintext = stringToUint8Array(newPassword + newPasswordSalt);
-
-  const encrypt = new EncryptCommand({
-    KeyId: ADMIN_USER_PASSWORD_KEY_ALIAS,
-    Plaintext,
-  });
-
-  const { CiphertextBlob } = await kmsClient.send(encrypt);
-
-  if (!CiphertextBlob)
-    return formatJSONErrorResponse(502, ErrorCodes.ENCRYPTION_FAILED);
-
-  const newPasswordHash = Uint8ArrayToStr(CiphertextBlob);
-
-  await setPassword({ email, newPasswordHash, newPasswordSalt });
+  await setPassword({ email, newPasswordHash });
   return formatJSONResponse(200, { passwordSet: true });
 };
 

@@ -12,7 +12,6 @@ export interface IAdminUser {
   userId: string;
   email: string;
   passwordHash: string;
-  passwordSalt: string;
 }
 
 const adminUserSchema = new Schema({
@@ -29,7 +28,6 @@ const adminUserSchema = new Schema({
     },
   },
   passwordHash: String,
-  passwordSalt: String,
 });
 
 interface adminUserItem extends Item, IAdminUser {}
@@ -65,11 +63,9 @@ export const fetchUserByEmail = async (email: string): Promise<IAdminUser> => {
 export const setPassword = async ({
   email,
   newPasswordHash,
-  newPasswordSalt,
 }: {
   email: string;
   newPasswordHash: string;
-  newPasswordSalt: string;
 }) => {
   const [adminUser] = await queryAdminUserByEmail(email).exec();
 
@@ -84,7 +80,6 @@ export const setPassword = async ({
     {
       $SET: {
         passwordHash: newPasswordHash,
-        passwordSalt: newPasswordSalt,
       },
     }
   );

@@ -9,9 +9,6 @@ export const ADMIN_USER_EMAIL_INDEX_NAME = "email-index";
 export const VERIFICATION_CODE_TABLE_NAME = `${STAGE}-admin-users-verification-code-table`;
 export const VERIFICATION_CODE_TABLE_REF = "AdminUsersVerificationCodeTable";
 
-export const ADMIN_USER_PASSWORD_KEY_ALIAS = `alias/${STAGE}-admin-user-password-key`;
-export const ADMIN_USER_PASSWORD_KEY_REF = "AdminUserPasswordKey";
-
 const AdminUsersTable: Table = {
   Type: "AWS::DynamoDB::Table",
   Properties: {
@@ -92,18 +89,9 @@ const AdminUserPasswordKey: KMSKey = {
   },
 };
 
-const AdminUserPasswordKeyAliasResource: KMSAlias = {
-  Type: "AWS::KMS::Alias",
-  Properties: {
-    AliasName: ADMIN_USER_PASSWORD_KEY_ALIAS,
-    TargetKeyId: { Ref: ADMIN_USER_PASSWORD_KEY_REF },
-  },
-};
-
 const adminUserResources = {
   AdminUsersTable,
   AdminUserPasswordKey,
-  AdminUserPasswordKeyAliasResource,
   AdminUsersVerificationCodeTable,
 };
 
