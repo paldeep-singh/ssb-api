@@ -18,10 +18,7 @@ import { middyfy } from "@libs/lambda";
 import { isError } from "@libs/utils";
 import { randomBytes } from "crypto";
 import { kmsClient, stringToUint8Array, Uint8ArrayToStr } from "@libs/kms";
-import {
-  ADMIN_USER_PASSWORD_KEY_ALIAS,
-  ADMIN_USER_VERIFICATION_CODE_KEY_ALIAS,
-} from "./resources";
+import { ADMIN_USER_PASSWORD_KEY_ALIAS } from "./resources";
 import { EncryptCommand } from "@aws-sdk/client-kms";
 import { sesClient } from "@libs/ses";
 import { SendEmailCommand } from "@aws-sdk/client-ses";

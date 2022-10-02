@@ -2,7 +2,6 @@ import { Statement, createLambdaRole } from "@libs/iam";
 import {
   ADMIN_USER_TABLE_REF,
   ADMIN_USER_PASSWORD_KEY_REF,
-  ADMIN_USER_VERIFICATION_CODE_KEY_REF,
   VERIFICATION_CODE_TABLE_REF,
 } from "./resources";
 
@@ -55,12 +54,6 @@ const encryptPasswordStatement: Statement = {
   Resource: [{ "Fn::GetAtt": [ADMIN_USER_PASSWORD_KEY_REF, "Arn"] }],
 };
 
-const encryptVerificationCodeStatement: Statement = {
-  Effect: "Allow",
-  Action: ["kms:Encrypt"],
-  Resource: [{ "Fn::GetAtt": [ADMIN_USER_VERIFICATION_CODE_KEY_REF, "Arn"] }],
-};
-
 const sendEmailStatement: Statement = {
   Effect: "Allow",
   Action: ["ses:SendEmail", "ses:SendRawEmail"],
@@ -91,7 +84,6 @@ const setAdminUserPasswordRole = createLambdaRole({
 
 const sendAdminUserVerificationCodeRole = createLambdaRole({
   statements: [
-    encryptVerificationCodeStatement,
     getVerificationCodeStatement,
     queryAdminUsersStatement,
     putVerificationCodeStatement,
@@ -107,7 +99,6 @@ const verifyAdminUserEmailRole = createLambdaRole({
     queryAdminUsersStatement,
     getVerificationCodeStatement,
     deleteVerificationCodeStatement,
-    encryptVerificationCodeStatement,
   ],
   roleName: "verifyAdminUserEmailRole",
   policyName: "verifyAdminUserEmailPolicy",

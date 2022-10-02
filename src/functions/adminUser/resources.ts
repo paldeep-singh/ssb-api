@@ -12,10 +12,6 @@ export const VERIFICATION_CODE_TABLE_REF = "AdminUsersVerificationCodeTable";
 export const ADMIN_USER_PASSWORD_KEY_ALIAS = `alias/${STAGE}-admin-user-password-key`;
 export const ADMIN_USER_PASSWORD_KEY_REF = "AdminUserPasswordKey";
 
-export const ADMIN_USER_VERIFICATION_CODE_KEY_ALIAS = `alias/${STAGE}-admin-user-verification-code-key`;
-export const ADMIN_USER_VERIFICATION_CODE_KEY_REF =
-  "AdminUserVerificationCodeKey";
-
 const AdminUsersTable: Table = {
   Type: "AWS::DynamoDB::Table",
   Properties: {
@@ -104,29 +100,11 @@ const AdminUserPasswordKeyAliasResource: KMSAlias = {
   },
 };
 
-const AdminUserVerificationCodeKey: KMSKey = {
-  Type: "AWS::KMS::Key",
-  Properties: {
-    Description: "Admin user verification code key",
-    KeyPolicy: defaultKeyPolicy,
-  },
-};
-
-const AdminUserVerificationCodeKeyAliasResource: KMSAlias = {
-  Type: "AWS::KMS::Alias",
-  Properties: {
-    AliasName: ADMIN_USER_VERIFICATION_CODE_KEY_ALIAS,
-    TargetKeyId: { Ref: ADMIN_USER_VERIFICATION_CODE_KEY_REF },
-  },
-};
-
 const adminUserResources = {
   AdminUsersTable,
   AdminUserPasswordKey,
   AdminUserPasswordKeyAliasResource,
   AdminUsersVerificationCodeTable,
-  AdminUserVerificationCodeKey,
-  AdminUserVerificationCodeKeyAliasResource,
 };
 
 export default adminUserResources;
