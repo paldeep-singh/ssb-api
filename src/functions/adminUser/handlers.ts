@@ -25,6 +25,7 @@ import {
   setPassword,
 } from "./models/adminUsers";
 import bcrypt from "bcryptjs";
+import { createNewSession } from "./models/sessions";
 
 export const passwordValidationRegex =
   /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$/;
@@ -162,7 +163,8 @@ const verifyAdminUserEmail: LambdaEventWithResult<
 
     await deleteVerificationCode(userId);
 
-    const sessionId = randomBytes(32).toString("hex");
+    const sessionId = await createNewSession(userId);
+
     return formatJSONResponse(200, { sessionId, userId });
   } catch (error) {
     if (!isError(error)) throw error;

@@ -28,6 +28,12 @@ describe("createNewSession", () => {
 
       expect(redisScope.isDone()).toBeTruthy();
     });
+
+    it("returns the session id", async () => {
+      const sessionId = await createNewSession(userId, true);
+
+      expect(sessionId).toBe(sessionBytes.toString("hex"));
+    });
   });
 
   describe("when creating a long session", () => {
@@ -42,6 +48,12 @@ describe("createNewSession", () => {
       await createNewSession(userId);
 
       expect(redisScope.isDone()).toBeTruthy();
+    });
+
+    it("returns the session id", async () => {
+      const sessionId = await createNewSession(userId);
+
+      expect(sessionId).toBe(sessionBytes.toString("hex"));
     });
   });
 });

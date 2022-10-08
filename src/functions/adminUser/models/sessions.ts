@@ -25,4 +25,6 @@ export const createNewSession = async (
   };
 
   await axios.post(requestURL, data, { headers });
+
+  return sessionId;
 };

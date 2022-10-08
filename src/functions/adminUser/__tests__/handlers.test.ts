@@ -34,11 +34,13 @@ import {
   setPassword,
 } from "../models/adminUsers";
 import bcrypt from "bcryptjs";
+import { createNewSession } from "../models/sessions";
 
 const mockedSESCLient = mockClient(SESClient as any);
 
 jest.mock("../models/verificationCodes");
 jest.mock("../models/adminUsers");
+jest.mock("../models/sessions");
 jest.mock("bcryptjs");
 jest.mock("@middy/core", () => {
   return (handler: any) => {
@@ -640,9 +642,11 @@ describe("handleVerifyAdminUserEmail", () => {
       });
 
       describe('if the verification code matches"', () => {
-        const codeHashPlaintext = stringToUint8Array(codeHash);
+        const sessionId = faker.datatype.uuid();
+
         beforeEach(() => {
           mocked(bcrypt.compare).mockResolvedValueOnce(true as never);
+          mocked(createNewSession).mockResolvedValueOnce(sessionId);
         });
 
         it("returns statusCode 200", async () => {
@@ -665,15 +669,14 @@ describe("handleVerifyAdminUserEmail", () => {
           expect(JSON.parse(body).userId).toEqual(adminUser.userId);
         });
 
-        it("returns a session id of length 64", async () => {
+        it("returns a session id", async () => {
           const { body } = await handleVerifyAdminUserEmail(
             APIGatewayEvent,
             context,
             jest.fn()
           );
 
-          expect(JSON.parse(body).sessionId).toBeDefined();
-          expect(JSON.parse(body).sessionId.length).toEqual(64);
+          expect(JSON.parse(body).sessionId).toEqual(sessionId);
         });
 
         it("deletes the verification code", async () => {
