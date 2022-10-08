@@ -1,4 +1,3 @@
-import { LOCAL_DYNAMODB_ENDPOINT } from "@libs/env";
 import { model, Schema, transaction } from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 import { ErrorCodes } from "../misc";
