@@ -655,6 +655,27 @@ describe("handleVerifyAdminUserEmail", () => {
           expect(statusCode).toEqual(200);
         });
 
+        it("returns the user id", async () => {
+          const { body } = await handleVerifyAdminUserEmail(
+            APIGatewayEvent,
+            context,
+            jest.fn()
+          );
+
+          expect(JSON.parse(body).userId).toEqual(adminUser.userId);
+        });
+
+        it("returns a session id of length 64", async () => {
+          const { body } = await handleVerifyAdminUserEmail(
+            APIGatewayEvent,
+            context,
+            jest.fn()
+          );
+
+          expect(JSON.parse(body).sessionId).toBeDefined();
+          expect(JSON.parse(body).sessionId.length).toEqual(64);
+        });
+
         it("deletes the verification code", async () => {
           await handleVerifyAdminUserEmail(APIGatewayEvent, context, jest.fn());
 

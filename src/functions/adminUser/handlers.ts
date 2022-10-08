@@ -162,7 +162,8 @@ const verifyAdminUserEmail: LambdaEventWithResult<
 
     await deleteVerificationCode(userId);
 
-    return formatJSONResponse(200, {});
+    const sessionId = randomBytes(32).toString("hex");
+    return formatJSONResponse(200, { sessionId, userId });
   } catch (error) {
     if (!isError(error)) throw error;
 
