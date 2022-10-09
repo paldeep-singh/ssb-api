@@ -59,7 +59,7 @@ export const fetchUserByEmail = async (email: string): Promise<IAdminUser> => {
   return adminUser;
 };
 
-export const setPassword = async ({
+export const updatePassword = async ({
   email,
   newPasswordHash,
 }: {

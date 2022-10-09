@@ -2,7 +2,7 @@ import { faker } from "@faker-js/faker";
 import {
   userDocumentExists,
   fetchUserByEmail,
-  setPassword,
+  updatePassword,
 } from "../../models/adminUsers";
 import { expectError } from "@libs/testUtils";
 import {
@@ -95,7 +95,7 @@ describe("setAdminUserPassword", () => {
     });
 
     it("sets the password", async () => {
-      await setPassword({
+      await updatePassword({
         email,
         newPasswordHash: newPasswordHash,
       });
@@ -110,7 +110,7 @@ describe("setAdminUserPassword", () => {
     it(`throws a ${ErrorCodes.NON_EXISTENT_ADMIN_USER} error`, async () => {
       expect.assertions(1);
       try {
-        await setPassword({
+        await updatePassword({
           email,
           newPasswordHash,
         });

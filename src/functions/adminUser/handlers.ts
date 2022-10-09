@@ -11,6 +11,7 @@ import {
 } from "@libs/api-gateway";
 import {
   adminUserEmailInput,
+  adminUserLoginInput,
   adminUserSetPasswordInput,
   adminUserVerifyEmailInput,
 } from "./schema";
@@ -22,7 +23,7 @@ import { SendEmailCommand } from "@aws-sdk/client-ses";
 import {
   userDocumentExists,
   fetchUserByEmail,
-  setPassword,
+  updatePassword,
 } from "./models/adminUsers";
 import bcrypt from "bcryptjs";
 import { createNewSession } from "./models/sessions";
@@ -44,7 +45,7 @@ const checkAdminUserExists: LambdaEventWithResult<
   });
 };
 
-const checkAdminUserAccountIsClaimed: LambdaEventWithResult<
+const checkAccountIsClaimed: LambdaEventWithResult<
   typeof adminUserEmailInput
 > = async (event) => {
   const { email } = event.body;
@@ -65,7 +66,7 @@ const checkAdminUserAccountIsClaimed: LambdaEventWithResult<
   }
 };
 
-const setAdminUserPassword: LambdaEventWithResult<
+const setPassword: LambdaEventWithResult<
   typeof adminUserSetPasswordInput
 > = async (event) => {
   const { email, newPassword, confirmNewPassword } = event.body;
@@ -86,11 +87,11 @@ const setAdminUserPassword: LambdaEventWithResult<
 
   const newPasswordHash = await bcrypt.hash(newPassword, 10);
 
-  await setPassword({ email, newPasswordHash });
+  await updatePassword({ email, newPasswordHash });
   return formatJSONResponse(200, { passwordSet: true });
 };
 
-export const sendAdminUserVerificationCode: LambdaEventWithResult<
+export const sendVerificationCode: LambdaEventWithResult<
   typeof adminUserEmailInput
 > = async (event) => {
   const { email } = event.body;
@@ -137,7 +138,7 @@ export const sendAdminUserVerificationCode: LambdaEventWithResult<
   }
 };
 
-const verifyAdminUserEmail: LambdaEventWithResult<
+const verifyEmail: LambdaEventWithResult<
   typeof adminUserVerifyEmailInput
 > = async (event) => {
   const { email, verificationCode: providedCode } = event.body;
@@ -182,50 +183,43 @@ const verifyAdminUserEmail: LambdaEventWithResult<
   }
 };
 
-// TODO: Rework into login function
-// export const verifyAdminUserPassword: LambdaEventWithResult<
-//   typeof adminUserVerifyPasswordInput
-// > = async ({ body: { email, password } }) => {
-//   const adminUser = await fetchUserByEmail(email);
+export const login: LambdaEventWithResult<typeof adminUserLoginInput> = async ({
+  body: { email, password },
+}) => {
+  const adminUser = await fetchUserByEmail(email);
 
-//   if (!adminUser) {
-//     return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER);
-//   }
+  if (!adminUser) {
+    return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER);
+  }
 
-//   if (!!adminUser.passwordHash || !!adminUser.passwordSalt) {
-//     return formatJSONErrorResponse(400, ErrorCodes.ACCOUNT_UNCLAIMED);
-//   }
-//   const Plaintext = stringToUint8Array(password + adminUser.passwordSalt);
+  if (!adminUser.passwordHash) {
+    return formatJSONErrorResponse(400, ErrorCodes.ACCOUNT_UNCLAIMED);
+  }
 
-//   const encrypt = new EncryptCommand({
-//     KeyId: ADMIN_USER_PASSWORD_KEY_ALIAS,
-//     Plaintext,
-//   });
+  const { passwordHash, userId } = adminUser;
 
-//   const { CiphertextBlob } = await kmsClient.send(encrypt);
+  const passwordMatch = await bcrypt.compare(password, passwordHash);
 
-//   if (!CiphertextBlob)
-//     return formatJSONErrorResponse(502, ErrorCodes.ENCRYPTION_FAILED);
+  if (!passwordMatch) {
+    return formatJSONErrorResponse(400, ErrorCodes.INVALID_PASSWORD);
+  }
 
-//   const encryptedPassword = Uint8ArrayToStr(CiphertextBlob);
+  const sessionId = await createNewSession(userId);
 
-//   const passwordVerified = encryptedPassword === adminUser.passwordHash;
-
-//   return formatJSONResponse(200, { passwordVerified });
-// };
+  return formatJSONResponse(200, { sessionId });
+};
 
 export const handleCheckAdminUserExists = middyfy(checkAdminUserExists);
 
 export const handleCheckAdminUserAccountIsClaimed = middyfy(
-  checkAdminUserAccountIsClaimed
+  checkAccountIsClaimed
 );
 
-export const handleSetAdminUserPassword = middyfy(setAdminUserPassword);
+export const handleSetAdminUserPassword = middyfy(setPassword);
 
-export const handleSendAdminUserVerificationCode = middyfy(
-  sendAdminUserVerificationCode
-);
+export const handleSendAdminUserVerificationCode =
+  middyfy(sendVerificationCode);
 
-export const handleVerifyAdminUserEmail = middyfy(verifyAdminUserEmail);
+export const handleVerifyAdminUserEmail = middyfy(verifyEmail);
 
 // export const handleVerifyAdminUserPassword = middyfy(verifyAdminUserPassword);

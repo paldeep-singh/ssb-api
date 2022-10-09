@@ -16,7 +16,7 @@ export const adminUserSetPasswordInput = {
   required: ["email", "newPassword", "confirmNewPassword"],
 } as const;
 
-export const adminUserVerifyPasswordInput = {
+export const adminUserLoginInput = {
   type: "object",
   properties: {
     email: { type: "string" },

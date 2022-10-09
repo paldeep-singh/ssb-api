@@ -31,7 +31,7 @@ import dayjs from "dayjs";
 import {
   userDocumentExists,
   fetchUserByEmail,
-  setPassword,
+  updatePassword,
 } from "../models/adminUsers";
 import bcrypt from "bcryptjs";
 import { createNewSession } from "../models/sessions";
@@ -237,7 +237,7 @@ describe("handleSetAdminUserPassword", () => {
 
           mocked(bcrypt.hash).mockResolvedValueOnce(encryptedPassword as never);
 
-          mocked(setPassword).mockResolvedValueOnce();
+          mocked(updatePassword).mockResolvedValueOnce();
         });
 
         it("returns statusCode 200", async () => {
@@ -253,7 +253,7 @@ describe("handleSetAdminUserPassword", () => {
         it("calls setPassword with the correct arguments", async () => {
           await handleSetAdminUserPassword(APIGatewayEvent, context, jest.fn());
 
-          expect(setPassword).toHaveBeenCalledWith({
+          expect(updatePassword).toHaveBeenCalledWith({
             email,
             newPasswordHash: encryptedPassword,
           });

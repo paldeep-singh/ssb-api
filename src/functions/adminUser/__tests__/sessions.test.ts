@@ -1,4 +1,10 @@
-import { createNewSession, redisToken, redisURL } from "../models/sessions";
+import {
+  createNewSession,
+  fetchSession,
+  redisToken,
+  redisURL,
+  updateSession,
+} from "../models/sessions";
 import nock from "nock";
 import { faker } from "@faker-js/faker";
 import { randomBytes } from "crypto";
@@ -54,6 +60,72 @@ describe("createNewSession", () => {
       const sessionId = await createNewSession(userId);
 
       expect(sessionId).toBe(sessionBytes.toString("hex"));
+    });
+  });
+});
+
+describe("updateSession", () => {
+  const userId = faker.datatype.uuid();
+  const sessionId = faker.random.alphaNumeric(32);
+
+  beforeEach(() => {
+    redisScope
+      .post(`/set/${sessionId}?EX=1800`, { userId })
+      .matchHeader("Authorization", `Bearer ${redisToken}`)
+      .reply(200);
+  });
+
+  it("sends the request to update the session", async () => {
+    await updateSession(sessionId, { userId });
+
+    expect(redisScope.isDone()).toBeTruthy();
+  });
+});
+
+describe("fetchSession", () => {
+  const userId = faker.datatype.uuid();
+  const sessionId = faker.random.alphaNumeric(32);
+
+  describe("when the session exists", () => {
+    beforeEach(() => {
+      redisScope
+        .get(`/get/${sessionId}`)
+        .matchHeader("Authorization", `Bearer ${redisToken}`)
+        .reply(200, { result: { userId } });
+    });
+
+    it("sends the request to fetch the session", async () => {
+      await fetchSession(sessionId);
+
+      expect(redisScope.isDone()).toBeTruthy();
+    });
+
+    it("returns the session data", async () => {
+      const session = await fetchSession(sessionId);
+
+      expect(session).toEqual({
+        sessionId,
+        data: {
+          userId,
+        },
+      });
+    });
+  });
+
+  describe("when the session does not exist", () => {
+    beforeEach(() => {
+      redisScope
+        .get(`/get/${sessionId}`)
+        .matchHeader("Authorization", `Bearer ${redisToken}`)
+        .reply(200, {
+          result: null,
+        });
+    });
+
+    it("returns null", async () => {
+      const session = await fetchSession(sessionId);
+
+      expect(session).toBeNull();
     });
   });
 });
