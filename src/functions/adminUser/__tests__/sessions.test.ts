@@ -35,10 +35,13 @@ describe("createNewSession", () => {
       expect(redisScope.isDone()).toBeTruthy();
     });
 
-    it("returns the session id", async () => {
-      const sessionId = await createNewSession(userId, true);
+    it("returns the session", async () => {
+      const session = await createNewSession(userId, true);
 
-      expect(sessionId).toBe(sessionBytes.toString("hex"));
+      expect(session).toEqual({
+        sessionId: sessionBytes.toString("hex"),
+        sessionData: { userId },
+      });
     });
   });
 
@@ -57,9 +60,12 @@ describe("createNewSession", () => {
     });
 
     it("returns the session id", async () => {
-      const sessionId = await createNewSession(userId);
+      const session = await createNewSession(userId);
 
-      expect(sessionId).toBe(sessionBytes.toString("hex"));
+      expect(session).toEqual({
+        sessionId: sessionBytes.toString("hex"),
+        sessionData: { userId },
+      });
     });
   });
 });
@@ -105,7 +111,7 @@ describe("fetchSession", () => {
 
       expect(session).toEqual({
         sessionId,
-        data: {
+        sessionData: {
           userId,
         },
       });

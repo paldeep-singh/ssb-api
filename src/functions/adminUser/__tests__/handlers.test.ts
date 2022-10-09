@@ -646,7 +646,12 @@ describe("handleVerifyAdminUserEmail", () => {
 
         beforeEach(() => {
           mocked(bcrypt.compare).mockResolvedValueOnce(true as never);
-          mocked(createNewSession).mockResolvedValueOnce(sessionId);
+          mocked(createNewSession).mockResolvedValueOnce({
+            sessionId,
+            sessionData: {
+              userId,
+            },
+          });
         });
 
         it("returns statusCode 200", async () => {
@@ -659,24 +664,19 @@ describe("handleVerifyAdminUserEmail", () => {
           expect(statusCode).toEqual(200);
         });
 
-        it("returns the user id", async () => {
+        it("returns a session", async () => {
           const { body } = await handleVerifyAdminUserEmail(
             APIGatewayEvent,
             context,
             jest.fn()
           );
 
-          expect(JSON.parse(body).userId).toEqual(adminUser.userId);
-        });
-
-        it("returns a session id", async () => {
-          const { body } = await handleVerifyAdminUserEmail(
-            APIGatewayEvent,
-            context,
-            jest.fn()
-          );
-
-          expect(JSON.parse(body).sessionId).toEqual(sessionId);
+          expect(JSON.parse(body)).toEqual({
+            sessionId,
+            sessionData: {
+              userId,
+            },
+          });
         });
 
         it("deletes the verification code", async () => {

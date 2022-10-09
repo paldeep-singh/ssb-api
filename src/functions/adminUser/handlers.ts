@@ -164,9 +164,9 @@ const verifyEmail: LambdaEventWithResult<
 
     await deleteVerificationCode(userId);
 
-    const sessionId = await createNewSession(userId);
+    const session = await createNewSession(userId);
 
-    return formatJSONResponse(200, { sessionId, userId });
+    return formatJSONResponse(200, { ...session });
   } catch (error) {
     if (!isError(error)) throw error;
 

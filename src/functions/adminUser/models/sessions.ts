@@ -19,13 +19,13 @@ interface ISessionData {
 
 interface ISession {
   sessionId: string;
-  data: ISessionData;
+  sessionData: ISessionData;
 }
 
 export const createNewSession = async (
   userId: string,
   short: boolean = false
-) => {
+): Promise<ISession> => {
   const sessionId = randomBytes(32).toString("hex");
 
   const expiry = short ? FIVE_MINUTES : THIRTY_MINUTES;
@@ -38,7 +38,10 @@ export const createNewSession = async (
 
   await axios.post(requestURL, data, { headers });
 
-  return sessionId;
+  return {
+    sessionId,
+    sessionData: data,
+  };
 };
 
 export const updateSession = async (
@@ -51,7 +54,7 @@ export const updateSession = async (
 
   return {
     sessionId,
-    data: sessionData,
+    sessionData: sessionData,
   };
 };
 
@@ -75,6 +78,6 @@ export const fetchSession = async (
 
   return {
     sessionId,
-    data,
+    sessionData: data,
   };
 };
