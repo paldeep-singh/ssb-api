@@ -28,8 +28,8 @@
   },
   "scripts": {
     "start": "STAGE=local serverless offline start",
-    "deploy:dev": "STAGE=dev time serverless",
-    "teardown:dev": "STAGE=dev serverless remove",
+    "deploy:dev": "STAGE=DEV time serverless",
+    "teardown:dev": "STAGE=DEV serverless remove",
     "test": "./scripts/runTests.sh unit",
     "test:integration": "./scripts/runTests.sh integration",
     "test:all": "./scripts/runTests.sh all"
@@ -37,6 +37,7 @@
   "dependencies": {
     "@aws-sdk/client-kms": "^3.171.0",
     "@aws-sdk/client-ses": "^3.171.0",
+    "@aws-sdk/client-ssm": "^3.186.0",
     "@middy/core": "^3.3.2",
     "@middy/http-json-body-parser": "^3.3.2",
     "@tsconfig/node16": "^1.0.3",
