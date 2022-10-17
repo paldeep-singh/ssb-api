@@ -6,6 +6,7 @@
   "author": "penguinpp <paldeepsingh21@gmail.com>",
   "license": "UNLICENSED",
   "devDependencies": {
+    "@aws-sdk/types": "^3.188.0",
     "@faker-js/faker": "^7.5.0",
     "@serverless/typescript": "^3.21.0",
     "@types/bcryptjs": "^2.4.2",
@@ -47,5 +48,8 @@
     "dayjs": "^1.11.5",
     "dynamoose": "^3.1.0",
     "lodash": "^4.17.21"
+  },
+  "resolutions": {
+    "@aws-sdk/types": "^3.188.0"
   }
 }

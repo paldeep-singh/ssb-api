@@ -1,24 +1,40 @@
 import {
   createNewSession,
   fetchSession,
-  redisToken,
-  redisURL,
   updateSession,
 } from "../models/sessions";
 import nock from "nock";
 import { faker } from "@faker-js/faker";
 import { randomBytes } from "crypto";
 import { mocked } from "jest-mock";
+import { mockClient } from "aws-sdk-client-mock";
+import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
 
+const redisURL = process.env.UPSTASH_REDIS_REST_URL || faker.internet.url();
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 const redisScope = nock(redisURL);
 jest.mock("crypto");
+const ssmMock = mockClient(SSMClient);
 
 describe("createNewSession", () => {
   const userId = faker.datatype.uuid();
   const sessionBytes = Buffer.from(faker.random.alphaNumeric(32), "hex");
 
   beforeEach(() => {
-    mocked(randomBytes).mockReturnValue(sessionBytes as any);
+    mocked(randomBytes).mockReturnValue(sessionBytes as unknown as void);
+    ssmMock
+      .on(GetParameterCommand)
+      .resolves({
+        Parameter: {
+          Value: redisURL,
+        },
+      })
+      .on(GetParameterCommand)
+      .resolves({
+        Parameter: {
+          Value: redisToken,
+        },
+      });
   });
 
   describe("when creating a short session", () => {

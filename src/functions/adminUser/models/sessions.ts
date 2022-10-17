@@ -65,54 +65,6 @@ export const getRedisHeaders = async (): Promise<
   };
 };
 
-export const getRedisCredentials = async (): Promise<{
-  redisURL: string;
-  redisToken: string;
-}> => {
-  if (STAGE === "local") {
-    const redisURL = process.env.UPSTASH_REDIS_REST_URL || "";
-    const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || "";
-
-    return { redisURL, redisToken };
-  }
-
-  const ssm = new SSMClient({});
-
-  const getURLCommand = new GetParameterCommand({
-    Name: `${STAGE}_UPSTASH_REDIS_REST_URL`,
-  });
-
-  const getTokenCommand = new GetParameterCommand({
-    Name: `${STAGE}_UPSTASH_REDIS_REST_TOKEN`,
-  });
-
-  const urlParameter = await ssm.send(getURLCommand);
-
-  if (!urlParameter.Parameter)
-    throw new Error(`Upstash REST API URL must be provided`);
-  else if (!urlParameter.Parameter.Value)
-    throw new Error("Invalid value for Upstash REST API URL parameter");
-
-  const tokenParameter = await ssm.send(getTokenCommand);
-
-  if (!tokenParameter.Parameter)
-    throw new Error("Upstast REST API token must be provided");
-  else if (!tokenParameter.Parameter.Value)
-    throw new Error("Invalid value for Upstash REST API token parameter");
-
-  const {
-    Parameter: { Value: redisURL },
-  } = urlParameter;
-  const {
-    Parameter: { Value: redisToken },
-  } = tokenParameter;
-
-  return {
-    redisURL,
-    redisToken,
-  };
-};
-
 const FIVE_MINUTES = 60 * 5;
 const THIRTY_MINUTES = 60 * 30;
 
@@ -130,6 +82,7 @@ export const createNewSession = async (
   short: boolean = false
 ): Promise<ISession> => {
   const redisURL = await getRedisURL();
+  console.log("redisURL", redisURL);
   const sessionId = randomBytes(32).toString("hex");
 
   const expiry = short ? FIVE_MINUTES : THIRTY_MINUTES;

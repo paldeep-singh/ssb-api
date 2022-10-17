@@ -25,7 +25,6 @@ import { mocked } from "jest-mock";
 import { APIGatewayProxyResult } from "aws-lambda";
 import { createAdminUser, createVerificationCode } from "./fixtures";
 import { mockClient } from "aws-sdk-client-mock";
-import { stringToUint8Array } from "@libs/kms";
 import { SendEmailCommand, SESClient } from "@aws-sdk/client-ses";
 import dayjs from "dayjs";
 import {
@@ -36,7 +35,7 @@ import {
 import bcrypt from "bcryptjs";
 import { createNewSession } from "../models/sessions";
 
-const mockedSESCLient = mockClient(SESClient as any);
+const mockedSESCLient = mockClient(SESClient);
 
 jest.mock("../models/verificationCodes");
 jest.mock("../models/adminUsers");
