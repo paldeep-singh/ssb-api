@@ -9,14 +9,14 @@ function runIntegrationTests {
 
   # If the test fails, we still want the teardown to run.
   # So we set STATUS to 1 and allow the script to proceed.
-  yarn run jest "$@" --testPathPattern=.*/__tests__/integration/.*.test.ts || STATUS=1
+  yarn run jest "$@" --testRegex=\\.integration.test\\.ts$
 
   # Teardown local DynamoDB instance
   docker-compose down
 }
 
 function runUnitTests {
-  yarn run jest "$@" --testPathPattern=.*/__tests__/.*.test.ts --testPathIgnorePatterns=..*/__tests__/.*/.*.test.ts || STATUS=1
+  yarn run jest "$@" --testRegex=\\.test\\.ts$ --testPathIgnorePatterns=..*/__tests__/.*/.*.test.ts || STATUS=1
 }
 
 function runAllTests {
