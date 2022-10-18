@@ -9,6 +9,9 @@ export const ADMIN_USER_EMAIL_INDEX_NAME = "email-index";
 export const VERIFICATION_CODE_TABLE_NAME = `${STAGE}-admin-users-verification-code-table`;
 export const VERIFICATION_CODE_TABLE_REF = "AdminUsersVerificationCodeTable";
 
+export const UPSTASH_URL_PARAMETER_NAME = `${STAGE}_UPSTASH_REDIS_REST_URL`;
+export const UPSTASH_TOKEN_PARAMETER_NAME = `${STAGE}_UPSTASH_REDIS_REST_TOKEN`;
+
 const AdminUsersTable: Table = {
   Type: "AWS::DynamoDB::Table",
   Properties: {

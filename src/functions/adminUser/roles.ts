@@ -1,10 +1,23 @@
 import { Statement, createLambdaRole } from "@libs/iam";
-import { ADMIN_USER_TABLE_REF, VERIFICATION_CODE_TABLE_REF } from "./resources";
+import {
+  ADMIN_USER_TABLE_REF,
+  UPSTASH_TOKEN_PARAMETER_NAME,
+  UPSTASH_URL_PARAMETER_NAME,
+  VERIFICATION_CODE_TABLE_REF,
+} from "./resources";
 
 const adminUsersTableARN = { "Fn::GetAtt": [ADMIN_USER_TABLE_REF, "Arn"] };
 const verificationCodeTableARN = {
   "Fn::GetAtt": [VERIFICATION_CODE_TABLE_REF, "Arn"],
 };
+const upstashRedisURLParameterARN = {
+  "Fn::Sub": `arn:aws:ssm:\${AWS_REGION}:\${AWS_ACCOUNT_ID}:parameter/${UPSTASH_URL_PARAMETER_NAME}`,
+};
+
+const upstashRedisTokenParameterARN = {
+  "Fn::Sub": `arn:aws:ssm:\${AWS_REGION}:\${AWS_ACCOUNT_ID}:parameter/${UPSTASH_TOKEN_PARAMETER_NAME}`,
+};
+
 const queryAdminUsersStatement: Statement = {
   Effect: "Allow",
   Action: ["dynamodb:Query"],
@@ -50,6 +63,18 @@ const sendEmailStatement: Statement = {
   Resource: ["*"],
 };
 
+const getRedisUrlStatement: Statement = {
+  Effect: "Allow",
+  Action: ["ssm:GetParameter"],
+  Resource: upstashRedisURLParameterARN,
+};
+
+const getRedisTokenStatement: Statement = {
+  Effect: "Allow",
+  Action: ["ssm:GetParameter"],
+  Resource: upstashRedisTokenParameterARN,
+};
+
 const adminUserExistsRole = createLambdaRole({
   statements: [queryAdminUsersStatement],
   roleName: "adminUserExistsRole",
@@ -85,9 +110,21 @@ const verifyAdminUserEmailRole = createLambdaRole({
     queryAdminUsersStatement,
     getVerificationCodeStatement,
     deleteVerificationCodeStatement,
+    getRedisUrlStatement,
+    getRedisTokenStatement,
   ],
   roleName: "verifyAdminUserEmailRole",
   policyName: "verifyAdminUserEmailPolicy",
+});
+
+const adminUserLoginRole = createLambdaRole({
+  statements: [
+    queryAdminUsersStatement,
+    getRedisUrlStatement,
+    getRedisTokenStatement,
+  ],
+  roleName: "adminUserLoginRole",
+  policyName: "adminUserLoginPolicy",
 });
 
 const adminUserRoles = {
@@ -96,6 +133,7 @@ const adminUserRoles = {
   setAdminUserPasswordRole,
   sendAdminUserVerificationCodeRole,
   verifyAdminUserEmailRole,
+  adminUserLoginRole,
 };
 
 export default adminUserRoles;

@@ -1,5 +1,6 @@
 import {
   adminUserEmailInput,
+  adminUserLoginInput,
   adminUserSetPasswordInput,
   adminUserVerifyEmailInput,
 } from "./schema";
@@ -94,6 +95,23 @@ const adminUserFunctions: AWS["functions"] = {
       },
     ],
     role: "verifyAdminUserEmailRole",
+  },
+  login: {
+    handler: `${path}/handlers.handleLogin`,
+    events: [
+      {
+        http: {
+          method: "post",
+          path: `${route}/login`,
+          request: {
+            schemas: {
+              "application/json": adminUserLoginInput,
+            },
+          },
+        },
+      },
+    ],
+    role: "adminUserLoginRole",
   },
 };
 

@@ -2,6 +2,10 @@ import axios, { AxiosRequestHeaders } from "axios";
 import { randomBytes } from "crypto";
 import { STAGE } from "@libs/env";
 import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
+import {
+  UPSTASH_TOKEN_PARAMETER_NAME,
+  UPSTASH_URL_PARAMETER_NAME,
+} from "../resources";
 
 export const getRedisURL = async (): Promise<string> => {
   if (STAGE === "local") {
@@ -11,7 +15,7 @@ export const getRedisURL = async (): Promise<string> => {
   const ssm = new SSMClient({});
 
   const getURLCommand = new GetParameterCommand({
-    Name: `${STAGE}_UPSTASH_REDIS_REST_URL`,
+    Name: UPSTASH_URL_PARAMETER_NAME,
   });
 
   const urlParameter = await ssm.send(getURLCommand);
@@ -36,7 +40,7 @@ const getRedisToken = async (): Promise<string> => {
   const ssm = new SSMClient({});
 
   const getTokenCommand = new GetParameterCommand({
-    Name: `${STAGE}_UPSTASH_REDIS_REST_TOKEN`,
+    Name: UPSTASH_TOKEN_PARAMETER_NAME,
   });
 
   const tokenParameter = await ssm.send(getTokenCommand);
