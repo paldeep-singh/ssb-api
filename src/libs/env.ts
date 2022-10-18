@@ -1,6 +1,6 @@
 export const STAGE = process.env.STAGE;
 export const LOCAL_DYNAMODB_ENDPOINT =
-  STAGE === "local" ? "http://localhost:8448" : "";
+  STAGE === "local" || STAGE === "test" ? "http://localhost:8448" : "";
 
 const environment = {
   STAGE,
