@@ -10,11 +10,15 @@ import { mocked } from "jest-mock";
 import { mockClient } from "aws-sdk-client-mock";
 import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
 
-const redisURL = process.env.UPSTASH_REDIS_REST_URL || faker.internet.url();
-const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+const redisURL = faker.internet.url();
+const redisToken = faker.datatype.uuid();
 const redisScope = nock(redisURL);
 jest.mock("crypto");
 const ssmMock = mockClient(SSMClient);
+
+beforeEach(() => {
+  ssmMock.reset();
+});
 
 describe("createNewSession", () => {
   const userId = faker.datatype.uuid();
@@ -22,15 +26,15 @@ describe("createNewSession", () => {
 
   beforeEach(() => {
     mocked(randomBytes).mockReturnValue(sessionBytes as unknown as void);
+
     ssmMock
       .on(GetParameterCommand)
-      .resolves({
+      .resolvesOnce({
         Parameter: {
           Value: redisURL,
         },
       })
-      .on(GetParameterCommand)
-      .resolves({
+      .resolvesOnce({
         Parameter: {
           Value: redisToken,
         },
@@ -95,6 +99,19 @@ describe("updateSession", () => {
       .post(`/set/${sessionId}?EX=1800`, { userId })
       .matchHeader("Authorization", `Bearer ${redisToken}`)
       .reply(200);
+
+    ssmMock
+      .on(GetParameterCommand)
+      .resolvesOnce({
+        Parameter: {
+          Value: redisURL,
+        },
+      })
+      .resolvesOnce({
+        Parameter: {
+          Value: redisToken,
+        },
+      });
   });
 
   it("sends the request to update the session", async () => {
@@ -107,6 +124,21 @@ describe("updateSession", () => {
 describe("fetchSession", () => {
   const userId = faker.datatype.uuid();
   const sessionId = faker.random.alphaNumeric(32);
+
+  beforeEach(() => {
+    ssmMock
+      .on(GetParameterCommand)
+      .resolvesOnce({
+        Parameter: {
+          Value: redisURL,
+        },
+      })
+      .resolvesOnce({
+        Parameter: {
+          Value: redisToken,
+        },
+      });
+  });
 
   describe("when the session exists", () => {
     beforeEach(() => {

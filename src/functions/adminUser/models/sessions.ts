@@ -82,7 +82,6 @@ export const createNewSession = async (
   short: boolean = false
 ): Promise<ISession> => {
   const redisURL = await getRedisURL();
-  console.log("redisURL", redisURL);
   const sessionId = randomBytes(32).toString("hex");
 
   const expiry = short ? FIVE_MINUTES : THIRTY_MINUTES;
