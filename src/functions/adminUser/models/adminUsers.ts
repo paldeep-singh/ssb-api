@@ -10,7 +10,7 @@ import { baseTableConfig } from "../misc";
 export interface IAdminUser {
   userId: string;
   email: string;
-  passwordHash: string;
+  passwordHash?: string;
 }
 
 const adminUserSchema = new Schema({

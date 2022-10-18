@@ -4,6 +4,7 @@ import {
   handleSetAdminUserPassword,
   handleSendAdminUserVerificationCode,
   handleVerifyAdminUserEmail,
+  handleLogin,
 } from "../handlers";
 import { faker } from "@faker-js/faker";
 import {
@@ -12,6 +13,7 @@ import {
 } from "@libs/fixtures";
 import {
   adminUserEmailInput,
+  adminUserLoginInput,
   adminUserSetPasswordInput,
   adminUserVerifyEmailInput,
 } from "../schema";
@@ -682,6 +684,151 @@ describe("handleVerifyAdminUserEmail", () => {
           await handleVerifyAdminUserEmail(APIGatewayEvent, context, jest.fn());
 
           expect(mocked(deleteVerificationCode)).toHaveBeenCalledWith(userId);
+        });
+      });
+    });
+  });
+});
+
+describe.only("handleLogin", () => {
+  const email = faker.internet.email();
+  const password = faker.internet.password();
+
+  const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
+    typeof adminUserLoginInput
+  >({
+    body: {
+      email,
+      password,
+    },
+  });
+
+  describe("when the user does not exist", () => {
+    beforeEach(() => {
+      mocked(fetchUserByEmail).mockRejectedValueOnce(
+        new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER)
+      );
+    });
+
+    it("returns statusCode 404", async () => {
+      const { statusCode } = await handleLogin(
+        APIGatewayEvent,
+        context,
+        jest.fn()
+      );
+
+      expect(statusCode).toEqual(404);
+    });
+
+    it(`returns ${ErrorCodes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
+      const { body } = await handleLogin(APIGatewayEvent, context, jest.fn());
+
+      expect(JSON.parse(body).message).toEqual(
+        ErrorCodes.NON_EXISTENT_ADMIN_USER
+      );
+    });
+  });
+
+  describe('when the user exists"', () => {
+    describe("when the user's password has not been set", () => {
+      const adminUser = createAdminUser({
+        email,
+        passwordHash: undefined,
+      });
+      beforeEach(() => {
+        mocked(fetchUserByEmail).mockResolvedValueOnce(adminUser);
+      });
+
+      it("returns statusCode 400", async () => {
+        const { statusCode } = await handleLogin(
+          APIGatewayEvent,
+          context,
+          jest.fn()
+        );
+
+        expect(statusCode).toEqual(400);
+      });
+
+      it(`returns ${ErrorCodes.ACCOUNT_UNCLAIMED} error message`, async () => {
+        const { body } = await handleLogin(APIGatewayEvent, context, jest.fn());
+
+        expect(JSON.parse(body).message).toEqual(ErrorCodes.ACCOUNT_UNCLAIMED);
+      });
+    });
+
+    describe("when the user's password has been set", () => {
+      describe('when the password does not match"', () => {
+        const adminUser = createAdminUser({
+          email,
+          passwordHash: faker.datatype.string(20),
+        });
+        beforeEach(() => {
+          mocked(fetchUserByEmail).mockResolvedValueOnce(adminUser);
+          mocked(bcrypt.compare).mockResolvedValueOnce(false as never);
+        });
+
+        it("returns statusCode 400", async () => {
+          const { statusCode } = await handleLogin(
+            APIGatewayEvent,
+            context,
+            jest.fn()
+          );
+
+          expect(statusCode).toEqual(400);
+        });
+
+        it(`returns ${ErrorCodes.INVALID_PASSWORD} error message`, async () => {
+          const { body } = await handleLogin(
+            APIGatewayEvent,
+            context,
+            jest.fn()
+          );
+
+          expect(JSON.parse(body).message).toEqual(ErrorCodes.INVALID_PASSWORD);
+        });
+      });
+
+      describe('when the password matches"', () => {
+        const adminUser = createAdminUser({
+          email,
+          passwordHash: faker.datatype.string(20),
+        });
+        const sessionId = faker.datatype.uuid();
+
+        beforeEach(() => {
+          mocked(fetchUserByEmail).mockResolvedValueOnce(adminUser);
+          mocked(bcrypt.compare).mockResolvedValueOnce(true as never);
+          mocked(createNewSession).mockResolvedValueOnce({
+            sessionId,
+            sessionData: {
+              userId: adminUser.userId,
+            },
+          });
+        });
+
+        it("returns statusCode 200", async () => {
+          const { statusCode } = await handleLogin(
+            APIGatewayEvent,
+            context,
+            jest.fn()
+          );
+
+          expect(statusCode).toEqual(200);
+        });
+
+        it("returns a session", async () => {
+          const { body } = await handleLogin(
+            APIGatewayEvent,
+            context,
+            jest.fn()
+          );
+
+          expect(JSON.parse(body)).toEqual({
+            sessionId,
+            sessionData: {
+              userId: adminUser.userId,
+            },
+          });
         });
       });
     });

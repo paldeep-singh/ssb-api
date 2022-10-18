@@ -91,7 +91,7 @@ const setPassword: LambdaEventWithResult<
   return formatJSONResponse(200, { passwordSet: true });
 };
 
-export const sendVerificationCode: LambdaEventWithResult<
+const sendVerificationCode: LambdaEventWithResult<
   typeof adminUserEmailInput
 > = async (event) => {
   const { email } = event.body;
@@ -164,7 +164,7 @@ const verifyEmail: LambdaEventWithResult<
 
     await deleteVerificationCode(userId);
 
-    const session = await createNewSession(userId);
+    const session = await createNewSession(userId, true);
 
     return formatJSONResponse(200, { ...session });
   } catch (error) {
@@ -183,30 +183,35 @@ const verifyEmail: LambdaEventWithResult<
   }
 };
 
-export const login: LambdaEventWithResult<typeof adminUserLoginInput> = async ({
+const login: LambdaEventWithResult<typeof adminUserLoginInput> = async ({
   body: { email, password },
 }) => {
-  const adminUser = await fetchUserByEmail(email);
+  try {
+    const adminUser = await fetchUserByEmail(email);
 
-  if (!adminUser) {
-    return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER);
+    if (!adminUser.passwordHash) {
+      return formatJSONErrorResponse(400, ErrorCodes.ACCOUNT_UNCLAIMED);
+    }
+
+    const { passwordHash, userId } = adminUser;
+
+    const passwordMatch = await bcrypt.compare(password, passwordHash);
+
+    if (!passwordMatch) {
+      return formatJSONErrorResponse(400, ErrorCodes.INVALID_PASSWORD);
+    }
+
+    const session = await createNewSession(userId);
+
+    return formatJSONResponse(200, { ...session });
+  } catch (error) {
+    if (!isError(error)) throw error;
+
+    if (error.message === ErrorCodes.NON_EXISTENT_ADMIN_USER)
+      return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER);
+
+    throw error;
   }
-
-  if (!adminUser.passwordHash) {
-    return formatJSONErrorResponse(400, ErrorCodes.ACCOUNT_UNCLAIMED);
-  }
-
-  const { passwordHash, userId } = adminUser;
-
-  const passwordMatch = await bcrypt.compare(password, passwordHash);
-
-  if (!passwordMatch) {
-    return formatJSONErrorResponse(400, ErrorCodes.INVALID_PASSWORD);
-  }
-
-  const sessionId = await createNewSession(userId);
-
-  return formatJSONResponse(200, { sessionId });
 };
 
 export const handleCheckAdminUserExists = middyfy(checkAdminUserExists);
@@ -222,4 +227,4 @@ export const handleSendAdminUserVerificationCode =
 
 export const handleVerifyAdminUserEmail = middyfy(verifyEmail);
 
-// export const handleVerifyAdminUserPassword = middyfy(verifyAdminUserPassword);
+export const handleLogin = middyfy(login);
