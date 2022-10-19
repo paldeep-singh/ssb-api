@@ -11,23 +11,6 @@ const path = handlerPath(__dirname);
 const route = handlerRoute(__dirname);
 
 const adminUserFunctions: AWS["functions"] = {
-  adminUserExists: {
-    handler: `${path}/handlers.handleCheckAdminUserExists`,
-    events: [
-      {
-        http: {
-          method: "post",
-          path: `${route}/exists`,
-          request: {
-            schemas: {
-              "application/json": adminUserEmailInput,
-            },
-          },
-        },
-      },
-    ],
-    role: "adminUserExistsRole",
-  },
   adminUserAccountIsClaimed: {
     handler: `${path}/handlers.handleCheckAdminUserAccountIsClaimed`,
     events: [

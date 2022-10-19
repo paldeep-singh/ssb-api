@@ -84,17 +84,8 @@ const AdminUsersVerificationCodeTable: Table = {
   DeletionPolicy: "Delete",
 };
 
-const AdminUserPasswordKey: KMSKey = {
-  Type: "AWS::KMS::Key",
-  Properties: {
-    Description: "Admin user password key",
-    KeyPolicy: defaultKeyPolicy,
-  },
-};
-
 const adminUserResources = {
   AdminUsersTable,
-  AdminUserPasswordKey,
   AdminUsersVerificationCodeTable,
 };
 

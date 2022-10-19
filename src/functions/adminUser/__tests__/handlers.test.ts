@@ -1,5 +1,4 @@
 import {
-  handleCheckAdminUserExists,
   handleCheckAdminUserAccountIsClaimed,
   handleSetAdminUserPassword,
   handleSendAdminUserVerificationCode,
@@ -57,41 +56,6 @@ beforeEach(() => {
 
 const email = faker.internet.email();
 const context = createAPIGatewayProxyEventContext();
-
-describe("handleAdminUserExists", () => {
-  const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
-    typeof adminUserEmailInput
-  >({
-    body: {
-      email,
-    },
-  });
-  describe.each([
-    ["exists", 200, true],
-    ["does not exist", 404, false],
-  ])("when the user %s", (_, expectedStatusCode, expectedAdminUserExists) => {
-    beforeEach(() => {
-      mocked(userDocumentExists).mockResolvedValueOnce(expectedAdminUserExists);
-    });
-
-    it(`returns statusCode ${expectedStatusCode}`, async () => {
-      const { statusCode }: APIGatewayProxyResult =
-        await handleCheckAdminUserExists(APIGatewayEvent, context, jest.fn());
-
-      expect(statusCode).toEqual(expectedStatusCode);
-    });
-
-    it(`returns adminUserExists: ${expectedAdminUserExists}`, async () => {
-      const { body } = await handleCheckAdminUserExists(
-        APIGatewayEvent,
-        context,
-        jest.fn()
-      );
-
-      expect(JSON.parse(body).adminUserExists).toEqual(expectedAdminUserExists);
-    });
-  });
-});
 
 describe("handleCheckAdminUserAccountIsClaimed", () => {
   const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
@@ -690,7 +654,7 @@ describe("handleVerifyAdminUserEmail", () => {
   });
 });
 
-describe.only("handleLogin", () => {
+describe("handleLogin", () => {
   const email = faker.internet.email();
   const password = faker.internet.password();
 

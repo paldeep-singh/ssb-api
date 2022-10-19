@@ -74,13 +74,6 @@ const getRedisTokenStatement: Statement = {
   Action: ["ssm:GetParameter"],
   Resource: upstashRedisTokenParameterARN,
 };
-
-const adminUserExistsRole = createLambdaRole({
-  statements: [queryAdminUsersStatement],
-  roleName: "adminUserExistsRole",
-  policyName: "adminUserExistsPolicy",
-});
-
 const adminUserAccountIsClaimedRole = createLambdaRole({
   statements: [queryAdminUsersStatement],
   roleName: "adminUserPasswordIsSetRole",
@@ -128,7 +121,6 @@ const adminUserLoginRole = createLambdaRole({
 });
 
 const adminUserRoles = {
-  adminUserExistsRole,
   adminUserAccountIsClaimedRole,
   setAdminUserPasswordRole,
   sendAdminUserVerificationCodeRole,

@@ -31,20 +31,6 @@ import { createNewSession } from "./models/sessions";
 export const passwordValidationRegex =
   /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$/;
 
-const checkAdminUserExists: LambdaEventWithResult<
-  typeof adminUserEmailInput
-> = async (event) => {
-  const { email } = event.body;
-
-  const userExists = await userDocumentExists(email);
-
-  const statusCode = userExists ? 200 : 404;
-
-  return formatJSONResponse(statusCode, {
-    adminUserExists: userExists,
-  });
-};
-
 const checkAccountIsClaimed: LambdaEventWithResult<
   typeof adminUserEmailInput
 > = async (event) => {
@@ -213,8 +199,6 @@ const login: LambdaEventWithResult<typeof adminUserLoginInput> = async ({
     throw error;
   }
 };
-
-export const handleCheckAdminUserExists = middyfy(checkAdminUserExists);
 
 export const handleCheckAdminUserAccountIsClaimed = middyfy(
   checkAccountIsClaimed
