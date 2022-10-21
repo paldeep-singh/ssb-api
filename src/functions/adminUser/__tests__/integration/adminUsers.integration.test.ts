@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker";
 import {
-  userDocumentExists,
+  adminUserEmailExists,
   fetchUserByEmail,
   updatePassword,
 } from "../../models/adminUsers";
@@ -16,10 +16,10 @@ import { ErrorCodes } from "../../misc";
 const email = faker.internet.email();
 const userId = faker.datatype.uuid();
 
-describe("userDocumentExists", () => {
+describe("adminUserEmailExists", () => {
   describe("if the admin user does not exist", () => {
     it("returns false", async () => {
-      const response = await userDocumentExists(email);
+      const response = await adminUserEmailExists(email);
 
       expect(response).toEqual(false);
     });
@@ -37,7 +37,7 @@ describe("userDocumentExists", () => {
     });
 
     it("returns true", async () => {
-      const response = await userDocumentExists(email);
+      const response = await adminUserEmailExists(email);
 
       expect(response).toEqual(true);
     });

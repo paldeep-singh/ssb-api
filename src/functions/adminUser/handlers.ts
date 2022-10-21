@@ -21,7 +21,7 @@ import { randomBytes } from "crypto";
 import { sesClient } from "@libs/ses";
 import { SendEmailCommand } from "@aws-sdk/client-ses";
 import {
-  userDocumentExists,
+  adminUserEmailExists,
   fetchUserByEmail,
   updatePassword,
 } from "./models/adminUsers";
@@ -57,7 +57,7 @@ const setPassword: LambdaEventWithResult<
 > = async (event) => {
   const { email, newPassword, confirmNewPassword } = event.body;
 
-  if (!(await userDocumentExists(email))) {
+  if (!(await adminUserEmailExists(email))) {
     return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER);
   }
 

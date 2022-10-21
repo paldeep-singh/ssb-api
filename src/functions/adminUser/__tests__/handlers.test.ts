@@ -29,7 +29,7 @@ import { mockClient } from "aws-sdk-client-mock";
 import { SendEmailCommand, SESClient } from "@aws-sdk/client-ses";
 import dayjs from "dayjs";
 import {
-  userDocumentExists,
+  adminUserEmailExists,
   fetchUserByEmail,
   updatePassword,
 } from "../models/adminUsers";
@@ -154,7 +154,7 @@ describe("handleSetAdminUserPassword", () => {
       },
     });
     beforeEach(() => {
-      mocked(userDocumentExists).mockResolvedValueOnce(false);
+      mocked(adminUserEmailExists).mockResolvedValueOnce(false);
     });
 
     it("returns statusCode 404", async () => {
@@ -198,7 +198,7 @@ describe("handleSetAdminUserPassword", () => {
         });
 
         beforeEach(() => {
-          mocked(userDocumentExists).mockResolvedValueOnce(true);
+          mocked(adminUserEmailExists).mockResolvedValueOnce(true);
 
           mocked(bcrypt.hash).mockResolvedValueOnce(encryptedPassword as never);
 
@@ -237,7 +237,7 @@ describe("handleSetAdminUserPassword", () => {
 
       describe("when the password is invalid", () => {
         beforeEach(() => {
-          mocked(userDocumentExists).mockResolvedValueOnce(true);
+          mocked(adminUserEmailExists).mockResolvedValueOnce(true);
         });
 
         describe.each([
@@ -297,7 +297,7 @@ describe("handleSetAdminUserPassword", () => {
       },
     });
     beforeEach(() => {
-      mocked(userDocumentExists).mockResolvedValueOnce(true);
+      mocked(adminUserEmailExists).mockResolvedValueOnce(true);
     });
 
     it("returns statusCode 400", async () => {
