@@ -1,8 +1,13 @@
-import middy from '@middy/core';
-import middyJsonBodyParser from '@middy/http-json-body-parser';
+import middy, { MiddyfiedHandler } from '@middy/core';
+import middyJsonBodyParser, {
+  Event as ParsedAPIGatewayEvent
+} from '@middy/http-json-body-parser';
 
 type MiddyInputHandler = Parameters<typeof middy>[0];
+type MiddyfiedAPIGatewayHandler = MiddyfiedHandler<ParsedAPIGatewayEvent>;
 
-export const middyfy = (handler: MiddyInputHandler) => {
+export const middyfy = (
+  handler: MiddyInputHandler
+): MiddyfiedAPIGatewayHandler => {
   return middy(handler).use(middyJsonBodyParser());
 };

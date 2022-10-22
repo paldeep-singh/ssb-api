@@ -23,10 +23,15 @@ export type LambdaEventWithResult<requestSchema extends JSONSchema7> =
     APIGatewayProxyResult
   >;
 
+type ApiGateWayResponse = {
+  statusCode: number;
+  body: string;
+};
+
 export const formatJSONResponse = (
   statusCode: number,
   response: Record<string, unknown>
-) => {
+): ApiGateWayResponse => {
   return {
     statusCode,
     body: JSON.stringify(response)
@@ -36,6 +41,6 @@ export const formatJSONResponse = (
 export const formatJSONErrorResponse = (
   statusCode: number,
   message: string
-) => {
+): ApiGateWayResponse => {
   return formatJSONResponse(statusCode, { message });
 };

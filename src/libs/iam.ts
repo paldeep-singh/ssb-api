@@ -1,7 +1,7 @@
-import { AwsStrings, Tag } from "./misc-aws-utils";
+import { AwsStrings, Tag } from './misc-aws-utils';
 
 type Principal =
-  | "*"
+  | '*'
   | {
       AWS: AwsStrings;
     }
@@ -16,7 +16,7 @@ type Resource = AwsStrings;
 
 export type Statement = {
   Sid?: string;
-  Effect: "Allow" | "Deny";
+  Effect: 'Allow' | 'Deny';
   Action: string | string[];
   NotAction?: string | string[];
   Principal?: Principal;
@@ -29,7 +29,7 @@ export type Statement = {
 };
 
 export type PolicyDocument = {
-  Version: "2012-10-17";
+  Version: '2012-10-17';
   Statement: Statement | Statement[];
 };
 
@@ -39,7 +39,7 @@ type Policy = {
 };
 
 type iamRole = {
-  Type: "AWS::IAM::Role";
+  Type: 'AWS::IAM::Role';
   Properties: {
     AssumeRolePolicyDocument: PolicyDocument;
     Description?: string;
@@ -54,25 +54,25 @@ type iamRole = {
 };
 
 const lambdaAssumeRolePolicyDocument: PolicyDocument = {
-  Version: "2012-10-17",
+  Version: '2012-10-17',
   Statement: {
-    Effect: "Allow",
-    Action: "sts:AssumeRole",
+    Effect: 'Allow',
+    Action: 'sts:AssumeRole',
     Principal: {
-      Service: "lambda.amazonaws.com",
-    },
-  },
+      Service: 'lambda.amazonaws.com'
+    }
+  }
 };
 
 const lambdaBaseStatement: Statement = {
-  Effect: "Allow",
-  Action: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+  Effect: 'Allow',
+  Action: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
   Resource: [
     {
-      "Fn::Sub":
-        "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*",
-    },
-  ],
+      'Fn::Sub':
+        'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*'
+    }
+  ]
 };
 
 interface ICreateLambdaRole {
@@ -84,10 +84,10 @@ interface ICreateLambdaRole {
 export const createLambdaRole = ({
   statements,
   roleName,
-  policyName,
-}: ICreateLambdaRole) => {
+  policyName
+}: ICreateLambdaRole): iamRole => {
   const role: iamRole = {
-    Type: "AWS::IAM::Role",
+    Type: 'AWS::IAM::Role',
     Properties: {
       AssumeRolePolicyDocument: lambdaAssumeRolePolicyDocument,
       RoleName: roleName,
@@ -95,12 +95,12 @@ export const createLambdaRole = ({
         {
           PolicyName: policyName,
           PolicyDocument: {
-            Version: "2012-10-17",
-            Statement: [lambdaBaseStatement, ...statements],
-          },
-        },
-      ],
-    },
+            Version: '2012-10-17',
+            Statement: [lambdaBaseStatement, ...statements]
+          }
+        }
+      ]
+    }
   };
 
   return role;

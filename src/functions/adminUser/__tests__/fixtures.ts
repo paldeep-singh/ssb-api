@@ -29,18 +29,24 @@ export const insertTestAdminUser = async (
   await adminUserModel.create(adminUser);
 };
 
-export const deleteTestAdminUser = async (userId: string) => {
+export const deleteTestAdminUser = async (userId: string): Promise<void> => {
   await adminUserModel.delete(userId);
 };
 
-export const fetchTestAdminUser = async (userId: string) => {
+export const fetchTestAdminUser = async (
+  userId: string
+): Promise<IAdminUser> => {
   return await adminUserModel.get(userId);
 };
 
-export const fetchTestVerificationCode = async (email: string) => {
+export const fetchTestVerificationCode = async (
+  email: string
+): Promise<IVerificationCode> => {
   return await verificationCodeModel.get(email);
 };
 
-export const deleteTestVerificationCode = async (email: string) => {
+export const deleteTestVerificationCode = async (
+  email: string
+): Promise<void> => {
   await verificationCodeModel.delete(email);
 };

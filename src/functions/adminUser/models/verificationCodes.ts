@@ -37,7 +37,7 @@ export const verificationCodeModel = model<verificationCodeItem>(
 export const putVerificationCode = async ({
   userId,
   codeHash
-}: IVerificationCodeVariables) => {
+}: IVerificationCodeVariables): Promise<void> => {
   await verificationCodeModel.create({
     userId,
     codeHash
@@ -56,6 +56,6 @@ export const fetchVerificationCode = async (
   return verificationCode;
 };
 
-export const deleteVerificationCode = async (email: string) => {
+export const deleteVerificationCode = async (email: string): Promise<void> => {
   await verificationCodeModel.delete(email);
 };

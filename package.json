@@ -69,8 +69,19 @@
       "plugin:@typescript-eslint/recommended"
     ],
     "rules": {
-      "@typescript-eslint/no-explicit-any": 2
-    }
+      "@typescript-eslint/no-explicit-any": 2,
+      "@typescript-eslint/explicit-function-return-type": 2
+    },
+    "overrides": [
+      {
+        "files": [
+          "*/**/*test.ts"
+        ],
+        "rules": {
+          "@typescript-eslint/explicit-function-return-type": 0
+        }
+      }
+    ]
   },
   "prettier": {
     "semi": true,
