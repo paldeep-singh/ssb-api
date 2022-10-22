@@ -1,6 +1,6 @@
-import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
-import { STAGE } from "./env";
+import { SESClient } from '@aws-sdk/client-ses';
+import { STAGE } from './env';
 
 export const sesClient = new SESClient(
-  STAGE === "local" ? { region: STAGE } : {}
+  STAGE === 'local' ? { region: STAGE } : {}
 );

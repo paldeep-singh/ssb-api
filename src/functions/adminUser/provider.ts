@@ -12,7 +12,7 @@ export const adminUserProvider: AWS["provider"]["httpApi"] = {
       identitySource: ["$request.header.Authorization"],
       payloadVersion: "2.0",
       enableSimpleResponses: true,
-      name: SPECIFIC_ADMIN_USER_AUTHORISER,
+      name: SPECIFIC_ADMIN_USER_AUTHORISER
     },
   },
 };

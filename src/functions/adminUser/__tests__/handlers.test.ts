@@ -23,7 +23,6 @@ import {
 } from "../models/verificationCodes";
 import { ErrorCodes } from "../misc";
 import { mocked } from "jest-mock";
-import { APIGatewayProxyResult } from "aws-lambda";
 import { createAdminUser, createVerificationCode } from "./fixtures";
 import { mockClient } from "aws-sdk-client-mock";
 import { SendEmailCommand, SESClient } from "@aws-sdk/client-ses";
@@ -43,7 +42,7 @@ jest.mock("../models/adminUsers");
 jest.mock("../models/sessions");
 jest.mock("bcryptjs");
 jest.mock("@middy/core", () => {
-  return (handler: any) => {
+  return (handler: unknown) => {
     return {
       use: jest.fn().mockReturnValue(handler), // ...use(ssm()) will return handler function
     };

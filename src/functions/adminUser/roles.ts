@@ -1,89 +1,83 @@
-import { Statement, createLambdaRole } from "@libs/iam";
+import { Statement, createLambdaRole } from '@libs/iam';
 import {
   ADMIN_USER_TABLE_REF,
   UPSTASH_TOKEN_PARAMETER_NAME,
   UPSTASH_URL_PARAMETER_NAME,
-  VERIFICATION_CODE_TABLE_REF,
-} from "./resources";
+  VERIFICATION_CODE_TABLE_REF
+} from './resources';
 
-const adminUsersTableARN = { "Fn::GetAtt": [ADMIN_USER_TABLE_REF, "Arn"] };
+const adminUsersTableARN = { 'Fn::GetAtt': [ADMIN_USER_TABLE_REF, 'Arn'] };
 const verificationCodeTableARN = {
-  "Fn::GetAtt": [VERIFICATION_CODE_TABLE_REF, "Arn"],
+  'Fn::GetAtt': [VERIFICATION_CODE_TABLE_REF, 'Arn']
 };
 const upstashRedisURLParameterARN = {
-  "Fn::Sub": `arn:aws:ssm:\${AWS_REGION}:\${AWS_ACCOUNT_ID}:parameter/${UPSTASH_URL_PARAMETER_NAME}`,
+  'Fn::Sub': `arn:aws:ssm:\${AWS_REGION}:\${AWS_ACCOUNT_ID}:parameter/${UPSTASH_URL_PARAMETER_NAME}`
 };
 
 const upstashRedisTokenParameterARN = {
-  "Fn::Sub": `arn:aws:ssm:\${AWS_REGION}:\${AWS_ACCOUNT_ID}:parameter/${UPSTASH_TOKEN_PARAMETER_NAME}`,
+  'Fn::Sub': `arn:aws:ssm:\${AWS_REGION}:\${AWS_ACCOUNT_ID}:parameter/${UPSTASH_TOKEN_PARAMETER_NAME}`
 };
 
 const queryAdminUsersStatement: Statement = {
-  Effect: "Allow",
-  Action: ["dynamodb:Query"],
+  Effect: 'Allow',
+  Action: ['dynamodb:Query'],
   Resource: [
     adminUsersTableARN,
-    { "Fn::Sub": "${AdminUsersTable.Arn}/index/*" },
-  ],
-};
-
-const getAdminUserStatement: Statement = {
-  Effect: "Allow",
-  Action: ["dynamodb:GetItem"],
-  Resource: adminUsersTableARN,
+    { 'Fn::Sub': '${AdminUsersTable.Arn}/index/*' }
+  ]
 };
 
 const updateAdminUserStatement: Statement = {
-  Effect: "Allow",
-  Action: ["dynamodb:UpdateItem"],
-  Resource: adminUsersTableARN,
+  Effect: 'Allow',
+  Action: ['dynamodb:UpdateItem'],
+  Resource: adminUsersTableARN
 };
 
 const getVerificationCodeStatement: Statement = {
-  Effect: "Allow",
-  Action: ["dynamodb:GetItem"],
-  Resource: verificationCodeTableARN,
+  Effect: 'Allow',
+  Action: ['dynamodb:GetItem'],
+  Resource: verificationCodeTableARN
 };
 
 const putVerificationCodeStatement: Statement = {
-  Effect: "Allow",
-  Action: ["dynamodb:PutItem"],
-  Resource: verificationCodeTableARN,
+  Effect: 'Allow',
+  Action: ['dynamodb:PutItem'],
+  Resource: verificationCodeTableARN
 };
 
 const deleteVerificationCodeStatement: Statement = {
-  Effect: "Allow",
-  Action: ["dynamodb:DeleteItem"],
-  Resource: verificationCodeTableARN,
+  Effect: 'Allow',
+  Action: ['dynamodb:DeleteItem'],
+  Resource: verificationCodeTableARN
 };
 
 const sendEmailStatement: Statement = {
-  Effect: "Allow",
-  Action: ["ses:SendEmail", "ses:SendRawEmail"],
-  Resource: ["*"],
+  Effect: 'Allow',
+  Action: ['ses:SendEmail', 'ses:SendRawEmail'],
+  Resource: ['*']
 };
 
 const getRedisUrlStatement: Statement = {
-  Effect: "Allow",
-  Action: ["ssm:GetParameter"],
-  Resource: upstashRedisURLParameterARN,
+  Effect: 'Allow',
+  Action: ['ssm:GetParameter'],
+  Resource: upstashRedisURLParameterARN
 };
 
 const getRedisTokenStatement: Statement = {
-  Effect: "Allow",
-  Action: ["ssm:GetParameter"],
-  Resource: upstashRedisTokenParameterARN,
+  Effect: 'Allow',
+  Action: ['ssm:GetParameter'],
+  Resource: upstashRedisTokenParameterARN
 };
 const adminUserAccountIsClaimedRole = createLambdaRole({
   statements: [queryAdminUsersStatement],
-  roleName: "adminUserPasswordIsSetRole",
-  policyName: "adminUserPasswordIsSetPolicy",
+  roleName: 'adminUserPasswordIsSetRole',
+  policyName: 'adminUserPasswordIsSetPolicy'
 });
 
 const setAdminUserPasswordRole = createLambdaRole({
   statements: [queryAdminUsersStatement, updateAdminUserStatement],
-  roleName: "setAdminUserPasswordRole",
-  policyName: "setAdminUserPasswordPolicy",
+  roleName: 'setAdminUserPasswordRole',
+  policyName: 'setAdminUserPasswordPolicy'
 });
 
 const sendAdminUserVerificationCodeRole = createLambdaRole({
@@ -92,10 +86,10 @@ const sendAdminUserVerificationCodeRole = createLambdaRole({
     queryAdminUsersStatement,
     putVerificationCodeStatement,
     sendEmailStatement,
-    deleteVerificationCodeStatement,
+    deleteVerificationCodeStatement
   ],
-  roleName: "sendAdminUserVerificationCodeRole",
-  policyName: "sendAdminUserVerificationCodePolicy",
+  roleName: 'sendAdminUserVerificationCodeRole',
+  policyName: 'sendAdminUserVerificationCodePolicy'
 });
 
 const verifyAdminUserEmailRole = createLambdaRole({
@@ -104,20 +98,20 @@ const verifyAdminUserEmailRole = createLambdaRole({
     getVerificationCodeStatement,
     deleteVerificationCodeStatement,
     getRedisUrlStatement,
-    getRedisTokenStatement,
+    getRedisTokenStatement
   ],
-  roleName: "verifyAdminUserEmailRole",
-  policyName: "verifyAdminUserEmailPolicy",
+  roleName: 'verifyAdminUserEmailRole',
+  policyName: 'verifyAdminUserEmailPolicy'
 });
 
 const adminUserLoginRole = createLambdaRole({
   statements: [
     queryAdminUsersStatement,
     getRedisUrlStatement,
-    getRedisTokenStatement,
+    getRedisTokenStatement
   ],
-  roleName: "adminUserLoginRole",
-  policyName: "adminUserLoginPolicy",
+  roleName: 'adminUserLoginRole',
+  policyName: 'adminUserLoginPolicy'
 });
 
 const adminUserRoles = {
@@ -125,7 +119,7 @@ const adminUserRoles = {
   setAdminUserPasswordRole,
   sendAdminUserVerificationCodeRole,
   verifyAdminUserEmailRole,
-  adminUserLoginRole,
+  adminUserLoginRole
 };
 
 export default adminUserRoles;

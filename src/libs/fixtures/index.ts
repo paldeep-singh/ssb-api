@@ -1,12 +1,12 @@
-import { faker } from "@faker-js/faker";
-import { Context } from "aws-lambda";
-import type { FromSchema, JSONSchema7 } from "json-schema-to-ts";
-import { ValidatedAPIGatewayProxyEvent } from "../api-gateway";
-import { JsonValue } from "type-fest";
+import { faker } from '@faker-js/faker';
+import { Context } from 'aws-lambda';
+import type { JSONSchema7 } from 'json-schema-to-ts';
+import { ValidatedAPIGatewayProxyEvent } from '../api-gateway';
+import { JsonValue } from 'type-fest';
 
 type ParsedEvent<requestSchema extends JSONSchema7> = Omit<
   ValidatedAPIGatewayProxyEvent<requestSchema>,
-  "body"
+  'body'
 > & {
   body: JsonValue;
   rawBody: string;
@@ -19,12 +19,12 @@ export const createParsedAPIGatewayProxyEvent = <
 ): ParsedEvent<requestSchema> => {
   return {
     body: {} as JsonValue,
-    rawBody: "",
+    rawBody: '',
     headers: {},
     multiValueHeaders: {},
-    httpMethod: "",
+    httpMethod: '',
     isBase64Encoded: false,
-    path: "",
+    path: '',
     pathParameters: null,
     queryStringParameters: null,
     multiValueQueryStringParameters: null,
@@ -33,7 +33,7 @@ export const createParsedAPIGatewayProxyEvent = <
       accountId: faker.datatype.uuid(),
       apiId: faker.datatype.uuid(),
       authorizer: {},
-      httpMethod: "",
+      httpMethod: '',
       identity: {
         accessKey: null,
         accountId: null,
@@ -49,18 +49,18 @@ export const createParsedAPIGatewayProxyEvent = <
         sourceIp: faker.internet.ip(),
         user: null,
         userAgent: null,
-        userArn: null,
+        userArn: null
       },
-      protocol: "https",
-      path: "/webhook",
-      stage: "Stage",
+      protocol: 'https',
+      path: '/webhook',
+      stage: 'Stage',
       requestId: faker.datatype.uuid(),
       requestTimeEpoch: faker.date.recent().getTime(),
       resourceId: faker.datatype.uuid(),
-      resourcePath: "/webhook",
+      resourcePath: '/webhook'
     },
-    resource: "",
-    ...eventAttributes,
+    resource: '',
+    ...eventAttributes
   };
 };
 
@@ -69,19 +69,19 @@ export const createAPIGatewayProxyEventContext = (
 ): Context => {
   return {
     callbackWaitsForEmptyEventLoop: false,
-    functionName: "",
-    functionVersion: "",
-    invokedFunctionArn: "",
-    memoryLimitInMB: "",
-    awsRequestId: "",
-    logGroupName: "",
-    logStreamName: "",
+    functionName: '',
+    functionVersion: '',
+    invokedFunctionArn: '',
+    memoryLimitInMB: '',
+    awsRequestId: '',
+    logGroupName: '',
+    logStreamName: '',
     identity: undefined,
     clientContext: undefined,
     getRemainingTimeInMillis: jest.fn(),
     done: jest.fn(),
     fail: jest.fn(),
     succeed: jest.fn(),
-    ...contextAttributes,
+    ...contextAttributes
   };
 };

@@ -1,7 +1,7 @@
-import { Tag } from "./misc-aws-utils";
+import { Tag } from './misc-aws-utils';
 
 type RecoveryOption = {
-  Name: "admin_only" | "verified_email" | "verified_phone_number";
+  Name: 'admin_only' | 'verified_email' | 'verified_phone_number';
   Priority: 1 | 2;
 };
 
@@ -12,7 +12,7 @@ type InviteMessageTemplate = {
 };
 
 type SchemaAttribute = {
-  AttributeDataType?: "String" | "Number" | "DateTime" | "Boolean";
+  AttributeDataType?: 'String' | 'Number' | 'DateTime' | 'Boolean';
   DeveloperOnlyAttribute?: boolean;
   Mutable?: boolean;
   Name: string;
@@ -28,7 +28,7 @@ type SchemaAttribute = {
 };
 
 type VerificationMessageTemplate = {
-  DefaultEmailOption?: "CONFIRM_WITH_CODE" | "CONFIRM_WITH_LINK";
+  DefaultEmailOption?: 'CONFIRM_WITH_CODE' | 'CONFIRM_WITH_LINK';
   EmailMessage?: string;
   EmailMessageByLink?: string;
   EmailSubject?: string;
@@ -49,7 +49,7 @@ type DeviceConfiguration = {
 
 type EmailConfiguration = {
   ConfigurationSet?: string;
-  EmailSendingAccount: "COGNITO_DEFAULT" | "DEVELOPER";
+  EmailSendingAccount: 'COGNITO_DEFAULT' | 'DEVELOPER';
   From?: string;
   ReplyToEmailAddress?: string;
   SourceArn?: string;
@@ -59,12 +59,12 @@ type LambdaConfig = {
   CreateAuthChallenge?: string;
   CustomEmailSender?: {
     LambdaArn: string;
-    LambdaVersion: "V1_0";
+    LambdaVersion: 'V1_0';
   };
   CustomMessage?: string;
   CustomSMSSender?: {
     LambdaArn: string;
-    LambdaVersion: "V1_0";
+    LambdaVersion: 'V1_0';
   };
   DefineAuthChallenge?: string;
   PostAuthentication?: string;
@@ -91,16 +91,16 @@ type SMSConfiguration = {
   SnsRegion?: string;
 };
 
-type UserPool = {
+export type UserPool = {
   AccountRecoverySetting?: { RecoveryMechanisms: RecoveryOption[] };
   AdminCreateUserConfig?: AdminCreateUserConfig;
-  AliasAttributes?: Array<"email" | "phone_number" | "preferred_username">;
-  AutoVerifiedAttributes?: Array<"email" | "phone_number">;
+  AliasAttributes?: Array<'email' | 'phone_number' | 'preferred_username'>;
+  AutoVerifiedAttributes?: Array<'email' | 'phone_number'>;
   DeviceConfiguration?: DeviceConfiguration;
   EmailConfiguration?: EmailConfiguration;
-  EnabledMfas?: Array<"SMS_MFA" | "SOFTWARE_TOKEN_MFA">;
+  EnabledMfas?: Array<'SMS_MFA' | 'SOFTWARE_TOKEN_MFA'>;
   LambdaConfig?: LambdaConfig;
-  MfaConfiguration?: "OFF" | "ON" | "OPTIONAL";
+  MfaConfiguration?: 'OFF' | 'ON' | 'OPTIONAL';
   Policies?: {
     PasswordPolicy?: PasswordPolicy;
   };
@@ -110,12 +110,12 @@ type UserPool = {
   UserAttributeUpdateSettings?: {
     AttributesRequireVerificationBeforeUpdate?: string[];
   };
-  UsernameAttributes?: Array<"email" | "phone_number">;
+  UsernameAttributes?: Array<'email' | 'phone_number'>;
   UserNameConfiguration?: {
     CaseSensitive?: boolean;
   };
   UserPoolAddOns?: {
-    AdvancedSecurityMode?: "AUDIT" | "ENFORCED" | "OFF";
+    AdvancedSecurityMode?: 'AUDIT' | 'ENFORCED' | 'OFF';
   };
   UserPoolTags?: Tag[];
   VerificationMessageTemplate?: VerificationMessageTemplate;

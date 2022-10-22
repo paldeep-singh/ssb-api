@@ -83,7 +83,7 @@ interface ISession {
 
 export const createNewSession = async (
   userId: string,
-  short: boolean = false
+  short = false
 ): Promise<ISession> => {
   const redisURL = await getRedisURL();
   const sessionId = randomBytes(32).toString("hex");

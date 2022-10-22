@@ -42,13 +42,10 @@ const queryAdminUserByEmail = (email: string) => {
 };
 
 export const adminUserEmailExists = async (email: string) => {
-  try {
+
     const response = await queryAdminUserByEmail(email).count().exec();
 
     return response.count !== 0;
-  } catch (error) {
-    throw error;
-  }
 };
 
 export const fetchUserByEmail = async (email: string): Promise<IAdminUser> => {

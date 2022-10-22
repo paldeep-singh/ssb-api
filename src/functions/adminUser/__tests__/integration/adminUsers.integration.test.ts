@@ -77,7 +77,6 @@ describe("fetchUserByEmail", () => {
 
 describe("setAdminUserPassword", () => {
   const newPasswordHash = faker.datatype.string(50);
-  const newPasswordSalt = faker.datatype.string(20);
 
   describe("when the user exists", () => {
     const adminUser = createAdminUser({

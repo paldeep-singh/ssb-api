@@ -1,9 +1,8 @@
-import { Schema, model, aws, transaction } from "dynamoose";
-import { Item } from "dynamoose/dist/Item";
-import { LOCAL_DYNAMODB_ENDPOINT } from "@libs/env";
-import { VERIFICATION_CODE_TABLE_NAME } from "../resources";
-import { ErrorCodes } from "../misc";
-import { baseTableConfig } from "../misc";
+import { Schema, model } from 'dynamoose';
+import { Item } from 'dynamoose/dist/Item';
+import { VERIFICATION_CODE_TABLE_NAME } from '../resources';
+import { ErrorCodes } from '../misc';
+import { baseTableConfig } from '../misc';
 
 export interface IVerificationCode {
   userId: string;
@@ -11,15 +10,15 @@ export interface IVerificationCode {
   ttl: string;
 }
 
-export type IVerificationCodeVariables = Omit<IVerificationCode, "ttl">;
+export type IVerificationCodeVariables = Omit<IVerificationCode, 'ttl'>;
 
 const verificationCodeSchema = new Schema({
   userId: {
     type: String,
-    hashKey: true,
+    hashKey: true
   },
   codeHash: String,
-  codeSalt: String,
+  codeSalt: String
 });
 
 interface verificationCodeItem extends Item, IVerificationCode {}
@@ -30,18 +29,18 @@ export const verificationCodeModel = model<verificationCodeItem>(
   {
     ...baseTableConfig,
     expires: {
-      ttl: 1000 * 60 * 5, // 5 minutes
-    },
+      ttl: 1000 * 60 * 5 // 5 minutes
+    }
   }
 );
 
 export const putVerificationCode = async ({
   userId,
-  codeHash,
+  codeHash
 }: IVerificationCodeVariables) => {
   await verificationCodeModel.create({
     userId,
-    codeHash,
+    codeHash
   });
 };
 

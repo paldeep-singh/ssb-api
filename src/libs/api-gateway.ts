@@ -2,13 +2,12 @@ import type {
   APIGatewayProxyEvent,
   APIGatewayProxyResult,
   Callback,
-  Context,
-  Handler,
-} from "aws-lambda";
-import type { FromSchema, JSONSchema7 } from "json-schema-to-ts";
+  Context
+} from 'aws-lambda';
+import type { FromSchema, JSONSchema7 } from 'json-schema-to-ts';
 
 export type ValidatedAPIGatewayProxyEvent<requestSchema extends JSONSchema7> =
-  Omit<APIGatewayProxyEvent, "body"> & {
+  Omit<APIGatewayProxyEvent, 'body'> & {
     body: FromSchema<requestSchema>;
   };
 
@@ -30,7 +29,7 @@ export const formatJSONResponse = (
 ) => {
   return {
     statusCode,
-    body: JSON.stringify(response),
+    body: JSON.stringify(response)
   };
 };
 

@@ -1,10 +1,9 @@
 import {
   IVerificationCode,
-  IVerificationCodeVariables,
-  verificationCodeModel,
-} from "../models/verificationCodes";
-import { IAdminUser, adminUserModel } from "../models/adminUsers";
-import { faker } from "@faker-js/faker";
+  verificationCodeModel
+} from '../models/verificationCodes';
+import { IAdminUser, adminUserModel } from '../models/adminUsers';
+import { faker } from '@faker-js/faker';
 
 export const createAdminUser = (
   adminUserAttributes: Partial<IAdminUser> = {}
@@ -12,7 +11,7 @@ export const createAdminUser = (
   userId: faker.datatype.uuid(),
   email: faker.internet.email(),
   passwordHash: faker.datatype.string(20),
-  ...adminUserAttributes,
+  ...adminUserAttributes
 });
 
 export const createVerificationCode = (
@@ -21,7 +20,7 @@ export const createVerificationCode = (
   userId: faker.datatype.uuid(),
   codeHash: faker.datatype.string(20),
   ttl: faker.date.soon().toISOString(),
-  ...verficationCodeAttributes,
+  ...verficationCodeAttributes
 });
 
 export const insertTestAdminUser = async (
