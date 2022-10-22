@@ -12,7 +12,7 @@ export type ValidatedAPIGatewayProxyEvent<requestSchema extends JSONSchema7> =
     body: FromSchema<requestSchema>;
   };
 
-type HandlerWithResult<TEvent = any, TResult = any> = (
+type HandlerWithResult<TEvent, TResult> = (
   event: TEvent,
   context: Context,
   callback: Callback<TResult>
