@@ -2,100 +2,100 @@ import {
   adminUserEmailInput,
   adminUserLoginInput,
   adminUserSetPasswordInput,
-  adminUserVerifyEmailInput,
-} from "./schema";
-import { handlerPath, handlerRoute } from "@libs/handler-resolver";
-import { AWS } from "@serverless/typescript";
+  adminUserVerifyEmailInput
+} from './schema';
+import { handlerPath, handlerRoute } from '@libs/handler-resolver';
+import { AWS } from '@serverless/typescript';
 
 const path = handlerPath(__dirname);
 const route = handlerRoute(__dirname);
 
-const adminUserFunctions: AWS["functions"] = {
+const adminUserFunctions: AWS['functions'] = {
   adminUserAccountIsClaimed: {
     handler: `${path}/handlers.handleCheckAdminUserAccountIsClaimed`,
     events: [
       {
         http: {
-          method: "post",
+          method: 'post',
           path: `${route}/claimed`,
           request: {
             schemas: {
-              "application/json": adminUserEmailInput,
-            },
-          },
-        },
-      },
+              'application/json': adminUserEmailInput
+            }
+          }
+        }
+      }
     ],
-    role: "adminUserAccountIsClaimedRole",
+    role: 'adminUserAccountIsClaimedRole'
   },
   setAdminUserPassword: {
     handler: `${path}/handlers.handleSetAdminUserPassword`,
     events: [
       {
         http: {
-          method: "post",
+          method: 'post',
           path: `${route}/set-password`,
           request: {
             schemas: {
-              "application/json": adminUserSetPasswordInput,
-            },
-          },
-        },
-      },
+              'application/json': adminUserSetPasswordInput
+            }
+          }
+        }
+      }
     ],
-    role: "setAdminUserPasswordRole",
+    role: 'setAdminUserPasswordRole'
   },
   sendAdminUserVerificationCode: {
     handler: `${path}/handlers.handleSendAdminUserVerificationCode`,
     events: [
       {
         http: {
-          method: "post",
+          method: 'post',
           path: `${route}/request-verification`,
           request: {
             schemas: {
-              "application/json": adminUserEmailInput,
-            },
-          },
-        },
-      },
+              'application/json': adminUserEmailInput
+            }
+          }
+        }
+      }
     ],
-    role: "sendAdminUserVerificationCodeRole",
+    role: 'sendAdminUserVerificationCodeRole'
   },
   verifyAdminUserEmail: {
     handler: `${path}/handlers.handleVerifyAdminUserEmail`,
     events: [
       {
         http: {
-          method: "post",
+          method: 'post',
           path: `${route}/verify-email`,
           request: {
             schemas: {
-              "application/json": adminUserVerifyEmailInput,
-            },
-          },
-        },
-      },
+              'application/json': adminUserVerifyEmailInput
+            }
+          }
+        }
+      }
     ],
-    role: "verifyAdminUserEmailRole",
+    role: 'verifyAdminUserEmailRole'
   },
   login: {
     handler: `${path}/handlers.handleLogin`,
     events: [
       {
         http: {
-          method: "post",
+          method: 'post',
           path: `${route}/login`,
           request: {
             schemas: {
-              "application/json": adminUserLoginInput,
-            },
-          },
-        },
-      },
+              'application/json': adminUserLoginInput
+            }
+          }
+        }
+      }
     ],
-    role: "adminUserLoginRole",
-  },
+    role: 'adminUserLoginRole'
+  }
 };
 
 export default adminUserFunctions;
