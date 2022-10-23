@@ -2656,40 +2656,6 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@lambda-middleware/json-deserializer@^1.1.1":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@lambda-middleware/json-deserializer/-/json-deserializer-1.1.1.tgz#fda271f914fc4ab80cb991ba67cc77008799379c"
-  integrity sha512-PNTZHK83znYXKB2276BVqhTbuBhxUeXo84QJP9BKsmXeeDFunxE3t+tQ4Iq9HnIc9odTkYSSIvexTJ2YpIKhpw==
-  dependencies:
-    "@lambda-middleware/utils" "^1.0.4"
-    debug ">=4.1.0"
-    tslib "^2.0.1"
-
-"@lambda-middleware/utils@^1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@lambda-middleware/utils/-/utils-1.0.4.tgz#b08ac9dd96fa8555c66a47c9b348abf5dd080c6b"
-  integrity sha512-DKjQ+nySDESswupoqYJPFXIwTSllkoFCagDYaWO9VfTPNr1/S8cP1fkSMyZ23rA43cK7N+drOf1tkVhG0fT98w==
-  dependencies:
-    "@types/aws-lambda" "^8.10.47"
-    tslib "^2.0.1"
-
-"@middy/core@^3.3.2":
-  version "3.3.2"
-  resolved "https://registry.yarnpkg.com/@middy/core/-/core-3.3.2.tgz#f210ae2190e78d4c218704f09d7050300ac332cc"
-  integrity sha512-UNr/4smCN4xgvwR48CWyCl9g5cUYF3QX6eAnOq0b03PReO11l1sTYc8jJikfbYThxDn7/6O7yjH16uH5jodmKg==
-
-"@middy/http-json-body-parser@^3.3.2":
-  version "3.3.2"
-  resolved "https://registry.yarnpkg.com/@middy/http-json-body-parser/-/http-json-body-parser-3.3.2.tgz#4ae510a4f225f42074dda9b61bcf976b866c3618"
-  integrity sha512-V4Yb1wJQNxA5r7GRZ6ubAO3vL1h51Es2WpDKFsCroFbwtpru7hww+cHMZYW0/zHmlS1MlzGrZpk55P1x3bvSYQ==
-  dependencies:
-    "@middy/util" "3.3.2"
-
-"@middy/util@3.3.2":
-  version "3.3.2"
-  resolved "https://registry.yarnpkg.com/@middy/util/-/util-3.3.2.tgz#7552301f06d48057e47da3a810d531c1290b315a"
-  integrity sha512-Esl7Usyo+0RVoR5ZpBMq3M6EjTCj2njwJhbl/yuWB4bFxTFG0uiae682NbDmqLcJH/eSZjmYST8x/SF8wqiE4A==
-
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz#7619c2eb21b25483f6d167548b4cfd5a7488c3d5"
@@ -2835,11 +2801,6 @@
   version "8.10.103"
   resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.103.tgz#9f0d748036a206ebe4a3eb19febc53b52ee36352"
   integrity sha512-mYWsrM5YPmnyJru7kMDX8RYSc486sDqVOP1kUdotthD3YjJ57iTBN3N7MMtL1qdVoPW2YmCnNnWscyidmPe6Gw==
-
-"@types/aws-lambda@^8.10.47":
-  version "8.10.108"
-  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.108.tgz#ddadf0d9182f2f5e689ce5fc05b5f711fad6d115"
-  integrity sha512-1yh1W1WoqK3lGHy+V/Fi55zobxrDHUUsluCWdMlOXkCvtsCmHPXOG+CQ2STIL4B1g6xi6I6XzxaF8V9+zeIFLA==
 
 "@types/babel__core@^7.1.14":
   version "7.1.19"
@@ -3926,7 +3887,7 @@ debug@3.2.6:
   dependencies:
     ms "^2.1.1"
 
-debug@>=4.1.0, debug@^4.1.0, debug@^4.1.1, debug@^4.3.2, debug@^4.3.3, debug@^4.3.4:
+debug@^4.1.0, debug@^4.1.1, debug@^4.3.2, debug@^4.3.3, debug@^4.3.4:
   version "4.3.4"
   resolved "https://registry.npmjs.org/debug/-/debug-4.3.4.tgz"
   integrity sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==
@@ -7768,7 +7729,7 @@ tslib@^1.11.1, tslib@^1.8.1:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.14.1.tgz#cf2d38bdc34a134bcaf1091c41f6619e2f672d00"
   integrity sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
 
-tslib@^2.0.1, tslib@^2.1.0, tslib@^2.3.1:
+tslib@^2.1.0, tslib@^2.3.1:
   version "2.4.0"
   resolved "https://registry.npmjs.org/tslib/-/tslib-2.4.0.tgz"
   integrity sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==
