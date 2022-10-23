@@ -11,12 +11,6 @@ import {
   createAPIGatewayProxyEventContext
 } from '@libs/fixtures';
 import {
-  adminUserEmailInput,
-  adminUserLoginInput,
-  adminUserSetPasswordInput,
-  adminUserVerifyEmailInput
-} from '../schema';
-import {
   putVerificationCode,
   fetchVerificationCode,
   deleteVerificationCode
