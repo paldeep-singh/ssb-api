@@ -7,7 +7,7 @@ import {
 } from '../handlers';
 import { faker } from '@faker-js/faker';
 import {
-  createParsedAPIGatewayProxyEvent,
+  createAPIGatewayProxyEvent,
   createAPIGatewayProxyEventContext
 } from '@libs/fixtures';
 import {
@@ -41,13 +41,6 @@ jest.mock('../models/verificationCodes');
 jest.mock('../models/adminUsers');
 jest.mock('../models/sessions');
 jest.mock('bcryptjs');
-jest.mock('@middy/core', () => {
-  return (handler: unknown) => {
-    return {
-      use: jest.fn().mockReturnValue(handler) // ...use(ssm()) will return handler function
-    };
-  };
-});
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -57,7 +50,7 @@ const email = faker.internet.email();
 const context = createAPIGatewayProxyEventContext();
 
 describe('handleCheckAdminUserAccountIsClaimed', () => {
-  const APIGatewayEvent = createParsedAPIGatewayProxyEvent({
+  const APIGatewayEvent = createAPIGatewayProxyEvent({
     email
   });
   describe.each([
@@ -139,7 +132,7 @@ describe('handleSetAdminUserPassword', () => {
   describe('when the user does not exist', () => {
     const password = faker.internet.password();
 
-    const APIGatewayEvent = createParsedAPIGatewayProxyEvent({
+    const APIGatewayEvent = createAPIGatewayProxyEvent({
       email,
       newPassword: password,
       confirmNewPassword: password
@@ -178,7 +171,7 @@ describe('handleSetAdminUserPassword', () => {
 
         const encryptedPassword = faker.datatype.string(20);
 
-        const APIGatewayEvent = createParsedAPIGatewayProxyEvent({
+        const APIGatewayEvent = createAPIGatewayProxyEvent({
           email,
           newPassword: password,
           confirmNewPassword: password
@@ -236,7 +229,7 @@ describe('handleSetAdminUserPassword', () => {
           ],
           ['has no numbers', faker.random.alpha(6)]
         ])(`when the password %s`, (_, password) => {
-          const APIGatewayEvent = createParsedAPIGatewayProxyEvent({
+          const APIGatewayEvent = createAPIGatewayProxyEvent({
             email,
             newPassword: password,
             confirmNewPassword: password
@@ -270,7 +263,7 @@ describe('handleSetAdminUserPassword', () => {
 
   describe('when the passwords do not match', () => {
     const password = faker.internet.password();
-    const APIGatewayEvent = createParsedAPIGatewayProxyEvent({
+    const APIGatewayEvent = createAPIGatewayProxyEvent({
       email,
       newPassword: password,
       confirmNewPassword: faker.internet.password()
@@ -304,7 +297,7 @@ describe('handleSetAdminUserPassword', () => {
 describe('handleSendAdminUserVerificationCode', () => {
   const email = faker.internet.email();
 
-  const APIGatewayEvent = createParsedAPIGatewayProxyEvent({
+  const APIGatewayEvent = createAPIGatewayProxyEvent({
     email
   });
 
@@ -420,7 +413,7 @@ describe('handleVerifyAdminUserEmail', () => {
   const email = faker.internet.email();
   const verificationCode = faker.random.alphaNumeric(6).toUpperCase();
 
-  const APIGatewayEvent = createParsedAPIGatewayProxyEvent({
+  const APIGatewayEvent = createAPIGatewayProxyEvent({
     email,
     verificationCode
   });
@@ -629,7 +622,7 @@ describe('handleLogin', () => {
   const email = faker.internet.email();
   const password = faker.internet.password();
 
-  const APIGatewayEvent = createParsedAPIGatewayProxyEvent({
+  const APIGatewayEvent = createAPIGatewayProxyEvent({
     email,
     password
   });
