@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { Context } from 'aws-lambda';
+import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import type { JSONSchema7 } from 'json-schema-to-ts';
 import { ValidatedAPIGatewayProxyEvent } from '../api-gateway';
 import { JsonValue } from 'type-fest';
@@ -12,20 +12,19 @@ type ParsedEvent<requestSchema extends JSONSchema7> = Omit<
   rawBody: string;
 };
 
-export const createParsedAPIGatewayProxyEvent = <
-  requestSchema extends JSONSchema7
->(
-  eventAttributes: Partial<ParsedEvent<requestSchema>> = {}
-): ParsedEvent<requestSchema> => {
+export const createParsedAPIGatewayProxyEvent = (
+  body: Record<string, unknown>,
+  eventAttributes: Partial<APIGatewayProxyEvent> = {}
+): APIGatewayProxyEvent => {
   return {
-    body: {} as JsonValue,
-    rawBody: '',
-    headers: {},
     multiValueHeaders: {},
     httpMethod: '',
     isBase64Encoded: false,
     path: '',
     pathParameters: null,
+    headers: {
+      'Content-Type': 'application/json'
+    },
     queryStringParameters: null,
     multiValueQueryStringParameters: null,
     stageVariables: null,
@@ -60,7 +59,8 @@ export const createParsedAPIGatewayProxyEvent = <
       resourcePath: '/webhook'
     },
     resource: '',
-    ...eventAttributes
+    ...eventAttributes,
+    body: JSON.stringify(body)
   };
 };
 

@@ -3,48 +3,48 @@ import {
   handleSetAdminUserPassword,
   handleSendAdminUserVerificationCode,
   handleVerifyAdminUserEmail,
-  handleLogin,
-} from "../handlers";
-import { faker } from "@faker-js/faker";
+  handleLogin
+} from '../handlers';
+import { faker } from '@faker-js/faker';
 import {
   createParsedAPIGatewayProxyEvent,
-  createAPIGatewayProxyEventContext,
-} from "@libs/fixtures";
+  createAPIGatewayProxyEventContext
+} from '@libs/fixtures';
 import {
   adminUserEmailInput,
   adminUserLoginInput,
   adminUserSetPasswordInput,
-  adminUserVerifyEmailInput,
-} from "../schema";
+  adminUserVerifyEmailInput
+} from '../schema';
 import {
   putVerificationCode,
   fetchVerificationCode,
-  deleteVerificationCode,
-} from "../models/verificationCodes";
-import { ErrorCodes } from "../misc";
-import { mocked } from "jest-mock";
-import { createAdminUser, createVerificationCode } from "./fixtures";
-import { mockClient } from "aws-sdk-client-mock";
-import { SendEmailCommand, SESClient } from "@aws-sdk/client-ses";
-import dayjs from "dayjs";
+  deleteVerificationCode
+} from '../models/verificationCodes';
+import { ErrorCodes } from '../misc';
+import { mocked } from 'jest-mock';
+import { createAdminUser, createVerificationCode } from './fixtures';
+import { mockClient } from 'aws-sdk-client-mock';
+import { SendEmailCommand, SESClient } from '@aws-sdk/client-ses';
+import dayjs from 'dayjs';
 import {
   adminUserEmailExists,
   fetchUserByEmail,
-  updatePassword,
-} from "../models/adminUsers";
-import bcrypt from "bcryptjs";
-import { createNewSession } from "../models/sessions";
+  updatePassword
+} from '../models/adminUsers';
+import bcrypt from 'bcryptjs';
+import { createNewSession } from '../models/sessions';
 
 const mockedSESCLient = mockClient(SESClient);
 
-jest.mock("../models/verificationCodes");
-jest.mock("../models/adminUsers");
-jest.mock("../models/sessions");
-jest.mock("bcryptjs");
-jest.mock("@middy/core", () => {
+jest.mock('../models/verificationCodes');
+jest.mock('../models/adminUsers');
+jest.mock('../models/sessions');
+jest.mock('bcryptjs');
+jest.mock('@middy/core', () => {
   return (handler: unknown) => {
     return {
-      use: jest.fn().mockReturnValue(handler), // ...use(ssm()) will return handler function
+      use: jest.fn().mockReturnValue(handler) // ...use(ssm()) will return handler function
     };
   };
 });
@@ -56,29 +56,25 @@ beforeEach(() => {
 const email = faker.internet.email();
 const context = createAPIGatewayProxyEventContext();
 
-describe("handleCheckAdminUserAccountIsClaimed", () => {
-  const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
-    typeof adminUserEmailInput
-  >({
-    body: {
-      email,
-    },
+describe('handleCheckAdminUserAccountIsClaimed', () => {
+  const APIGatewayEvent = createParsedAPIGatewayProxyEvent({
+    email
   });
   describe.each([
     [
-      "set",
+      'set',
       true,
       createAdminUser({
-        passwordHash: faker.datatype.string(20),
-      }),
+        passwordHash: faker.datatype.string(20)
+      })
     ],
     [
-      "not set",
+      'not set',
       false,
       createAdminUser({
-        passwordHash: "",
-      }),
-    ],
+        passwordHash: ''
+      })
+    ]
   ])(
     "when the user's password is %s",
     (_, expectedAccountClaimed, adminUser) => {
@@ -108,14 +104,14 @@ describe("handleCheckAdminUserAccountIsClaimed", () => {
     }
   );
 
-  describe("when the user does not exist", () => {
+  describe('when the user does not exist', () => {
     beforeEach(() => {
       mocked(fetchUserByEmail).mockRejectedValueOnce(
         new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER)
       );
     });
 
-    it("returns statusCode 404", async () => {
+    it('returns statusCode 404', async () => {
       const { statusCode } = await handleCheckAdminUserAccountIsClaimed(
         APIGatewayEvent,
         context,
@@ -139,24 +135,20 @@ describe("handleCheckAdminUserAccountIsClaimed", () => {
   });
 });
 
-describe("handleSetAdminUserPassword", () => {
-  describe("when the user does not exist", () => {
+describe('handleSetAdminUserPassword', () => {
+  describe('when the user does not exist', () => {
     const password = faker.internet.password();
 
-    const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
-      typeof adminUserSetPasswordInput
-    >({
-      body: {
-        email,
-        newPassword: password,
-        confirmNewPassword: password,
-      },
+    const APIGatewayEvent = createParsedAPIGatewayProxyEvent({
+      email,
+      newPassword: password,
+      confirmNewPassword: password
     });
     beforeEach(() => {
       mocked(adminUserEmailExists).mockResolvedValueOnce(false);
     });
 
-    it("returns statusCode 404", async () => {
+    it('returns statusCode 404', async () => {
       const { statusCode } = await handleSetAdminUserPassword(
         APIGatewayEvent,
         context,
@@ -179,21 +171,17 @@ describe("handleSetAdminUserPassword", () => {
     });
   });
 
-  describe("when the user exists", () => {
-    describe("when the passwords match", () => {
-      describe("when the password is valid", () => {
-        const password = faker.random.alphaNumeric(5) + "Aa1";
+  describe('when the user exists', () => {
+    describe('when the passwords match', () => {
+      describe('when the password is valid', () => {
+        const password = faker.random.alphaNumeric(5) + 'Aa1';
 
         const encryptedPassword = faker.datatype.string(20);
 
-        const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
-          typeof adminUserSetPasswordInput
-        >({
-          body: {
-            email,
-            newPassword: password,
-            confirmNewPassword: password,
-          },
+        const APIGatewayEvent = createParsedAPIGatewayProxyEvent({
+          email,
+          newPassword: password,
+          confirmNewPassword: password
         });
 
         beforeEach(() => {
@@ -204,7 +192,7 @@ describe("handleSetAdminUserPassword", () => {
           mocked(updatePassword).mockResolvedValueOnce();
         });
 
-        it("returns statusCode 200", async () => {
+        it('returns statusCode 200', async () => {
           const { statusCode } = await handleSetAdminUserPassword(
             APIGatewayEvent,
             context,
@@ -214,12 +202,12 @@ describe("handleSetAdminUserPassword", () => {
           expect(statusCode).toEqual(200);
         });
 
-        it("calls setPassword with the correct arguments", async () => {
+        it('calls setPassword with the correct arguments', async () => {
           await handleSetAdminUserPassword(APIGatewayEvent, context, jest.fn());
 
           expect(updatePassword).toHaveBeenCalledWith({
             email,
-            newPasswordHash: encryptedPassword,
+            newPasswordHash: encryptedPassword
           });
         });
 
@@ -234,31 +222,27 @@ describe("handleSetAdminUserPassword", () => {
         });
       });
 
-      describe("when the password is invalid", () => {
+      describe('when the password is invalid', () => {
         beforeEach(() => {
           mocked(adminUserEmailExists).mockResolvedValueOnce(true);
         });
 
         describe.each([
-          ["is too short", faker.random.alphaNumeric(4) + "Aa1"],
-          ["has no uppercase letters", faker.random.alphaNumeric(6) + "a1"],
+          ['is too short', faker.random.alphaNumeric(4) + 'Aa1'],
+          ['has no uppercase letters', faker.random.alphaNumeric(6) + 'a1'],
           [
-            "has no lowercase letters",
-            faker.random.alphaNumeric(6, { casing: "upper" }) + "A1",
+            'has no lowercase letters',
+            faker.random.alphaNumeric(6, { casing: 'upper' }) + 'A1'
           ],
-          ["has no numbers", faker.random.alpha(6)],
+          ['has no numbers', faker.random.alpha(6)]
         ])(`when the password %s`, (_, password) => {
-          const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
-            typeof adminUserSetPasswordInput
-          >({
-            body: {
-              email,
-              newPassword: password,
-              confirmNewPassword: password,
-            },
+          const APIGatewayEvent = createParsedAPIGatewayProxyEvent({
+            email,
+            newPassword: password,
+            confirmNewPassword: password
           });
 
-          it("returns statusCode 400", async () => {
+          it('returns statusCode 400', async () => {
             const { statusCode } = await handleSetAdminUserPassword(
               APIGatewayEvent,
               context,
@@ -284,22 +268,18 @@ describe("handleSetAdminUserPassword", () => {
     });
   });
 
-  describe("when the passwords do not match", () => {
+  describe('when the passwords do not match', () => {
     const password = faker.internet.password();
-    const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
-      typeof adminUserSetPasswordInput
-    >({
-      body: {
-        email,
-        newPassword: password,
-        confirmNewPassword: faker.internet.password(),
-      },
+    const APIGatewayEvent = createParsedAPIGatewayProxyEvent({
+      email,
+      newPassword: password,
+      confirmNewPassword: faker.internet.password()
     });
     beforeEach(() => {
       mocked(adminUserEmailExists).mockResolvedValueOnce(true);
     });
 
-    it("returns statusCode 400", async () => {
+    it('returns statusCode 400', async () => {
       const { statusCode } = await handleSetAdminUserPassword(
         APIGatewayEvent,
         context,
@@ -321,25 +301,21 @@ describe("handleSetAdminUserPassword", () => {
   });
 });
 
-describe("handleSendAdminUserVerificationCode", () => {
+describe('handleSendAdminUserVerificationCode', () => {
   const email = faker.internet.email();
 
-  const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
-    typeof adminUserEmailInput
-  >({
-    body: {
-      email,
-    },
+  const APIGatewayEvent = createParsedAPIGatewayProxyEvent({
+    email
   });
 
-  describe("when the user does not exist", () => {
+  describe('when the user does not exist', () => {
     beforeEach(() => {
       mocked(fetchUserByEmail).mockRejectedValueOnce(
         new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER)
       );
     });
 
-    it("returns statusCode 404", async () => {
+    it('returns statusCode 404', async () => {
       const { statusCode } = await handleSendAdminUserVerificationCode(
         APIGatewayEvent,
         context,
@@ -362,14 +338,14 @@ describe("handleSendAdminUserVerificationCode", () => {
     });
   });
 
-  describe("when the user exists", () => {
+  describe('when the user exists', () => {
     const verificationCode = faker.random.alphaNumeric(6).toUpperCase();
     const codeHash = faker.datatype.string(20);
     const userId = faker.datatype.uuid();
 
     const adminUser = createAdminUser({
       email,
-      userId,
+      userId
     });
 
     beforeEach(() => {
@@ -378,7 +354,7 @@ describe("handleSendAdminUserVerificationCode", () => {
       mocked(bcrypt.hash).mockResolvedValueOnce(codeHash as never);
     });
 
-    it("deletes any existing codes", async () => {
+    it('deletes any existing codes', async () => {
       await handleSendAdminUserVerificationCode(
         APIGatewayEvent,
         context,
@@ -388,7 +364,7 @@ describe("handleSendAdminUserVerificationCode", () => {
       expect(mocked(deleteVerificationCode)).toHaveBeenCalledWith(userId);
     });
 
-    it("returns statusCode 200", async () => {
+    it('returns statusCode 200', async () => {
       const { statusCode } = await handleSendAdminUserVerificationCode(
         APIGatewayEvent,
         context,
@@ -398,7 +374,7 @@ describe("handleSendAdminUserVerificationCode", () => {
       expect(statusCode).toEqual(200);
     });
 
-    it("inserts the verification code into the table", async () => {
+    it('inserts the verification code into the table', async () => {
       await handleSendAdminUserVerificationCode(
         APIGatewayEvent,
         context,
@@ -407,7 +383,7 @@ describe("handleSendAdminUserVerificationCode", () => {
 
       expect(mocked(putVerificationCode)).toHaveBeenCalledWith({
         userId,
-        codeHash,
+        codeHash
       });
     });
 
@@ -421,46 +397,42 @@ describe("handleSendAdminUserVerificationCode", () => {
       mockedSESCLient.calls()[0].calledWithExactly(
         new SendEmailCommand({
           Destination: {
-            ToAddresses: [email],
+            ToAddresses: [email]
           },
           Message: {
             Subject: {
-              Data: "Spice Spice Baby Verification Code",
+              Data: 'Spice Spice Baby Verification Code'
             },
             Body: {
               Text: {
-                Data: `Your verification code is: ${verificationCode}`,
-              },
-            },
+                Data: `Your verification code is: ${verificationCode}`
+              }
+            }
           },
-          Source: "spicespicebaby01@gmail.com",
+          Source: 'spicespicebaby01@gmail.com'
         })
       );
     });
   });
 });
 
-describe("handleVerifyAdminUserEmail", () => {
+describe('handleVerifyAdminUserEmail', () => {
   const email = faker.internet.email();
   const verificationCode = faker.random.alphaNumeric(6).toUpperCase();
 
-  const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
-    typeof adminUserVerifyEmailInput
-  >({
-    body: {
-      email,
-      verificationCode,
-    },
+  const APIGatewayEvent = createParsedAPIGatewayProxyEvent({
+    email,
+    verificationCode
   });
 
-  describe("when the user does not exist", () => {
+  describe('when the user does not exist', () => {
     beforeEach(() => {
       mocked(fetchUserByEmail).mockRejectedValueOnce(
         new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER)
       );
     });
 
-    it("returns statusCode 404", async () => {
+    it('returns statusCode 404', async () => {
       const { statusCode } = await handleVerifyAdminUserEmail(
         APIGatewayEvent,
         context,
@@ -483,26 +455,26 @@ describe("handleVerifyAdminUserEmail", () => {
     });
   });
 
-  describe("when the user exists", () => {
+  describe('when the user exists', () => {
     const userId = faker.datatype.uuid();
 
     const adminUser = createAdminUser({
       email,
-      userId,
+      userId
     });
 
     beforeEach(() => {
       mocked(fetchUserByEmail).mockResolvedValue(adminUser);
     });
 
-    describe("when no verification code exists for the user", () => {
+    describe('when no verification code exists for the user', () => {
       beforeEach(() => {
         mocked(fetchVerificationCode).mockRejectedValueOnce(
           new Error(ErrorCodes.NO_ACTIVE_VERIFICATION_CODE)
         );
       });
 
-      it("returns statusCode 404", async () => {
+      it('returns statusCode 404', async () => {
         const { statusCode } = await handleVerifyAdminUserEmail(
           APIGatewayEvent,
           context,
@@ -525,17 +497,17 @@ describe("handleVerifyAdminUserEmail", () => {
       });
     });
 
-    describe("when a verification code exists for the user", () => {
+    describe('when a verification code exists for the user', () => {
       const expiredCode = createVerificationCode({
         userId,
-        ttl: new Date().toISOString(),
+        ttl: new Date().toISOString()
       });
-      describe("when the verification code is expired", () => {
+      describe('when the verification code is expired', () => {
         beforeEach(() => {
           mocked(fetchVerificationCode).mockResolvedValueOnce(expiredCode);
         });
 
-        it("returns statusCode 400", async () => {
+        it('returns statusCode 400', async () => {
           const { statusCode } = await handleVerifyAdminUserEmail(
             APIGatewayEvent,
             context,
@@ -559,24 +531,24 @@ describe("handleVerifyAdminUserEmail", () => {
       });
     });
 
-    describe("when the verification code has not expired", () => {
+    describe('when the verification code has not expired', () => {
       const codeHash = faker.datatype.string(20);
       const storedCode = createVerificationCode({
         userId,
-        ttl: dayjs().add(5, "minute").toISOString(),
-        codeHash,
+        ttl: dayjs().add(5, 'minute').toISOString(),
+        codeHash
       });
 
       beforeEach(() => {
         mocked(fetchVerificationCode).mockResolvedValueOnce(storedCode);
       });
 
-      describe("if the verification code does not match", () => {
+      describe('if the verification code does not match', () => {
         beforeEach(() => {
           mocked(bcrypt.compare).mockResolvedValueOnce(false as never);
         });
 
-        it("returns statusCode 400", async () => {
+        it('returns statusCode 400', async () => {
           const { statusCode } = await handleVerifyAdminUserEmail(
             APIGatewayEvent,
             context,
@@ -598,7 +570,7 @@ describe("handleVerifyAdminUserEmail", () => {
           );
         });
 
-        it("does not delete the verification code", async () => {
+        it('does not delete the verification code', async () => {
           await handleVerifyAdminUserEmail(APIGatewayEvent, context, jest.fn());
 
           expect(mocked(deleteVerificationCode)).not.toHaveBeenCalled();
@@ -613,12 +585,12 @@ describe("handleVerifyAdminUserEmail", () => {
           mocked(createNewSession).mockResolvedValueOnce({
             sessionId,
             sessionData: {
-              userId,
-            },
+              userId
+            }
           });
         });
 
-        it("returns statusCode 200", async () => {
+        it('returns statusCode 200', async () => {
           const { statusCode } = await handleVerifyAdminUserEmail(
             APIGatewayEvent,
             context,
@@ -628,7 +600,7 @@ describe("handleVerifyAdminUserEmail", () => {
           expect(statusCode).toEqual(200);
         });
 
-        it("returns a session", async () => {
+        it('returns a session', async () => {
           const { body } = await handleVerifyAdminUserEmail(
             APIGatewayEvent,
             context,
@@ -638,12 +610,12 @@ describe("handleVerifyAdminUserEmail", () => {
           expect(JSON.parse(body)).toEqual({
             sessionId,
             sessionData: {
-              userId,
-            },
+              userId
+            }
           });
         });
 
-        it("deletes the verification code", async () => {
+        it('deletes the verification code', async () => {
           await handleVerifyAdminUserEmail(APIGatewayEvent, context, jest.fn());
 
           expect(mocked(deleteVerificationCode)).toHaveBeenCalledWith(userId);
@@ -653,27 +625,23 @@ describe("handleVerifyAdminUserEmail", () => {
   });
 });
 
-describe("handleLogin", () => {
+describe('handleLogin', () => {
   const email = faker.internet.email();
   const password = faker.internet.password();
 
-  const APIGatewayEvent = createParsedAPIGatewayProxyEvent<
-    typeof adminUserLoginInput
-  >({
-    body: {
-      email,
-      password,
-    },
+  const APIGatewayEvent = createParsedAPIGatewayProxyEvent({
+    email,
+    password
   });
 
-  describe("when the user does not exist", () => {
+  describe('when the user does not exist', () => {
     beforeEach(() => {
       mocked(fetchUserByEmail).mockRejectedValueOnce(
         new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER)
       );
     });
 
-    it("returns statusCode 404", async () => {
+    it('returns statusCode 404', async () => {
       const { statusCode } = await handleLogin(
         APIGatewayEvent,
         context,
@@ -696,13 +664,13 @@ describe("handleLogin", () => {
     describe("when the user's password has not been set", () => {
       const adminUser = createAdminUser({
         email,
-        passwordHash: undefined,
+        passwordHash: undefined
       });
       beforeEach(() => {
         mocked(fetchUserByEmail).mockResolvedValueOnce(adminUser);
       });
 
-      it("returns statusCode 400", async () => {
+      it('returns statusCode 400', async () => {
         const { statusCode } = await handleLogin(
           APIGatewayEvent,
           context,
@@ -723,14 +691,14 @@ describe("handleLogin", () => {
       describe('when the password does not match"', () => {
         const adminUser = createAdminUser({
           email,
-          passwordHash: faker.datatype.string(20),
+          passwordHash: faker.datatype.string(20)
         });
         beforeEach(() => {
           mocked(fetchUserByEmail).mockResolvedValueOnce(adminUser);
           mocked(bcrypt.compare).mockResolvedValueOnce(false as never);
         });
 
-        it("returns statusCode 400", async () => {
+        it('returns statusCode 400', async () => {
           const { statusCode } = await handleLogin(
             APIGatewayEvent,
             context,
@@ -754,7 +722,7 @@ describe("handleLogin", () => {
       describe('when the password matches"', () => {
         const adminUser = createAdminUser({
           email,
-          passwordHash: faker.datatype.string(20),
+          passwordHash: faker.datatype.string(20)
         });
         const sessionId = faker.datatype.uuid();
 
@@ -764,12 +732,12 @@ describe("handleLogin", () => {
           mocked(createNewSession).mockResolvedValueOnce({
             sessionId,
             sessionData: {
-              userId: adminUser.userId,
-            },
+              userId: adminUser.userId
+            }
           });
         });
 
-        it("returns statusCode 200", async () => {
+        it('returns statusCode 200', async () => {
           const { statusCode } = await handleLogin(
             APIGatewayEvent,
             context,
@@ -779,7 +747,7 @@ describe("handleLogin", () => {
           expect(statusCode).toEqual(200);
         });
 
-        it("returns a session", async () => {
+        it('returns a session', async () => {
           const { body } = await handleLogin(
             APIGatewayEvent,
             context,
@@ -789,8 +757,8 @@ describe("handleLogin", () => {
           expect(JSON.parse(body)).toEqual({
             sessionId,
             sessionData: {
-              userId: adminUser.userId,
-            },
+              userId: adminUser.userId
+            }
           });
         });
       });

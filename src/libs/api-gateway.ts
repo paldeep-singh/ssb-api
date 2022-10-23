@@ -1,6 +1,6 @@
 import type {
-  APIGatewayProxyEvent,
   APIGatewayProxyResult,
+  APIGatewayProxyEvent,
   Callback,
   Context
 } from 'aws-lambda';
@@ -43,4 +43,42 @@ export const formatJSONErrorResponse = (
   message: string
 ): ApiGateWayResponse => {
   return formatJSONResponse(statusCode, { message });
+};
+
+export const jsonDeserializer =
+  <requestParams extends JSONSchema7>() =>
+  (handler: LambdaEventWithResult<requestParams>) =>
+  async (
+    event: APIGatewayProxyEvent,
+    context: Context,
+    callback: Callback<APIGatewayProxyResult>
+  ): Promise<APIGatewayProxyResult> => {
+    const { body, headers, isBase64Encoded } = event;
+
+    const mimePattern = /^application\/(.+\+)?json(;.*)?$/;
+
+    const contentType =
+      headers['Content-Type'] ?? headers['content-type'] ?? '';
+
+    if (!body || !mimePattern.test(contentType)) {
+      throw new Error('Invalid request params');
+    }
+
+    const data = isBase64Encoded
+      ? Buffer.from(body, 'base64').toString()
+      : body;
+
+    const bodyObject = JSON.parse(data) as FromSchema<requestParams>;
+
+    return await handler({ ...event, body: bodyObject }, context, callback);
+  };
+
+export const bodyParser = <requestSchema extends JSONSchema7>(
+  handler: LambdaEventWithResult<requestSchema>
+): ((
+  event: APIGatewayProxyEvent,
+  context: Context,
+  callback: Callback<APIGatewayProxyResult>
+) => Promise<APIGatewayProxyResult>) => {
+  return jsonDeserializer<requestSchema>()(handler);
 };

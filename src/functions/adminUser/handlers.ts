@@ -1,32 +1,32 @@
 import {
   putVerificationCode,
   fetchVerificationCode,
-  deleteVerificationCode,
-} from "./models/verificationCodes";
-import { ErrorCodes } from "./misc";
+  deleteVerificationCode
+} from './models/verificationCodes';
+import { ErrorCodes } from './misc';
 import {
   LambdaEventWithResult,
   formatJSONResponse,
   formatJSONErrorResponse,
-} from "@libs/api-gateway";
+  bodyParser
+} from '@libs/api-gateway';
 import {
   adminUserEmailInput,
   adminUserLoginInput,
   adminUserSetPasswordInput,
-  adminUserVerifyEmailInput,
-} from "./schema";
-import { middyfy } from "@libs/lambda";
-import { isError } from "@libs/utils";
-import { randomBytes } from "crypto";
-import { sesClient } from "@libs/ses";
-import { SendEmailCommand } from "@aws-sdk/client-ses";
+  adminUserVerifyEmailInput
+} from './schema';
+import { isError } from '@libs/utils';
+import { randomBytes } from 'crypto';
+import { sesClient } from '@libs/ses';
+import { SendEmailCommand } from '@aws-sdk/client-ses';
 import {
   adminUserEmailExists,
   fetchUserByEmail,
-  updatePassword,
-} from "./models/adminUsers";
-import bcrypt from "bcryptjs";
-import { createNewSession } from "./models/sessions";
+  updatePassword
+} from './models/adminUsers';
+import bcrypt from 'bcryptjs';
+import { createNewSession } from './models/sessions';
 
 export const passwordValidationRegex =
   /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$/;
@@ -85,7 +85,7 @@ const sendVerificationCode: LambdaEventWithResult<
   try {
     const { userId } = await fetchUserByEmail(email);
 
-    const verificationCode = randomBytes(3).toString("hex").toUpperCase();
+    const verificationCode = randomBytes(3).toString('hex').toUpperCase();
 
     const codeHash = await bcrypt.hash(verificationCode, 10);
 
@@ -96,19 +96,19 @@ const sendVerificationCode: LambdaEventWithResult<
 
     const sendEmail = new SendEmailCommand({
       Destination: {
-        ToAddresses: [email],
+        ToAddresses: [email]
       },
       Message: {
         Subject: {
-          Data: "Spice Spice Baby Verification Code",
+          Data: 'Spice Spice Baby Verification Code'
         },
         Body: {
           Text: {
-            Data: `Your verification code is: ${verificationCode}`,
-          },
-        },
+            Data: `Your verification code is: ${verificationCode}`
+          }
+        }
       },
-      Source: "spicespicebaby01@gmail.com",
+      Source: 'spicespicebaby01@gmail.com'
     });
 
     await sesClient.send(sendEmail);
@@ -170,7 +170,7 @@ const verifyEmail: LambdaEventWithResult<
 };
 
 const login: LambdaEventWithResult<typeof adminUserLoginInput> = async ({
-  body: { email, password },
+  body: { email, password }
 }) => {
   try {
     const adminUser = await fetchUserByEmail(email);
@@ -200,15 +200,17 @@ const login: LambdaEventWithResult<typeof adminUserLoginInput> = async ({
   }
 };
 
-export const handleCheckAdminUserAccountIsClaimed = middyfy(
-  checkAccountIsClaimed
-);
+export const handleCheckAdminUserAccountIsClaimed = bodyParser<
+  typeof adminUserEmailInput
+>(checkAccountIsClaimed);
 
-export const handleSetAdminUserPassword = middyfy(setPassword);
+export const handleSetAdminUserPassword =
+  bodyParser<typeof adminUserSetPasswordInput>(setPassword);
 
 export const handleSendAdminUserVerificationCode =
-  middyfy(sendVerificationCode);
+  bodyParser<typeof adminUserEmailInput>(sendVerificationCode);
 
-export const handleVerifyAdminUserEmail = middyfy(verifyEmail);
+export const handleVerifyAdminUserEmail =
+  bodyParser<typeof adminUserVerifyEmailInput>(verifyEmail);
 
-export const handleLogin = middyfy(login);
+export const handleLogin = bodyParser<typeof adminUserLoginInput>(login);
