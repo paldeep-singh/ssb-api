@@ -1,57 +1,57 @@
-import { AwsStrings, Tag } from './misc-aws-utils';
+import { AwsStrings, Tag } from './misc-aws-utils'
 
 type Principal =
   | '*'
   | {
-      AWS: AwsStrings;
+      AWS: AwsStrings
     }
   | {
-      Service: AwsStrings;
+      Service: AwsStrings
     }
   | {
-      Federated: AwsStrings;
-    };
+      Federated: AwsStrings
+    }
 
-type Resource = AwsStrings;
+type Resource = AwsStrings
 
 export type Statement = {
-  Sid?: string;
-  Effect: 'Allow' | 'Deny';
-  Action: string | string[];
-  NotAction?: string | string[];
-  Principal?: Principal;
-  NotPrincipal?: Principal;
-  Resource?: Resource | Resource[];
-  NotResource?: Resource | Resource[];
+  Sid?: string
+  Effect: 'Allow' | 'Deny'
+  Action: string | string[]
+  NotAction?: string | string[]
+  Principal?: Principal
+  NotPrincipal?: Principal
+  Resource?: Resource | Resource[]
+  NotResource?: Resource | Resource[]
   Condition?: {
-    [key: string]: string;
-  };
-};
+    [key: string]: string
+  }
+}
 
 export type PolicyDocument = {
-  Version: '2012-10-17';
-  Statement: Statement | Statement[];
-};
+  Version: '2012-10-17'
+  Statement: Statement | Statement[]
+}
 
 type Policy = {
-  PolicyName: string;
-  PolicyDocument: PolicyDocument;
-};
+  PolicyName: string
+  PolicyDocument: PolicyDocument
+}
 
 type iamRole = {
-  Type: 'AWS::IAM::Role';
+  Type: 'AWS::IAM::Role'
   Properties: {
-    AssumeRolePolicyDocument: PolicyDocument;
-    Description?: string;
-    ManagedPolicyArns?: string[];
-    MaxSessionDuration?: number;
-    Path?: string;
-    PermissionsBoundary?: string;
-    Policies?: Policy[];
-    RoleName: string;
-    Tags?: Tag[];
-  };
-};
+    AssumeRolePolicyDocument: PolicyDocument
+    Description?: string
+    ManagedPolicyArns?: string[]
+    MaxSessionDuration?: number
+    Path?: string
+    PermissionsBoundary?: string
+    Policies?: Policy[]
+    RoleName: string
+    Tags?: Tag[]
+  }
+}
 
 const lambdaAssumeRolePolicyDocument: PolicyDocument = {
   Version: '2012-10-17',
@@ -62,7 +62,7 @@ const lambdaAssumeRolePolicyDocument: PolicyDocument = {
       Service: 'lambda.amazonaws.com'
     }
   }
-};
+}
 
 const lambdaBaseStatement: Statement = {
   Effect: 'Allow',
@@ -73,12 +73,12 @@ const lambdaBaseStatement: Statement = {
         'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*'
     }
   ]
-};
+}
 
 interface ICreateLambdaRole {
-  statements: Statement[];
-  roleName: string;
-  policyName: string;
+  statements: Statement[]
+  roleName: string
+  policyName: string
 }
 
 export const createLambdaRole = ({
@@ -101,7 +101,7 @@ export const createLambdaRole = ({
         }
       ]
     }
-  };
+  }
 
-  return role;
-};
+  return role
+}

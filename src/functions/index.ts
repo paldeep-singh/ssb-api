@@ -1,5 +1,5 @@
-import adminUserFunctions from "./adminUser";
+import adminUserFunctions from './adminUser'
 
 export default {
-  ...adminUserFunctions,
-};
+  ...adminUserFunctions
+}

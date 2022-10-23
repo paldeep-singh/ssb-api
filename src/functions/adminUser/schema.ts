@@ -1,35 +1,35 @@
 export const adminUserEmailInput = {
-  type: "object",
+  type: 'object',
   properties: {
-    email: { type: "string" },
+    email: { type: 'string' }
   },
-  required: ["email"],
-} as const;
+  required: ['email']
+} as const
 
 export const adminUserSetPasswordInput = {
-  type: "object",
+  type: 'object',
   properties: {
-    email: { type: "string" },
-    newPassword: { type: "string" },
-    confirmNewPassword: { type: "string" },
+    email: { type: 'string' },
+    newPassword: { type: 'string' },
+    confirmNewPassword: { type: 'string' }
   },
-  required: ["email", "newPassword", "confirmNewPassword"],
-} as const;
+  required: ['email', 'newPassword', 'confirmNewPassword']
+} as const
 
 export const adminUserLoginInput = {
-  type: "object",
+  type: 'object',
   properties: {
-    email: { type: "string" },
-    password: { type: "string" },
+    email: { type: 'string' },
+    password: { type: 'string' }
   },
-  required: ["email", "password"],
-} as const;
+  required: ['email', 'password']
+} as const
 
 export const adminUserVerifyEmailInput = {
-  type: "object",
+  type: 'object',
   properties: {
-    email: { type: "string" },
-    verificationCode: { type: "string" },
+    email: { type: 'string' },
+    verificationCode: { type: 'string' }
   },
-  required: ["email", "verificationCode"],
-} as const;
+  required: ['email', 'verificationCode']
+} as const

@@ -3,12 +3,12 @@ import {
   adminUserLoginInput,
   adminUserSetPasswordInput,
   adminUserVerifyEmailInput
-} from './schema';
-import { handlerPath, handlerRoute } from '@libs/handler-resolver';
-import { AWS } from '@serverless/typescript';
+} from './schema'
+import { handlerPath, handlerRoute } from '@libs/handler-resolver'
+import { AWS } from '@serverless/typescript'
 
-const path = handlerPath(__dirname);
-const route = handlerRoute(__dirname);
+const path = handlerPath(__dirname)
+const route = handlerRoute(__dirname)
 
 const adminUserFunctions: AWS['functions'] = {
   adminUserAccountIsClaimed: {
@@ -96,6 +96,6 @@ const adminUserFunctions: AWS['functions'] = {
     ],
     role: 'adminUserLoginRole'
   }
-};
+}
 
-export default adminUserFunctions;
+export default adminUserFunctions

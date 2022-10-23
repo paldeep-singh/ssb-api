@@ -2,97 +2,97 @@ import {
   putVerificationCode,
   fetchVerificationCode,
   deleteVerificationCode
-} from './models/verificationCodes';
-import { ErrorCodes } from './misc';
+} from './models/verificationCodes'
+import { ErrorCodes } from './misc'
 import {
   LambdaEventWithResult,
   formatJSONResponse,
   formatJSONErrorResponse,
   bodyParser
-} from '@libs/api-gateway';
+} from '@libs/api-gateway'
 import {
   adminUserEmailInput,
   adminUserLoginInput,
   adminUserSetPasswordInput,
   adminUserVerifyEmailInput
-} from './schema';
-import { isError } from '@libs/utils';
-import { randomBytes } from 'crypto';
-import { sesClient } from '@libs/ses';
-import { SendEmailCommand } from '@aws-sdk/client-ses';
+} from './schema'
+import { isError } from '@libs/utils'
+import { randomBytes } from 'crypto'
+import { sesClient } from '@libs/ses'
+import { SendEmailCommand } from '@aws-sdk/client-ses'
 import {
   adminUserEmailExists,
   fetchUserByEmail,
   updatePassword
-} from './models/adminUsers';
-import bcrypt from 'bcryptjs';
-import { createNewSession } from './models/sessions';
+} from './models/adminUsers'
+import bcrypt from 'bcryptjs'
+import { createNewSession } from './models/sessions'
 
 export const passwordValidationRegex =
-  /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$/;
+  /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$/
 
 const checkAccountIsClaimed: LambdaEventWithResult<
   typeof adminUserEmailInput
 > = async (event) => {
-  const { email } = event.body;
+  const { email } = event.body
   try {
-    const user = await fetchUserByEmail(email);
+    const user = await fetchUserByEmail(email)
 
-    const accountClaimed = !!user.passwordHash;
+    const accountClaimed = !!user.passwordHash
 
-    return formatJSONResponse(200, { accountClaimed });
+    return formatJSONResponse(200, { accountClaimed })
   } catch (error) {
-    if (!isError(error)) throw error;
+    if (!isError(error)) throw error
 
     if (error.message === ErrorCodes.NON_EXISTENT_ADMIN_USER) {
-      return formatJSONErrorResponse(404, error.message);
+      return formatJSONErrorResponse(404, error.message)
     }
 
-    throw error;
+    throw error
   }
-};
+}
 
 const setPassword: LambdaEventWithResult<
   typeof adminUserSetPasswordInput
 > = async (event) => {
-  const { email, newPassword, confirmNewPassword } = event.body;
+  const { email, newPassword, confirmNewPassword } = event.body
 
   if (!(await adminUserEmailExists(email))) {
-    return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER);
+    return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER)
   }
 
   if (newPassword !== confirmNewPassword) {
-    return formatJSONErrorResponse(400, ErrorCodes.PASSWORD_MISMATCH);
+    return formatJSONErrorResponse(400, ErrorCodes.PASSWORD_MISMATCH)
   }
 
   // Password must contain one number, one lowercase letter, one uppercase letter,
   // and be at least 8 characters long
   if (!passwordValidationRegex.test(newPassword)) {
-    return formatJSONErrorResponse(400, ErrorCodes.INVALID_PASSWORD);
+    return formatJSONErrorResponse(400, ErrorCodes.INVALID_PASSWORD)
   }
 
-  const newPasswordHash = await bcrypt.hash(newPassword, 10);
+  const newPasswordHash = await bcrypt.hash(newPassword, 10)
 
-  await updatePassword({ email, newPasswordHash });
-  return formatJSONResponse(200, { passwordSet: true });
-};
+  await updatePassword({ email, newPasswordHash })
+  return formatJSONResponse(200, { passwordSet: true })
+}
 
 const sendVerificationCode: LambdaEventWithResult<
   typeof adminUserEmailInput
 > = async (event) => {
-  const { email } = event.body;
+  const { email } = event.body
 
   try {
-    const { userId } = await fetchUserByEmail(email);
+    const { userId } = await fetchUserByEmail(email)
 
-    const verificationCode = randomBytes(3).toString('hex').toUpperCase();
+    const verificationCode = randomBytes(3).toString('hex').toUpperCase()
 
-    const codeHash = await bcrypt.hash(verificationCode, 10);
+    const codeHash = await bcrypt.hash(verificationCode, 10)
 
     // delete any existing verification code
-    await deleteVerificationCode(userId);
+    await deleteVerificationCode(userId)
 
-    await putVerificationCode({ userId, codeHash });
+    await putVerificationCode({ userId, codeHash })
 
     const sendEmail = new SendEmailCommand({
       Destination: {
@@ -109,108 +109,108 @@ const sendVerificationCode: LambdaEventWithResult<
         }
       },
       Source: 'spicespicebaby01@gmail.com'
-    });
+    })
 
-    await sesClient.send(sendEmail);
+    await sesClient.send(sendEmail)
 
-    return formatJSONResponse(200, {});
+    return formatJSONResponse(200, {})
   } catch (error) {
-    if (!isError(error)) throw error;
+    if (!isError(error)) throw error
 
     if (error.message === ErrorCodes.NON_EXISTENT_ADMIN_USER)
-      return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER);
+      return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER)
 
-    throw error;
+    throw error
   }
-};
+}
 
 const verifyEmail: LambdaEventWithResult<
   typeof adminUserVerifyEmailInput
 > = async (event) => {
-  const { email, verificationCode: providedCode } = event.body;
+  const { email, verificationCode: providedCode } = event.body
 
   try {
-    const { userId } = await fetchUserByEmail(email);
+    const { userId } = await fetchUserByEmail(email)
 
-    const { codeHash, ttl } = await fetchVerificationCode(userId);
+    const { codeHash, ttl } = await fetchVerificationCode(userId)
 
-    const now = new Date().getTime();
-    const codeExpiry = new Date(ttl).getTime();
+    const now = new Date().getTime()
+    const codeExpiry = new Date(ttl).getTime()
 
     if (now > codeExpiry) {
-      await deleteVerificationCode(userId);
-      return formatJSONErrorResponse(400, ErrorCodes.VERIFICATION_CODE_EXPIRED);
+      await deleteVerificationCode(userId)
+      return formatJSONErrorResponse(400, ErrorCodes.VERIFICATION_CODE_EXPIRED)
     }
 
-    const codeMatch = await bcrypt.compare(providedCode, codeHash);
+    const codeMatch = await bcrypt.compare(providedCode, codeHash)
 
     if (!codeMatch) {
-      return formatJSONErrorResponse(400, ErrorCodes.INVALID_VERIFICATION_CODE);
+      return formatJSONErrorResponse(400, ErrorCodes.INVALID_VERIFICATION_CODE)
     }
 
-    await deleteVerificationCode(userId);
+    await deleteVerificationCode(userId)
 
-    const session = await createNewSession(userId, true);
+    const session = await createNewSession(userId, true)
 
-    return formatJSONResponse(200, { ...session });
+    return formatJSONResponse(200, { ...session })
   } catch (error) {
-    if (!isError(error)) throw error;
+    if (!isError(error)) throw error
 
     if (error.message === ErrorCodes.NON_EXISTENT_ADMIN_USER)
-      return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER);
+      return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER)
 
     if (error.message === ErrorCodes.NO_ACTIVE_VERIFICATION_CODE)
       return formatJSONErrorResponse(
         404,
         ErrorCodes.NO_ACTIVE_VERIFICATION_CODE
-      );
+      )
 
-    throw error;
+    throw error
   }
-};
+}
 
 const login: LambdaEventWithResult<typeof adminUserLoginInput> = async ({
   body: { email, password }
 }) => {
   try {
-    const adminUser = await fetchUserByEmail(email);
+    const adminUser = await fetchUserByEmail(email)
 
     if (!adminUser.passwordHash) {
-      return formatJSONErrorResponse(400, ErrorCodes.ACCOUNT_UNCLAIMED);
+      return formatJSONErrorResponse(400, ErrorCodes.ACCOUNT_UNCLAIMED)
     }
 
-    const { passwordHash, userId } = adminUser;
+    const { passwordHash, userId } = adminUser
 
-    const passwordMatch = await bcrypt.compare(password, passwordHash);
+    const passwordMatch = await bcrypt.compare(password, passwordHash)
 
     if (!passwordMatch) {
-      return formatJSONErrorResponse(400, ErrorCodes.INVALID_PASSWORD);
+      return formatJSONErrorResponse(400, ErrorCodes.INVALID_PASSWORD)
     }
 
-    const session = await createNewSession(userId);
+    const session = await createNewSession(userId)
 
-    return formatJSONResponse(200, { ...session });
+    return formatJSONResponse(200, { ...session })
   } catch (error) {
-    if (!isError(error)) throw error;
+    if (!isError(error)) throw error
 
     if (error.message === ErrorCodes.NON_EXISTENT_ADMIN_USER)
-      return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER);
+      return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER)
 
-    throw error;
+    throw error
   }
-};
+}
 
 export const handleCheckAdminUserAccountIsClaimed = bodyParser<
   typeof adminUserEmailInput
->(checkAccountIsClaimed);
+>(checkAccountIsClaimed)
 
 export const handleSetAdminUserPassword =
-  bodyParser<typeof adminUserSetPasswordInput>(setPassword);
+  bodyParser<typeof adminUserSetPasswordInput>(setPassword)
 
 export const handleSendAdminUserVerificationCode =
-  bodyParser<typeof adminUserEmailInput>(sendVerificationCode);
+  bodyParser<typeof adminUserEmailInput>(sendVerificationCode)
 
 export const handleVerifyAdminUserEmail =
-  bodyParser<typeof adminUserVerifyEmailInput>(verifyEmail);
+  bodyParser<typeof adminUserVerifyEmailInput>(verifyEmail)
 
-export const handleLogin = bodyParser<typeof adminUserLoginInput>(login);
+export const handleLogin = bodyParser<typeof adminUserLoginInput>(login)

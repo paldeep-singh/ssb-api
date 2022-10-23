@@ -1,7 +1,7 @@
-import adminUserResources from "./adminUser/resources";
+import adminUserResources from './adminUser/resources'
 
 const resources = {
-  ...adminUserResources,
-};
+  ...adminUserResources
+}
 
-export default resources;
+export default resources

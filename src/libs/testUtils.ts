@@ -3,8 +3,8 @@ export const expectError = (
   expectedErrorMessage: string
 ): void => {
   if (maybeError instanceof Error) {
-    return expect(maybeError.message).toContain(expectedErrorMessage);
+    return expect(maybeError.message).toContain(expectedErrorMessage)
   } else {
-    throw new Error(`Expected error, got ${maybeError}`);
+    throw new Error(`Expected error, got ${maybeError}`)
   }
-};
+}

@@ -1,31 +1,31 @@
-import type { AWS } from "@serverless/typescript";
-import functions from "@functions/index";
-import resources from "@functions/resources";
-import roles from "@functions/roles";
-import environment from "@libs/env";
+import type { AWS } from '@serverless/typescript'
+import functions from '@functions/index'
+import resources from '@functions/resources'
+import roles from '@functions/roles'
+import environment from '@libs/env'
 
-const stage = environment.STAGE;
-if (!stage) throw new Error("STAGE environment variable is not set");
+const stage = environment.STAGE
+if (!stage) throw new Error('STAGE environment variable is not set')
 
-const local = "local";
-const dynamoDbPort = 8448;
+const local = 'local'
+const dynamoDbPort = 8448
 
 const serverlessConfiguration: AWS = {
-  service: "ssb-api",
+  service: 'ssb-api',
   plugins: [
-    "serverless-esbuild",
-    "serverless-dynamodb-local",
-    "serverless-offline",
+    'serverless-esbuild',
+    'serverless-dynamodb-local',
+    'serverless-offline'
   ],
-  frameworkVersion: "*",
+  frameworkVersion: '*',
   provider: {
-    name: "aws",
+    name: 'aws',
     stage,
-    runtime: "nodejs16.x",
-    region: "ap-southeast-2",
+    runtime: 'nodejs16.x',
+    region: 'ap-southeast-2',
     environment: {
-      STAGE: stage,
-    },
+      STAGE: stage
+    }
   },
   functions,
   custom: {
@@ -33,11 +33,11 @@ const serverlessConfiguration: AWS = {
       bundle: true,
       minify: false,
       sourcemap: true,
-      exclude: ["aws-sdk"],
-      target: "node16",
-      define: { "require.resolve": undefined },
-      platform: "node",
-      concurrency: 10,
+      exclude: ['aws-sdk'],
+      target: 'node16',
+      define: { 'require.resolve': undefined },
+      platform: 'node',
+      concurrency: 10
     },
     dynamodb: {
       stages: [local],
@@ -46,10 +46,10 @@ const serverlessConfiguration: AWS = {
         migrate: true,
         port: dynamoDbPort,
         inMemory: true,
-        convertEmptyValues: true,
+        convertEmptyValues: true
         // Uncomment only if you already have a DynamoDB running locally,
         // noStart: true},
-      },
+      }
       // TODO: Get seeds to work
       // seed: {
       //   dev: {
@@ -66,14 +66,14 @@ const serverlessConfiguration: AWS = {
       //     ],
       //   },
       // },
-    },
+    }
   },
   resources: {
     Resources: {
       ...resources,
-      ...roles,
-    },
-  },
-};
+      ...roles
+    }
+  }
+}
 
-module.exports = serverlessConfiguration;
+module.exports = serverlessConfiguration

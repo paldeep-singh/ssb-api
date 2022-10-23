@@ -1,150 +1,150 @@
-import axios, { AxiosRequestHeaders } from "axios";
-import { randomBytes } from "crypto";
-import { STAGE } from "@libs/env";
-import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
+import axios, { AxiosRequestHeaders } from 'axios'
+import { randomBytes } from 'crypto'
+import { STAGE } from '@libs/env'
+import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm'
 import {
   UPSTASH_TOKEN_PARAMETER_NAME,
-  UPSTASH_URL_PARAMETER_NAME,
-} from "../resources";
+  UPSTASH_URL_PARAMETER_NAME
+} from '../resources'
 
 export const getRedisURL = async (): Promise<string> => {
-  if (STAGE === "local") {
-    return process.env.UPSTASH_REDIS_REST_URL || "";
+  if (STAGE === 'local') {
+    return process.env.UPSTASH_REDIS_REST_URL || ''
   }
 
-  const ssm = new SSMClient({});
+  const ssm = new SSMClient({})
 
   const getURLCommand = new GetParameterCommand({
-    Name: UPSTASH_URL_PARAMETER_NAME,
-  });
+    Name: UPSTASH_URL_PARAMETER_NAME
+  })
 
-  const urlParameter = await ssm.send(getURLCommand);
+  const urlParameter = await ssm.send(getURLCommand)
 
   if (!urlParameter.Parameter)
-    throw new Error(`Upstash REST API URL must be provided`);
+    throw new Error(`Upstash REST API URL must be provided`)
   else if (!urlParameter.Parameter.Value)
-    throw new Error("Invalid value for Upstash REST API URL parameter");
+    throw new Error('Invalid value for Upstash REST API URL parameter')
 
   const {
-    Parameter: { Value: redisURL },
-  } = urlParameter;
+    Parameter: { Value: redisURL }
+  } = urlParameter
 
-  return redisURL;
-};
+  return redisURL
+}
 
 const getRedisToken = async (): Promise<string> => {
-  if (STAGE === "local") {
-    return process.env.UPSTASH_REDIS_REST_TOKEN || "";
+  if (STAGE === 'local') {
+    return process.env.UPSTASH_REDIS_REST_TOKEN || ''
   }
 
-  const ssm = new SSMClient({});
+  const ssm = new SSMClient({})
 
   const getTokenCommand = new GetParameterCommand({
-    Name: UPSTASH_TOKEN_PARAMETER_NAME,
-  });
+    Name: UPSTASH_TOKEN_PARAMETER_NAME
+  })
 
-  const tokenParameter = await ssm.send(getTokenCommand);
+  const tokenParameter = await ssm.send(getTokenCommand)
 
   if (!tokenParameter.Parameter)
-    throw new Error("Upstast REST API token must be provided");
+    throw new Error('Upstast REST API token must be provided')
   else if (!tokenParameter.Parameter.Value)
-    throw new Error("Invalid value for Upstash REST API token parameter");
+    throw new Error('Invalid value for Upstash REST API token parameter')
 
   const {
-    Parameter: { Value: redisToken },
-  } = tokenParameter;
+    Parameter: { Value: redisToken }
+  } = tokenParameter
 
-  return redisToken;
-};
+  return redisToken
+}
 
 export const getRedisHeaders = async (): Promise<
   Partial<AxiosRequestHeaders>
 > => {
-  const redisToken = await getRedisToken();
+  const redisToken = await getRedisToken()
 
   return {
     Authorization: `Bearer ${redisToken}`,
-    Accept: "application/json",
-    "Content-Type": "application/json",
-  };
-};
+    Accept: 'application/json',
+    'Content-Type': 'application/json'
+  }
+}
 
-const FIVE_MINUTES = 60 * 5;
-const THIRTY_MINUTES = 60 * 30;
+const FIVE_MINUTES = 60 * 5
+const THIRTY_MINUTES = 60 * 30
 
 interface ISessionData {
-  userId: string;
+  userId: string
 }
 
 interface ISession {
-  sessionId: string;
-  sessionData: ISessionData;
+  sessionId: string
+  sessionData: ISessionData
 }
 
 export const createNewSession = async (
   userId: string,
   short = false
 ): Promise<ISession> => {
-  const redisURL = await getRedisURL();
-  const sessionId = randomBytes(32).toString("hex");
+  const redisURL = await getRedisURL()
+  const sessionId = randomBytes(32).toString('hex')
 
-  const expiry = short ? FIVE_MINUTES : THIRTY_MINUTES;
+  const expiry = short ? FIVE_MINUTES : THIRTY_MINUTES
 
-  const requestURL = `${redisURL}/set/${sessionId}?EX=${expiry}`;
+  const requestURL = `${redisURL}/set/${sessionId}?EX=${expiry}`
 
   const data = {
-    userId,
-  };
+    userId
+  }
 
-  const headers = await getRedisHeaders();
+  const headers = await getRedisHeaders()
 
-  await axios.post(requestURL, data, { headers });
+  await axios.post(requestURL, data, { headers })
 
   return {
     sessionId,
-    sessionData: data,
-  };
-};
+    sessionData: data
+  }
+}
 
 export const updateSession = async (
   sessionId: string,
   sessionData: ISessionData
 ): Promise<ISession> => {
-  const redisURL = await getRedisURL();
-  const requestURL = `${redisURL}/set/${sessionId}?EX=${THIRTY_MINUTES}`;
-  const headers = await getRedisHeaders();
+  const redisURL = await getRedisURL()
+  const requestURL = `${redisURL}/set/${sessionId}?EX=${THIRTY_MINUTES}`
+  const headers = await getRedisHeaders()
 
-  await axios.post(requestURL, sessionData, { headers });
+  await axios.post(requestURL, sessionData, { headers })
 
   return {
     sessionId,
-    sessionData: sessionData,
-  };
-};
+    sessionData: sessionData
+  }
+}
 
 export const fetchSession = async (
   sessionId: string
 ): Promise<ISession | null> => {
-  const redisURL = await getRedisURL();
-  const requestURL = `${redisURL}/get/${sessionId}`;
+  const redisURL = await getRedisURL()
+  const requestURL = `${redisURL}/get/${sessionId}`
 
-  const headers = await getRedisHeaders();
+  const headers = await getRedisHeaders()
 
   const response = await axios.get<{ result: ISessionData | null }>(
     requestURL,
     {
-      headers,
+      headers
     }
-  );
+  )
 
   if (!response.data.result) {
-    return null;
+    return null
   }
 
-  const data = response.data.result;
+  const data = response.data.result
 
   return {
     sessionId,
-    sessionData: data,
-  };
-};
+    sessionData: data
+  }
+}

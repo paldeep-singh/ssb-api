@@ -1,17 +1,17 @@
-import { model, Schema, transaction } from 'dynamoose';
-import { Item } from 'dynamoose/dist/Item';
-import { Query } from 'dynamoose/dist/ItemRetriever';
-import { ErrorCodes } from '../misc';
+import { model, Schema, transaction } from 'dynamoose'
+import { Item } from 'dynamoose/dist/Item'
+import { Query } from 'dynamoose/dist/ItemRetriever'
+import { ErrorCodes } from '../misc'
 import {
   ADMIN_USER_EMAIL_INDEX_NAME,
   ADMIN_USER_TABLE_NAME
-} from '../resources';
-import { baseTableConfig } from '../misc';
+} from '../resources'
+import { baseTableConfig } from '../misc'
 
 export interface IAdminUser {
-  userId: string;
-  email: string;
-  passwordHash?: string;
+  userId: string
+  email: string
+  passwordHash?: string
 }
 
 const adminUserSchema = new Schema({
@@ -28,7 +28,7 @@ const adminUserSchema = new Schema({
     }
   },
   passwordHash: String
-});
+})
 
 interface adminUserItem extends Item, IAdminUser {}
 
@@ -36,37 +36,37 @@ export const adminUserModel = model<adminUserItem>(
   ADMIN_USER_TABLE_NAME,
   adminUserSchema,
   baseTableConfig
-);
+)
 
 const queryAdminUserByEmail = (email: string): Query<IAdminUser> => {
-  return adminUserModel.query('email').eq(email);
-};
+  return adminUserModel.query('email').eq(email)
+}
 
 export const adminUserEmailExists = async (email: string): Promise<boolean> => {
-  const response = await queryAdminUserByEmail(email).count().exec();
+  const response = await queryAdminUserByEmail(email).count().exec()
 
-  return response.count !== 0;
-};
+  return response.count !== 0
+}
 
 export const fetchUserByEmail = async (email: string): Promise<IAdminUser> => {
-  const [adminUser] = await queryAdminUserByEmail(email).exec();
+  const [adminUser] = await queryAdminUserByEmail(email).exec()
 
-  if (!adminUser) throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER);
+  if (!adminUser) throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER)
 
-  return adminUser;
-};
+  return adminUser
+}
 
 export const updatePassword = async ({
   email,
   newPasswordHash
 }: {
-  email: string;
-  newPasswordHash: string;
+  email: string
+  newPasswordHash: string
 }): Promise<void> => {
-  const [adminUser] = await queryAdminUserByEmail(email).exec();
+  const [adminUser] = await queryAdminUserByEmail(email).exec()
 
   if (!adminUser) {
-    throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER);
+    throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER)
   }
 
   const updateTransaction = adminUserModel.transaction.update(
@@ -78,7 +78,7 @@ export const updatePassword = async ({
         passwordHash: newPasswordHash
       }
     }
-  );
+  )
 
-  await transaction([updateTransaction]);
-};
+  await transaction([updateTransaction])
+}

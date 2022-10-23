@@ -1,5 +1,5 @@
-import { faker } from '@faker-js/faker';
-import { APIGatewayProxyEvent, Context } from 'aws-lambda';
+import { faker } from '@faker-js/faker'
+import { APIGatewayProxyEvent, Context } from 'aws-lambda'
 
 export const createAPIGatewayProxyEvent = (
   body: Record<string, unknown>,
@@ -50,8 +50,8 @@ export const createAPIGatewayProxyEvent = (
     resource: '',
     ...eventAttributes,
     body: JSON.stringify(body)
-  };
-};
+  }
+}
 
 export const createAPIGatewayProxyEventContext = (
   contextAttributes: Partial<Context> = {}
@@ -72,5 +72,5 @@ export const createAPIGatewayProxyEventContext = (
     fail: jest.fn(),
     succeed: jest.fn(),
     ...contextAttributes
-  };
-};
+  }
+}

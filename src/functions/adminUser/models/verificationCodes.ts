@@ -1,16 +1,16 @@
-import { Schema, model } from 'dynamoose';
-import { Item } from 'dynamoose/dist/Item';
-import { VERIFICATION_CODE_TABLE_NAME } from '../resources';
-import { ErrorCodes } from '../misc';
-import { baseTableConfig } from '../misc';
+import { Schema, model } from 'dynamoose'
+import { Item } from 'dynamoose/dist/Item'
+import { VERIFICATION_CODE_TABLE_NAME } from '../resources'
+import { ErrorCodes } from '../misc'
+import { baseTableConfig } from '../misc'
 
 export interface IVerificationCode {
-  userId: string;
-  codeHash: string;
-  ttl: string;
+  userId: string
+  codeHash: string
+  ttl: string
 }
 
-export type IVerificationCodeVariables = Omit<IVerificationCode, 'ttl'>;
+export type IVerificationCodeVariables = Omit<IVerificationCode, 'ttl'>
 
 const verificationCodeSchema = new Schema({
   userId: {
@@ -19,7 +19,7 @@ const verificationCodeSchema = new Schema({
   },
   codeHash: String,
   codeSalt: String
-});
+})
 
 interface verificationCodeItem extends Item, IVerificationCode {}
 
@@ -32,7 +32,7 @@ export const verificationCodeModel = model<verificationCodeItem>(
       ttl: 1000 * 60 * 5 // 5 minutes
     }
   }
-);
+)
 
 export const putVerificationCode = async ({
   userId,
@@ -41,21 +41,21 @@ export const putVerificationCode = async ({
   await verificationCodeModel.create({
     userId,
     codeHash
-  });
-};
+  })
+}
 
 export const fetchVerificationCode = async (
   userId: string
 ): Promise<IVerificationCode> => {
-  const verificationCode = await verificationCodeModel.get(userId);
+  const verificationCode = await verificationCodeModel.get(userId)
 
   if (!verificationCode) {
-    throw new Error(ErrorCodes.NO_ACTIVE_VERIFICATION_CODE);
+    throw new Error(ErrorCodes.NO_ACTIVE_VERIFICATION_CODE)
   }
 
-  return verificationCode;
-};
+  return verificationCode
+}
 
 export const deleteVerificationCode = async (email: string): Promise<void> => {
-  await verificationCodeModel.delete(email);
-};
+  await verificationCodeModel.delete(email)
+}

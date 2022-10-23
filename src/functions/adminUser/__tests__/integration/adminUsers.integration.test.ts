@@ -1,121 +1,121 @@
-import { faker } from "@faker-js/faker";
+import { faker } from '@faker-js/faker'
 import {
   adminUserEmailExists,
   fetchUserByEmail,
-  updatePassword,
-} from "../../models/adminUsers";
-import { expectError } from "@libs/testUtils";
+  updatePassword
+} from '../../models/adminUsers'
+import { expectError } from '@libs/testUtils'
 import {
   createAdminUser,
   insertTestAdminUser,
   deleteTestAdminUser,
-  fetchTestAdminUser,
-} from "../fixtures";
-import { ErrorCodes } from "../../misc";
+  fetchTestAdminUser
+} from '../fixtures'
+import { ErrorCodes } from '../../misc'
 
-const email = faker.internet.email();
-const userId = faker.datatype.uuid();
+const email = faker.internet.email()
+const userId = faker.datatype.uuid()
 
-describe("adminUserEmailExists", () => {
-  describe("if the admin user does not exist", () => {
-    it("returns false", async () => {
-      const response = await adminUserEmailExists(email);
+describe('adminUserEmailExists', () => {
+  describe('if the admin user does not exist', () => {
+    it('returns false', async () => {
+      const response = await adminUserEmailExists(email)
 
-      expect(response).toEqual(false);
-    });
-  });
+      expect(response).toEqual(false)
+    })
+  })
 
-  describe("if the admin user exists", () => {
-    const adminUser = createAdminUser({ userId, email });
-
-    beforeEach(async () => {
-      await insertTestAdminUser(adminUser);
-    });
-
-    afterEach(async () => {
-      await deleteTestAdminUser(userId);
-    });
-
-    it("returns true", async () => {
-      const response = await adminUserEmailExists(email);
-
-      expect(response).toEqual(true);
-    });
-  });
-});
-
-describe("fetchUserByEmail", () => {
-  describe("when the user exists", () => {
-    const adminUser = createAdminUser({ userId, email });
+  describe('if the admin user exists', () => {
+    const adminUser = createAdminUser({ userId, email })
 
     beforeEach(async () => {
-      await insertTestAdminUser(adminUser);
-    });
+      await insertTestAdminUser(adminUser)
+    })
 
     afterEach(async () => {
-      await deleteTestAdminUser(userId);
-    });
+      await deleteTestAdminUser(userId)
+    })
 
-    it("returns the user", async () => {
-      const response = await fetchUserByEmail(email);
+    it('returns true', async () => {
+      const response = await adminUserEmailExists(email)
 
-      expect(response).toEqual(adminUser);
-    });
-  });
+      expect(response).toEqual(true)
+    })
+  })
+})
 
-  describe("when the user does not exist", () => {
-    it("throws a NON_EXISTENT_ADMIN_USER error", async () => {
-      expect.assertions(1);
+describe('fetchUserByEmail', () => {
+  describe('when the user exists', () => {
+    const adminUser = createAdminUser({ userId, email })
+
+    beforeEach(async () => {
+      await insertTestAdminUser(adminUser)
+    })
+
+    afterEach(async () => {
+      await deleteTestAdminUser(userId)
+    })
+
+    it('returns the user', async () => {
+      const response = await fetchUserByEmail(email)
+
+      expect(response).toEqual(adminUser)
+    })
+  })
+
+  describe('when the user does not exist', () => {
+    it('throws a NON_EXISTENT_ADMIN_USER error', async () => {
+      expect.assertions(1)
       try {
-        await fetchUserByEmail(email);
+        await fetchUserByEmail(email)
       } catch (error) {
-        expectError(error, ErrorCodes.NON_EXISTENT_ADMIN_USER);
+        expectError(error, ErrorCodes.NON_EXISTENT_ADMIN_USER)
       }
-    });
-  });
-});
+    })
+  })
+})
 
-describe("setAdminUserPassword", () => {
-  const newPasswordHash = faker.datatype.string(50);
+describe('setAdminUserPassword', () => {
+  const newPasswordHash = faker.datatype.string(50)
 
-  describe("when the user exists", () => {
+  describe('when the user exists', () => {
     const adminUser = createAdminUser({
       userId,
       email,
-      passwordHash: "",
-    });
+      passwordHash: ''
+    })
 
     beforeEach(async () => {
-      await insertTestAdminUser(adminUser);
-    });
+      await insertTestAdminUser(adminUser)
+    })
 
     afterEach(async () => {
-      await deleteTestAdminUser(userId);
-    });
+      await deleteTestAdminUser(userId)
+    })
 
-    it("sets the password", async () => {
+    it('sets the password', async () => {
       await updatePassword({
         email,
-        newPasswordHash: newPasswordHash,
-      });
+        newPasswordHash: newPasswordHash
+      })
 
-      const { passwordHash } = await fetchTestAdminUser(userId);
+      const { passwordHash } = await fetchTestAdminUser(userId)
 
-      expect(passwordHash).toEqual(newPasswordHash);
-    });
-  });
+      expect(passwordHash).toEqual(newPasswordHash)
+    })
+  })
 
-  describe("when the user does not exist", () => {
+  describe('when the user does not exist', () => {
     it(`throws a ${ErrorCodes.NON_EXISTENT_ADMIN_USER} error`, async () => {
-      expect.assertions(1);
+      expect.assertions(1)
       try {
         await updatePassword({
           email,
-          newPasswordHash,
-        });
+          newPasswordHash
+        })
       } catch (error) {
-        expectError(error, ErrorCodes.NON_EXISTENT_ADMIN_USER);
+        expectError(error, ErrorCodes.NON_EXISTENT_ADMIN_USER)
       }
-    });
-  });
-});
+    })
+  })
+})

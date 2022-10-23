@@ -1,15 +1,15 @@
-import { Table } from '@libs/dynamo-db';
-import { STAGE } from '@libs/env';
+import { Table } from '@libs/dynamo-db'
+import { STAGE } from '@libs/env'
 
-export const ADMIN_USER_TABLE_NAME = `${STAGE}-admin-users-table`;
-export const ADMIN_USER_TABLE_REF = 'AdminUsersTable';
-export const ADMIN_USER_EMAIL_INDEX_NAME = 'email-index';
+export const ADMIN_USER_TABLE_NAME = `${STAGE}-admin-users-table`
+export const ADMIN_USER_TABLE_REF = 'AdminUsersTable'
+export const ADMIN_USER_EMAIL_INDEX_NAME = 'email-index'
 
-export const VERIFICATION_CODE_TABLE_NAME = `${STAGE}-admin-users-verification-code-table`;
-export const VERIFICATION_CODE_TABLE_REF = 'AdminUsersVerificationCodeTable';
+export const VERIFICATION_CODE_TABLE_NAME = `${STAGE}-admin-users-verification-code-table`
+export const VERIFICATION_CODE_TABLE_REF = 'AdminUsersVerificationCodeTable'
 
-export const UPSTASH_URL_PARAMETER_NAME = `${STAGE}_UPSTASH_REDIS_REST_URL`;
-export const UPSTASH_TOKEN_PARAMETER_NAME = `${STAGE}_UPSTASH_REDIS_REST_TOKEN`;
+export const UPSTASH_URL_PARAMETER_NAME = `${STAGE}_UPSTASH_REDIS_REST_URL`
+export const UPSTASH_TOKEN_PARAMETER_NAME = `${STAGE}_UPSTASH_REDIS_REST_TOKEN`
 
 const AdminUsersTable: Table = {
   Type: 'AWS::DynamoDB::Table',
@@ -56,7 +56,7 @@ const AdminUsersTable: Table = {
   },
   // Change this in permanent deployment
   DeletionPolicy: 'Delete'
-};
+}
 
 const AdminUsersVerificationCodeTable: Table = {
   Type: 'AWS::DynamoDB::Table',
@@ -81,11 +81,11 @@ const AdminUsersVerificationCodeTable: Table = {
   },
   // Change this in permanent deployment
   DeletionPolicy: 'Delete'
-};
+}
 
 const adminUserResources = {
   AdminUsersTable,
   AdminUsersVerificationCodeTable
-};
+}
 
-export default adminUserResources;
+export default adminUserResources

@@ -38,7 +38,8 @@
     "test": "./scripts/runTests.sh unit",
     "test:integration": "./scripts/runTests.sh integration",
     "test:all": "./scripts/runTests.sh all",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "prettify": "prettier --write \"**/*.ts\""
   },
   "dependencies": {
     "@aws-sdk/client-kms": "^3.171.0",
@@ -82,7 +83,7 @@
     ]
   },
   "prettier": {
-    "semi": true,
+    "semi": false,
     "trailingComma": "none",
     "singleQuote": true,
     "printWidth": 80

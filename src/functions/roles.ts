@@ -1,7 +1,7 @@
-import adminUserRoles from "./adminUser/roles";
+import adminUserRoles from './adminUser/roles'
 
 const roles = {
-  ...adminUserRoles,
-};
+  ...adminUserRoles
+}
 
-export default roles;
+export default roles
