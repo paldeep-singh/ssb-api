@@ -17,11 +17,10 @@ type HandlerWithResult<TEvent, TResult> = (
   callback: Callback<TResult>
 ) => Promise<TResult>
 
-export type LambdaEventWithResult<requestSchema extends JSONSchema7> =
-  HandlerWithResult<
-    ValidatedAPIGatewayProxyEvent<requestSchema>,
-    APIGatewayProxyResult
-  >
+export type LambdaEventWithSchemaAndResult<
+  requestSchema extends JSONSchema7,
+  TResult = APIGatewayProxyResult
+> = HandlerWithResult<ValidatedAPIGatewayProxyEvent<requestSchema>, TResult>
 
 type ApiGateWayResponse = {
   statusCode: number
@@ -47,7 +46,7 @@ export const formatJSONErrorResponse = (
 
 export const jsonDeserializer =
   <requestParams extends JSONSchema7>() =>
-  (handler: LambdaEventWithResult<requestParams>) =>
+  (handler: LambdaEventWithSchemaAndResult<requestParams>) =>
   async (
     event: APIGatewayProxyEvent,
     context: Context,
@@ -71,7 +70,7 @@ export const jsonDeserializer =
   }
 
 export const bodyParser = <requestSchema extends JSONSchema7>(
-  handler: LambdaEventWithResult<requestSchema>
+  handler: LambdaEventWithSchemaAndResult<requestSchema>
 ): ((
   event: APIGatewayProxyEvent,
   context: Context,

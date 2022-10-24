@@ -5,7 +5,7 @@ import {
 } from './models/verificationCodes'
 import { ErrorCodes } from './misc'
 import {
-  LambdaEventWithResult,
+  LambdaEventWithSchemaAndResult,
   formatJSONResponse,
   formatJSONErrorResponse,
   bodyParser
@@ -31,7 +31,7 @@ import { createNewSession } from './models/sessions'
 export const passwordValidationRegex =
   /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$/
 
-const checkAccountIsClaimed: LambdaEventWithResult<
+const checkAccountIsClaimed: LambdaEventWithSchemaAndResult<
   typeof adminUserEmailInput
 > = async (event) => {
   const { email } = event.body
@@ -52,7 +52,7 @@ const checkAccountIsClaimed: LambdaEventWithResult<
   }
 }
 
-const setPassword: LambdaEventWithResult<
+const setPassword: LambdaEventWithSchemaAndResult<
   typeof adminUserSetPasswordInput
 > = async (event) => {
   const { email, newPassword, confirmNewPassword } = event.body
@@ -77,7 +77,7 @@ const setPassword: LambdaEventWithResult<
   return formatJSONResponse(200, { passwordSet: true })
 }
 
-const sendVerificationCode: LambdaEventWithResult<
+const sendVerificationCode: LambdaEventWithSchemaAndResult<
   typeof adminUserEmailInput
 > = async (event) => {
   const { email } = event.body
@@ -124,7 +124,7 @@ const sendVerificationCode: LambdaEventWithResult<
   }
 }
 
-const verifyEmail: LambdaEventWithResult<
+const verifyEmail: LambdaEventWithSchemaAndResult<
   typeof adminUserVerifyEmailInput
 > = async (event) => {
   const { email, verificationCode: providedCode } = event.body
@@ -169,9 +169,9 @@ const verifyEmail: LambdaEventWithResult<
   }
 }
 
-const login: LambdaEventWithResult<typeof adminUserLoginInput> = async ({
-  body: { email, password }
-}) => {
+const login: LambdaEventWithSchemaAndResult<
+  typeof adminUserLoginInput
+> = async ({ body: { email, password } }) => {
   try {
     const adminUser = await fetchUserByEmail(email)
 
