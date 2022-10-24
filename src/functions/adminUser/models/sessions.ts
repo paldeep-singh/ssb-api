@@ -7,6 +7,15 @@ import {
   UPSTASH_URL_PARAMETER_NAME
 } from '../resources'
 
+interface ISessionData {
+  userId: string
+}
+
+export interface ISession {
+  sessionId: string
+  sessionData: ISessionData
+}
+
 export const getRedisURL = async (): Promise<string> => {
   if (STAGE === 'local') {
     return process.env.UPSTASH_REDIS_REST_URL || ''
@@ -71,15 +80,6 @@ export const getRedisHeaders = async (): Promise<
 
 const FIVE_MINUTES = 60 * 5
 const THIRTY_MINUTES = 60 * 30
-
-interface ISessionData {
-  userId: string
-}
-
-interface ISession {
-  sessionId: string
-  sessionData: ISessionData
-}
 
 export const createNewSession = async (
   userId: string,
