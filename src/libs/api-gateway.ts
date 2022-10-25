@@ -17,6 +17,16 @@ type HandlerWithResult<TEvent, TResult> = (
   callback: Callback<TResult>
 ) => Promise<TResult>
 
+export type LambdaEventWithUnknownSchema<
+  TResult,
+  TRequest = unknown
+> = HandlerWithResult<
+  Omit<APIGatewayProxyEvent, 'body'> & {
+    body: TRequest
+  },
+  TResult
+>
+
 export type LambdaEventWithSchemaAndResult<
   requestSchema extends JSONSchema7,
   TResult = APIGatewayProxyResult
