@@ -56,6 +56,14 @@ export const fetchUserByEmail = async (email: string): Promise<IAdminUser> => {
   return adminUser
 }
 
+export const fetchUser = async (userId: string): Promise<IAdminUser> => {
+  const adminUser = await adminUserModel.get(userId)
+
+  if (!adminUser) throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER)
+
+  return adminUser
+}
+
 export const updatePassword = async ({
   email,
   newPasswordHash

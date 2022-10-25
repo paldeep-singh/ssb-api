@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker'
 import {
   adminUserEmailExists,
+  fetchUser,
   fetchUserByEmail,
   updatePassword
 } from '../../models/adminUsers'
@@ -40,6 +41,37 @@ describe('adminUserEmailExists', () => {
       const response = await adminUserEmailExists(email)
 
       expect(response).toEqual(true)
+    })
+  })
+})
+
+describe('fetchUser', () => {
+  describe('if the admin user does not exist', () => {
+    it('throws an error', async () => {
+      expect.assertions(1)
+      try {
+        await fetchUser(userId)
+      } catch (error) {
+        expectError(error, ErrorCodes.NON_EXISTENT_ADMIN_USER)
+      }
+    })
+  })
+
+  describe('if the admin user exists', () => {
+    const adminUser = createAdminUser({ userId, email })
+
+    beforeEach(async () => {
+      await insertTestAdminUser(adminUser)
+    })
+
+    afterEach(async () => {
+      await deleteTestAdminUser(userId)
+    })
+
+    it('returns the admin user', async () => {
+      const response = await fetchUser(userId)
+
+      expect(response).toEqual(adminUser)
     })
   })
 })
