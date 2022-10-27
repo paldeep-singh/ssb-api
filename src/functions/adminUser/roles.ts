@@ -11,11 +11,11 @@ const verificationCodeTableARN = {
   'Fn::GetAtt': [VERIFICATION_CODE_TABLE_REF, 'Arn']
 }
 const upstashRedisURLParameterARN = {
-  'Fn::Sub': `arn:aws:ssm:\${AWS_REGION}:\${AWS_ACCOUNT_ID}:parameter/${UPSTASH_URL_PARAMETER_NAME}`
+  'Fn::Sub': `arn:aws:ssm:\${AWS::Region}:\${AWS::AccountId}:parameter/${UPSTASH_URL_PARAMETER_NAME}`
 }
 
 const upstashRedisTokenParameterARN = {
-  'Fn::Sub': `arn:aws:ssm:\${AWS_REGION}:\${AWS_ACCOUNT_ID}:parameter/${UPSTASH_TOKEN_PARAMETER_NAME}`
+  'Fn::Sub': `arn:aws:ssm:\${AWS::Region}:\${AWS::AccountId}:parameter/${UPSTASH_TOKEN_PARAMETER_NAME}`
 }
 
 const queryAdminUsersStatement: Statement = {
