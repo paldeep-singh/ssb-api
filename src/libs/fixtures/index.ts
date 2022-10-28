@@ -2,8 +2,9 @@ import { faker } from '@faker-js/faker'
 import { APIGatewayProxyEvent, Context } from 'aws-lambda'
 
 export const createAPIGatewayProxyEvent = (
-  body: Record<string, unknown>,
-  eventAttributes: Partial<APIGatewayProxyEvent> = {}
+  body: Record<string, unknown> = {},
+  eventAttributes: Partial<APIGatewayProxyEvent> = {},
+  headers: Record<string, string> = {}
 ): APIGatewayProxyEvent => {
   return {
     multiValueHeaders: {},
@@ -12,7 +13,8 @@ export const createAPIGatewayProxyEvent = (
     path: '',
     pathParameters: null,
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      ...headers
     },
     queryStringParameters: null,
     multiValueQueryStringParameters: null,

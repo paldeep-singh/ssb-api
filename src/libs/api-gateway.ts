@@ -19,10 +19,10 @@ type HandlerWithResult<TEvent, TResult> = (
 
 export type LambdaEventWithUnknownSchema<
   TResult,
-  TRequest = unknown
+  TRequest = string
 > = HandlerWithResult<
   Omit<APIGatewayProxyEvent, 'body'> & {
-    body: TRequest
+    body: TRequest | null
   },
   TResult
 >

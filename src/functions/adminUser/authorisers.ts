@@ -1,4 +1,5 @@
 import { LambdaEventWithUnknownSchema } from '@libs/api-gateway'
+import { parse } from 'path'
 import { fetchUser } from './models/adminUsers'
 import { fetchSession } from './models/sessions'
 
@@ -20,25 +21,32 @@ const createAuthoriserResult = (
   }
 }
 
-export const specificAdminUserAuthoriser: LambdaEventWithUnknownSchema<
+export const specificAdminUserAuthoriserFunction: LambdaEventWithUnknownSchema<
   IAuthoriserResult
 > = async (event) => {
   const { headers, body } = event
 
-  if (!headers || !headers.Authorization) {
+  if (!headers?.Authorization) {
     return createAuthoriserResult(false)
   }
 
   const sessionID = headers.Authorization
 
+  console.log('got here 1')
+  if (!body) return createAuthoriserResult(false)
+  console.log('got here 2')
+  const parsedBody = JSON.parse(body)
+
   const bodyIsObject =
-    typeof body === 'object' && !Array.isArray(body) && body !== null
+    typeof parsedBody === 'object' &&
+    !Array.isArray(parsedBody) &&
+    parsedBody !== null
 
   if (!bodyIsObject) {
     return createAuthoriserResult(false)
   }
 
-  const { email, userId } = body as Record<string, string>
+  const { email, userId } = parsedBody
 
   if (!email && !userId) {
     return createAuthoriserResult(false)
@@ -46,7 +54,9 @@ export const specificAdminUserAuthoriser: LambdaEventWithUnknownSchema<
 
   const session = await fetchSession(sessionID)
 
-  if (!session) return createAuthoriserResult(false)
+  if (!session) {
+    return createAuthoriserResult(false)
+  }
 
   const {
     sessionData: { userId: sessionUserId }
