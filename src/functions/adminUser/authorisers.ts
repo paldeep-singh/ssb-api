@@ -1,7 +1,4 @@
-import {
-  LambdaEventWithSchemaAndResult,
-  LambdaEventWithUnknownSchema
-} from '@libs/api-gateway'
+import { LambdaEventWithUnknownSchema } from '@libs/api-gateway'
 import { fetchUser } from './models/adminUsers'
 import { fetchSession } from './models/sessions'
 
