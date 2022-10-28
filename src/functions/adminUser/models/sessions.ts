@@ -1,6 +1,6 @@
 import axios, { AxiosRequestHeaders } from 'axios'
 import { randomBytes } from 'crypto'
-import { STAGE } from '@libs/env'
+import { STAGE } from '../../../env'
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm'
 import {
   UPSTASH_TOKEN_PARAMETER_NAME,
@@ -24,7 +24,8 @@ export const getRedisURL = async (): Promise<string> => {
   const ssm = new SSMClient({})
 
   const getURLCommand = new GetParameterCommand({
-    Name: UPSTASH_URL_PARAMETER_NAME
+    Name: UPSTASH_URL_PARAMETER_NAME,
+    WithDecryption: true
   })
 
   const urlParameter = await ssm.send(getURLCommand)
@@ -49,7 +50,8 @@ const getRedisToken = async (): Promise<string> => {
   const ssm = new SSMClient({})
 
   const getTokenCommand = new GetParameterCommand({
-    Name: UPSTASH_TOKEN_PARAMETER_NAME
+    Name: UPSTASH_TOKEN_PARAMETER_NAME,
+    WithDecryption: true
   })
 
   const tokenParameter = await ssm.send(getTokenCommand)

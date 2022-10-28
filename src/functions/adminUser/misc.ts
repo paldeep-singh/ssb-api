@@ -1,4 +1,4 @@
-import { LOCAL_DYNAMODB_ENDPOINT } from '@libs/env'
+import { LOCAL_DYNAMODB_ENDPOINT } from '../../env'
 import { aws } from 'dynamoose'
 
 export enum ErrorCodes {

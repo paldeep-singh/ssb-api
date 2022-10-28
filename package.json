@@ -33,8 +33,8 @@
   },
   "scripts": {
     "start": "STAGE=local serverless offline start",
-    "deploy": "STAGE=DEV /usr/bin/time -f '%E' serverless",
-    "teardown": "STAGE=DEV /usr/bin/time -f '%E' serverless remove",
+    "deploy": "STAGE=dev /usr/bin/time -f '%E' serverless",
+    "teardown": "STAGE=dev /usr/bin/time -f '%E' serverless remove",
     "test": "./scripts/runTests.sh unit",
     "test:integration": "./scripts/runTests.sh integration",
     "test:all": "./scripts/runTests.sh all",

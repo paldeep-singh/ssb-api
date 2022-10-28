@@ -1,7 +1,7 @@
 import { PolicyDocument } from './iam'
 import { Tag, AwsStrings } from './misc-aws-utils'
 import { KMSClient } from '@aws-sdk/client-kms'
-import { STAGE } from './env'
+import { STAGE } from '../env'
 
 export const kmsClient = new KMSClient(
   STAGE === 'local' ? { region: STAGE } : {}

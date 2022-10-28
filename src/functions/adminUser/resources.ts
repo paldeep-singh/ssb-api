@@ -1,5 +1,5 @@
 import { Table } from '@libs/dynamo-db'
-import { STAGE } from '@libs/env'
+import { STAGE } from '../../env'
 
 export const ADMIN_USER_TABLE_NAME = `${STAGE}-admin-users-table`
 export const ADMIN_USER_TABLE_REF = 'AdminUsersTable'
