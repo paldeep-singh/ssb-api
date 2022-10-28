@@ -92,9 +92,9 @@ describe('specificAdminUserAuthoriser', () => {
 
     describe('when the body contains a userId', () => {
       const userId = faker.datatype.uuid()
-      const sessionData = {
+      const sessionData = JSON.stringify({
         userId
-      }
+      })
 
       beforeEach(() => {
         ssmMock
@@ -161,9 +161,9 @@ describe('specificAdminUserAuthoriser', () => {
 
     describe('when the body contains an email', () => {
       const userId = faker.datatype.uuid()
-      const sessionData = {
+      const sessionData = JSON.stringify({
         userId
-      }
+      })
 
       beforeEach(() => {
         ssmMock

@@ -132,18 +132,15 @@ export const fetchSession = async (
 
   const headers = await getRedisHeaders()
 
-  const response = await axios.get<{ result: ISessionData | null }>(
-    requestURL,
-    {
-      headers
-    }
-  )
+  const response = await axios.get<{ result: string | null }>(requestURL, {
+    headers
+  })
 
   if (!response.data.result) {
     return null
   }
 
-  const data = response.data.result
+  const data = JSON.parse(response.data.result)
 
   return {
     sessionId,

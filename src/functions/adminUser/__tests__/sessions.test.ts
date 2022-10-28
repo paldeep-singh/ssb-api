@@ -145,7 +145,7 @@ describe('fetchSession', () => {
       redisScope
         .get(`/get/${sessionId}`)
         .matchHeader('Authorization', `Bearer ${redisToken}`)
-        .reply(200, { result: { userId } })
+        .reply(200, { result: JSON.stringify({ userId }) })
     })
 
     it('sends the request to fetch the session', async () => {
