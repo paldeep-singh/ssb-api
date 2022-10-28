@@ -3,6 +3,7 @@ import functions from '@functions/index'
 import resources from '@functions/resources'
 import roles from '@functions/roles'
 import environment from './src/env'
+import { adminUserProvider } from '@functions/adminUser/provider'
 
 const stage = environment.STAGE
 if (!stage) throw new Error('STAGE environment variable is not set')
@@ -25,6 +26,9 @@ const serverlessConfiguration: AWS = {
     region: 'ap-southeast-2',
     environment: {
       STAGE: stage
+    },
+    httpApi: {
+      ...adminUserProvider
     }
   },
   functions,

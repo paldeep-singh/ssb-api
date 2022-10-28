@@ -6,11 +6,16 @@ import {
 } from './schema'
 import { handlerPath, handlerRoute } from '@libs/handler-resolver'
 import { AWS } from '@serverless/typescript'
+import { SPECIFIC_ADMIN_USER_AUTHORISER_FUNCTION } from './authorisers'
 
 const path = handlerPath(__dirname)
 const route = handlerRoute(__dirname)
 
 const adminUserFunctions: AWS['functions'] = {
+  [SPECIFIC_ADMIN_USER_AUTHORISER_FUNCTION]: {
+    handler: `${path}/authorisers.${SPECIFIC_ADMIN_USER_AUTHORISER_FUNCTION}`,
+    role: 'adminUserSpecificAuthoriserRole'
+  },
   adminUserAccountIsClaimed: {
     handler: `${path}/handlers.handleCheckAdminUserAccountIsClaimed`,
     events: [

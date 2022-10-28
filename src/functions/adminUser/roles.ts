@@ -18,6 +18,12 @@ const upstashRedisTokenParameterARN = {
   'Fn::Sub': `arn:aws:ssm:\${AWS::Region}:\${AWS::AccountId}:parameter/${UPSTASH_TOKEN_PARAMETER_NAME}`
 }
 
+const getAdminUserStatement: Statement = {
+  Effect: 'Allow',
+  Action: ['dynamodb:GetItem'],
+  Resource: adminUsersTableARN
+}
+
 const queryAdminUsersStatement: Statement = {
   Effect: 'Allow',
   Action: ['dynamodb:Query'],
@@ -114,12 +120,23 @@ const adminUserLoginRole = createLambdaRole({
   policyName: 'adminUserLoginPolicy'
 })
 
+const adminUserSpecificAuthoriserRole = createLambdaRole({
+  statements: [
+    getAdminUserStatement,
+    getRedisTokenStatement,
+    getRedisUrlStatement
+  ],
+  roleName: 'adminUserSpecificAuthoriserRole',
+  policyName: 'adminUserSpecificAuthoriserPolicy'
+})
+
 const adminUserRoles = {
   adminUserAccountIsClaimedRole,
   setAdminUserPasswordRole,
   sendAdminUserVerificationCodeRole,
   verifyAdminUserEmailRole,
-  adminUserLoginRole
+  adminUserLoginRole,
+  adminUserSpecificAuthoriserRole
 }
 
 export default adminUserRoles
