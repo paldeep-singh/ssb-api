@@ -30,9 +30,6 @@ const adminUserFunctions: AWS['functions'] = {
             schemas: {
               'application/json': adminUserEmailInput
             }
-          },
-          authorizer: {
-            name: SPECIFIC_ADMIN_USER_AUTHORISER
           }
         }
       }
