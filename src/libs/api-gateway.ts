@@ -2,8 +2,11 @@ import type {
   APIGatewayProxyResult,
   APIGatewayProxyEvent,
   Callback,
-  Context
+  Context,
+  APIGatewayRequestAuthorizerEvent,
+  APIGatewayProxyWithLambdaAuthorizerEventRequestContext
 } from 'aws-lambda'
+import { AuthoriserStatement } from './iam'
 import type { FromSchema, JSONSchema7 } from 'json-schema-to-ts'
 
 export type ValidatedAPIGatewayProxyEvent<requestSchema extends JSONSchema7> =
@@ -16,6 +19,28 @@ type HandlerWithResult<TEvent, TResult> = (
   context: Context,
   callback: Callback<TResult>
 ) => Promise<TResult>
+
+type APIGatewayRequestAuthoriserEventWithContext<
+  TAuthoriserContext = Record<string, string | null>
+> = APIGatewayRequestAuthorizerEvent & {
+  requestContext: APIGatewayProxyWithLambdaAuthorizerEventRequestContext<TAuthoriserContext>
+} & {
+  body: string | null
+}
+
+export type CustomAuthoriserResult = {
+  principalId: string // The principal user identification associated with the token sent by the client.
+  policyDocument: {
+    Version: '2012-10-17'
+    Statement: AuthoriserStatement[]
+  }
+  context?: Record<string, unknown>
+  usageIdentifierKey?: string
+}
+
+export type LamdaCustomAuthoriserHandler = (
+  event: APIGatewayRequestAuthoriserEventWithContext
+) => Promise<CustomAuthoriserResult>
 
 export type LambdaEventWithUnknownSchema<
   TResult,

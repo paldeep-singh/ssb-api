@@ -28,6 +28,10 @@ export type Statement = {
   }
 }
 
+export type AuthoriserStatement = Statement & {
+  Action: 'execute-api:Invoke'
+}
+
 export type PolicyDocument = {
   Version: '2012-10-17'
   Statement: Statement | Statement[]
