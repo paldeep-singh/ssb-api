@@ -62,6 +62,22 @@ type ApiGateWayResponse = {
   body: string
 }
 
+// export type APIGatewayAuthoriserResource = {
+//   Type: 'AWS::ApiGateway::Authorizer'
+//   Properties: {
+//     AuthorizerCredentials?: string
+//     AuthorizerResultTtlInSeconds?: number
+//     AuthorizerUri?: string
+//     AuthType?: string
+//     IdentitySource: string
+//     IdentityValidationExpression: string
+//     Name: string
+//     ProviderARNs: string[]
+//     RestApiId: string
+//     Type: string
+//   }
+// }
+
 export const formatJSONResponse = (
   statusCode: number,
   response: Record<string, unknown>
