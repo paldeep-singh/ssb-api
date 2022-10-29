@@ -81,7 +81,11 @@ const adminUserAccountIsClaimedRole = createLambdaRole({
 })
 
 const setAdminUserPasswordRole = createLambdaRole({
-  statements: [queryAdminUsersStatement, updateAdminUserStatement],
+  statements: [
+    getRedisTokenStatement,
+    getRedisUrlStatement,
+    updateAdminUserStatement
+  ],
   roleName: 'setAdminUserPasswordRole',
   policyName: 'setAdminUserPasswordPolicy'
 })
