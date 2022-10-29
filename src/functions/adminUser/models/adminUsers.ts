@@ -1,4 +1,4 @@
-import { model, Schema, transaction } from 'dynamoose'
+import { model, Schema, transaction, Condition } from 'dynamoose'
 import { Item } from 'dynamoose/dist/Item'
 import { Query } from 'dynamoose/dist/ItemRetriever'
 import { ErrorCodes } from '../misc'
@@ -7,6 +7,7 @@ import {
   ADMIN_USER_TABLE_NAME
 } from '../resources'
 import { baseTableConfig } from '../misc'
+import { isError } from 'lodash'
 
 export interface IAdminUser {
   userId: string
@@ -38,6 +39,13 @@ export const adminUserModel = model<adminUserItem>(
   baseTableConfig
 )
 
+const TRANSACTION_CONDITIONAL_CHECK_FAILED_ERROR = new RegExp(
+  'ConditionalCheckFailed'
+)
+
+const isTransactionConditionalCheckFailedError = (error: Error): boolean =>
+  !!error.message.match(TRANSACTION_CONDITIONAL_CHECK_FAILED_ERROR)
+
 const queryAdminUserByEmail = (email: string): Query<IAdminUser> => {
   return adminUserModel.query('email').eq(email)
 }
@@ -65,28 +73,35 @@ export const fetchUser = async (userId: string): Promise<IAdminUser> => {
 }
 
 export const updatePassword = async ({
-  email,
+  userId,
   newPasswordHash
 }: {
-  email: string
+  userId: string
   newPasswordHash: string
 }): Promise<void> => {
-  const [adminUser] = await queryAdminUserByEmail(email).exec()
-
-  if (!adminUser) {
-    throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER)
-  }
-
   const updateTransaction = adminUserModel.transaction.update(
     {
-      userId: adminUser.userId
+      userId
     },
     {
       $SET: {
         passwordHash: newPasswordHash
       }
+    },
+    {
+      condition: new Condition().attribute('userId').exists()
     }
   )
 
-  await transaction([updateTransaction])
+  try {
+    await transaction([updateTransaction])
+  } catch (error) {
+    if (!isError(error)) throw error
+
+    if (isTransactionConditionalCheckFailedError(error)) {
+      throw new Error(ErrorCodes.NON_EXISTENT_ADMIN_USER)
+    }
+
+    throw error
+  }
 }

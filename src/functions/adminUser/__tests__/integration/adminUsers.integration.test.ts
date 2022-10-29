@@ -107,7 +107,7 @@ describe('fetchUserByEmail', () => {
   })
 })
 
-describe('setAdminUserPassword', () => {
+describe('updatePassword', () => {
   const newPasswordHash = faker.datatype.string(50)
 
   describe('when the user exists', () => {
@@ -127,8 +127,8 @@ describe('setAdminUserPassword', () => {
 
     it('sets the password', async () => {
       await updatePassword({
-        email,
-        newPasswordHash: newPasswordHash
+        userId,
+        newPasswordHash
       })
 
       const { passwordHash } = await fetchTestAdminUser(userId)
@@ -142,7 +142,7 @@ describe('setAdminUserPassword', () => {
       expect.assertions(1)
       try {
         await updatePassword({
-          email,
+          userId,
           newPasswordHash
         })
       } catch (error) {
