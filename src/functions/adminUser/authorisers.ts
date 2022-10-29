@@ -1,7 +1,10 @@
-import { LamdaCustomAuthoriserHandler } from '@libs/api-gateway'
-import { fetchUser } from './models/adminUsers'
 import { fetchSession } from './models/sessions'
-import { CustomAuthoriserResult } from '@libs/api-gateway'
+import {
+  APIGatewayAuthorizerResult,
+  APIGatewayAuthorizerResultContext,
+  APIGatewayTokenAuthorizerHandler
+} from 'aws-lambda'
+
 export const SPECIFIC_ADMIN_USER_AUTHORISER = 'specificAdminUserAuthoriser'
 export const SPECIFIC_ADMIN_USER_AUTHORISER_FUNCTION = `${SPECIFIC_ADMIN_USER_AUTHORISER}Function`
 
@@ -10,7 +13,7 @@ interface IAuthoriserResultParams {
   principalId: string
   usageIdentifierKey?: string
   resource: string
-  context?: Record<string, unknown>
+  context?: APIGatewayAuthorizerResultContext
 }
 
 const createAuthoriserResult = ({
@@ -19,7 +22,7 @@ const createAuthoriserResult = ({
   resource,
   usageIdentifierKey,
   context
-}: IAuthoriserResultParams): CustomAuthoriserResult => {
+}: IAuthoriserResultParams): APIGatewayAuthorizerResult => {
   return {
     principalId,
     policyDocument: {
@@ -37,60 +40,23 @@ const createAuthoriserResult = ({
   }
 }
 
-export const specificAdminUserAuthoriserFunction: LamdaCustomAuthoriserHandler =
+export const specificAdminUserAuthoriserFunction: APIGatewayTokenAuthorizerHandler =
   async (event) => {
-    const {
-      headers,
-      body,
-      methodArn,
-      requestContext: {
-        authorizer: { principalId }
-      }
-    } = event
+    const { authorizationToken, methodArn } = event
 
     const authParams = {
-      principalId,
+      principalId: authorizationToken,
       resource: methodArn
     }
 
-    if (!headers?.Authorization) {
+    if (!authorizationToken) {
       return createAuthoriserResult({
-        isAuthorized: false,
-        ...authParams
+        ...authParams,
+        isAuthorized: false
       })
     }
 
-    const sessionID = headers.Authorization
-
-    if (!body)
-      return createAuthoriserResult({
-        isAuthorized: false,
-        ...authParams
-      })
-    const parsedBody = JSON.parse(body)
-
-    const bodyIsObject =
-      typeof parsedBody === 'object' &&
-      !Array.isArray(parsedBody) &&
-      parsedBody !== null
-
-    if (!bodyIsObject) {
-      return createAuthoriserResult({
-        isAuthorized: false,
-        ...authParams
-      })
-    }
-
-    const { email, userId } = parsedBody
-
-    if (!email && !userId) {
-      return createAuthoriserResult({
-        isAuthorized: false,
-        ...authParams
-      })
-    }
-
-    const session = await fetchSession(sessionID)
+    const session = await fetchSession(authorizationToken)
 
     if (!session) {
       return createAuthoriserResult({
@@ -99,21 +65,8 @@ export const specificAdminUserAuthoriserFunction: LamdaCustomAuthoriserHandler =
       })
     }
 
-    const {
-      sessionData: { userId: sessionUserId }
-    } = session
-
-    if (userId) {
-      return createAuthoriserResult({
-        isAuthorized: userId === sessionUserId,
-        ...authParams
-      })
-    }
-
-    const adminUser = await fetchUser(userId)
-
     return createAuthoriserResult({
-      isAuthorized: adminUser.email === email,
+      isAuthorized: true,
       ...authParams
     })
   }

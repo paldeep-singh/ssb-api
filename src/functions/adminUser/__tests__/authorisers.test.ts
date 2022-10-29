@@ -2,7 +2,8 @@ import { GetParameterCommand, SSMClient } from '@aws-sdk/client-ssm'
 import { faker } from '@faker-js/faker'
 import {
   createAPIGatewayProxyEvent,
-  createAPIGatewayProxyEventContext
+  createAPIGatewayProxyEventContext,
+  createTokenAuthorisationEvent
 } from '@libs/fixtures'
 import { mockClient } from 'aws-sdk-client-mock'
 import { specificAdminUserAuthoriserFunction } from '../authorisers'
@@ -20,227 +21,138 @@ beforeEach(() => {
   ssmMock.reset()
 })
 
-const expectUnauthorised = (result: unknown) => {
+const expectUnauthorised = (
+  result: unknown,
+  principalId: string,
+  resource: string,
+  context?: Record<string, unknown>,
+  usageIdentifierKey?: string
+) => {
   expect(result).toEqual({
-    isAuthorized: false
+    principalId,
+    policyDocument: {
+      Version: '2012-10-17',
+      Statement: [
+        {
+          Action: 'execute-api:Invoke',
+          Effect: 'Deny',
+          Resource: resource
+        }
+      ]
+    },
+    usageIdentifierKey,
+    context
   })
 }
 
-const expectAuthorised = (result: unknown) => {
+const expectAuthorised = (
+  result: unknown,
+  principalId: string,
+  resource: string,
+  context?: Record<string, unknown>,
+  usageIdentifierKey?: string
+) => {
   expect(result).toEqual({
-    isAuthorized: true
+    principalId,
+    policyDocument: {
+      Version: '2012-10-17',
+      Statement: [
+        {
+          Action: 'execute-api:Invoke',
+          Effect: 'Allow',
+          Resource: resource
+        }
+      ]
+    },
+    usageIdentifierKey,
+    context
   })
 }
 
 describe('specificAdminUserAuthoriser', () => {
   const sessionId = faker.datatype.uuid()
-  const headers = {
-    Authorization: sessionId
-  }
+  const methodArn = faker.datatype.uuid()
+  const tokenAuthorisationEvent = createTokenAuthorisationEvent({
+    methodArn,
+    authorizationToken: sessionId
+  })
   const context = createAPIGatewayProxyEventContext()
 
-  describe('when the Authroization header is not present', () => {
-    const event = createAPIGatewayProxyEvent()
+  beforeEach(() => {
+    ssmMock
+      .on(GetParameterCommand)
+      .resolvesOnce({
+        Parameter: {
+          Value: redisURL
+        }
+      })
+      .resolvesOnce({
+        Parameter: {
+          Value: redisToken
+        }
+      })
+  })
 
-    it('returns an unauthorised response', async () => {
-      const result = await specificAdminUserAuthoriserFunction(
-        event,
+  describe('when the session exists', () => {
+    const userId = faker.datatype.uuid()
+    const sessionData = JSON.stringify({
+      userId
+    })
+
+    beforeEach(() => {
+      redisScope
+        .get(`/get/${sessionId}`)
+        .matchHeader('Authorization', `Bearer ${redisToken}`)
+        .reply(200, {
+          result: sessionData
+        })
+    })
+
+    it('fetches the session details from redis', async () => {
+      await specificAdminUserAuthoriserFunction(
+        tokenAuthorisationEvent,
         context,
         jest.fn()
       )
-
-      expectUnauthorised(result)
+      expect(redisScope.isDone()).toBeTruthy()
     })
-  })
 
-  describe('when the authorisation header is present', () => {
-    describe('when the body is not an object', () => {
-      const event = createAPIGatewayProxyEvent(
-        {
-          body: 'not an object'
-        },
-        {},
-        headers
+    it('returns an authorised result', async () => {
+      const result = await specificAdminUserAuthoriserFunction(
+        tokenAuthorisationEvent,
+        context,
+        jest.fn()
       )
-
-      it('returns an unauthorised response', async () => {
-        const result = await specificAdminUserAuthoriserFunction(
-          event,
-          context,
-          jest.fn()
-        )
-
-        expectUnauthorised(result)
-      })
+      expectAuthorised(result, sessionId, methodArn)
     })
   })
 
-  describe('when the body is an object', () => {
-    describe('when the body does not contain an email or userId', () => {
-      const event = createAPIGatewayProxyEvent({}, {}, headers)
-
-      it('returns an unauthorised response', async () => {
-        const result = await specificAdminUserAuthoriserFunction(
-          event,
-          context,
-          jest.fn()
-        )
-
-        expectUnauthorised(result)
-      })
+  describe('when the session does not exist', () => {
+    beforeEach(() => {
+      redisScope
+        .get(`/get/${sessionId}`)
+        .matchHeader('Authorization', `Bearer ${redisToken}`)
+        .reply(200, {
+          result: null
+        })
     })
 
-    describe('when the body contains a userId', () => {
-      const userId = faker.datatype.uuid()
-      const sessionData = JSON.stringify({
-        userId
-      })
-
-      beforeEach(() => {
-        ssmMock
-          .on(GetParameterCommand)
-          .resolvesOnce({
-            Parameter: {
-              Value: redisURL
-            }
-          })
-          .resolvesOnce({
-            Parameter: {
-              Value: redisToken
-            }
-          })
-
-        redisScope
-          .get(`/get/${sessionId}`)
-          .matchHeader('Authorization', `Bearer ${redisToken}`)
-          .reply(200, {
-            result: sessionData
-          })
-      })
-
-      describe('when the userId does not match the session userId', () => {
-        const event = createAPIGatewayProxyEvent(
-          {
-            userId: faker.datatype.uuid()
-          },
-          {},
-          headers
-        )
-
-        it('returns an unauthorised response', async () => {
-          const result = await specificAdminUserAuthoriserFunction(
-            event,
-            context,
-            jest.fn()
-          )
-
-          expectUnauthorised(result)
-        })
-      })
-
-      describe('when the userId matches the session userId', () => {
-        const event = createAPIGatewayProxyEvent(
-          {
-            userId
-          },
-          {},
-          headers
-        )
-
-        it('returns an authorised response', async () => {
-          const result = await specificAdminUserAuthoriserFunction(
-            event,
-            context,
-            jest.fn()
-          )
-
-          expectAuthorised(result)
-        })
-      })
+    it('fetches the session details from redis', async () => {
+      await specificAdminUserAuthoriserFunction(
+        tokenAuthorisationEvent,
+        context,
+        jest.fn()
+      )
+      expect(redisScope.isDone()).toBeTruthy()
     })
 
-    describe('when the body contains an email', () => {
-      const userId = faker.datatype.uuid()
-      const sessionData = JSON.stringify({
-        userId
-      })
-
-      beforeEach(() => {
-        ssmMock
-          .on(GetParameterCommand)
-          .resolvesOnce({
-            Parameter: {
-              Value: redisURL
-            }
-          })
-          .resolvesOnce({
-            Parameter: {
-              Value: redisToken
-            }
-          })
-
-        redisScope
-          .get(`/get/${sessionId}`)
-          .matchHeader('Authorization', `Bearer ${redisToken}`)
-          .reply(200, {
-            result: sessionData
-          })
-      })
-
-      describe("when the email does not match the session user's email", () => {
-        const event = createAPIGatewayProxyEvent(
-          {
-            email: faker.internet.email()
-          },
-          {},
-          headers
-        )
-
-        beforeEach(() => {
-          mocked(fetchUser).mockResolvedValueOnce({
-            userId,
-            email: faker.internet.email()
-          })
-        })
-
-        it('returns an unauthorised response', async () => {
-          const result = await specificAdminUserAuthoriserFunction(
-            event,
-            context,
-            jest.fn()
-          )
-
-          expectUnauthorised(result)
-        })
-      })
-
-      describe("when the email matches the session user's email", () => {
-        const email = faker.internet.email()
-        const event = createAPIGatewayProxyEvent(
-          {
-            email
-          },
-          {},
-          headers
-        )
-
-        beforeEach(() => {
-          mocked(fetchUser).mockResolvedValueOnce({
-            userId,
-            email
-          })
-        })
-
-        it('returns an authorised response', async () => {
-          const result = await specificAdminUserAuthoriserFunction(
-            event,
-            context,
-            jest.fn()
-          )
-
-          expectAuthorised(result)
-        })
-      })
+    it('returns an unauthorised result', async () => {
+      const result = await specificAdminUserAuthoriserFunction(
+        tokenAuthorisationEvent,
+        context,
+        jest.fn()
+      )
+      expectUnauthorised(result, sessionId, methodArn)
     })
   })
 })

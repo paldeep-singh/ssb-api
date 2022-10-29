@@ -1,5 +1,9 @@
 import { faker } from '@faker-js/faker'
-import { APIGatewayProxyEvent, Context } from 'aws-lambda'
+import {
+  APIGatewayProxyEvent,
+  APIGatewayTokenAuthorizerEvent,
+  Context
+} from 'aws-lambda'
 
 export const createAPIGatewayProxyEvent = (
   body: Record<string, unknown> = {},
@@ -76,3 +80,12 @@ export const createAPIGatewayProxyEventContext = (
     ...contextAttributes
   }
 }
+
+export const createTokenAuthorisationEvent = (
+  eventAttributes: Partial<APIGatewayTokenAuthorizerEvent>
+): APIGatewayTokenAuthorizerEvent => ({
+  type: 'TOKEN',
+  methodArn: faker.datatype.uuid(),
+  authorizationToken: faker.datatype.uuid(),
+  ...eventAttributes
+})
