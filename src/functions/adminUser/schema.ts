@@ -9,11 +9,10 @@ export const adminUserEmailInput = {
 export const adminUserSetPasswordInput = {
   type: 'object',
   properties: {
-    email: { type: 'string' },
     newPassword: { type: 'string' },
     confirmNewPassword: { type: 'string' }
   },
-  required: ['email', 'newPassword', 'confirmNewPassword']
+  required: ['newPassword', 'confirmNewPassword']
 } as const
 
 export const adminUserLoginInput = {

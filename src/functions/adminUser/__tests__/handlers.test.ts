@@ -8,7 +8,8 @@ import {
 import { faker } from '@faker-js/faker'
 import {
   createAPIGatewayProxyEvent,
-  createAPIGatewayProxyEventContext
+  createAPIGatewayProxyEventContext,
+  createAPIGatewayProxyEventWithAuthorisationHeader
 } from '@libs/fixtures'
 import {
   putVerificationCode,
@@ -27,7 +28,8 @@ import {
   updatePassword
 } from '../models/adminUsers'
 import bcrypt from 'bcryptjs'
-import { createNewSession } from '../models/sessions'
+import { createNewSession, fetchSession } from '../models/sessions'
+import { GetParameterCommand } from '@aws-sdk/client-ssm'
 
 const mockedSESCLient = mockClient(SESClient)
 
@@ -123,167 +125,161 @@ describe('handleCheckAdminUserAccountIsClaimed', () => {
 })
 
 describe('handleSetAdminUserPassword', () => {
-  describe('when the user does not exist', () => {
-    const password = faker.internet.password()
+  describe('when the session is invalid', () => {
+    const sessionId = faker.datatype.uuid()
+    const APIGatewayEvent = createAPIGatewayProxyEventWithAuthorisationHeader(
+      {
+        newPassword: faker.internet.password(),
+        confirmNewPassword: faker.internet.password()
+      },
+      sessionId
+    )
 
-    const APIGatewayEvent = createAPIGatewayProxyEvent({
-      email,
-      newPassword: password,
-      confirmNewPassword: password
-    })
     beforeEach(() => {
-      mocked(adminUserEmailExists).mockResolvedValueOnce(false)
+      mocked(fetchSession).mockResolvedValueOnce(null)
     })
 
-    it('returns statusCode 404', async () => {
+    it('returns statusCode 401', async () => {
       const { statusCode } = await handleSetAdminUserPassword(
         APIGatewayEvent,
         context,
         jest.fn()
       )
 
-      expect(statusCode).toEqual(404)
+      expect(statusCode).toEqual(401)
     })
 
-    it(`returns ${ErrorCodes.NON_EXISTENT_ADMIN_USER} error message`, async () => {
+    it(`returns ${ErrorCodes.INVALID_SESSION} error message`, async () => {
       const { body } = await handleSetAdminUserPassword(
         APIGatewayEvent,
         context,
         jest.fn()
       )
 
-      expect(JSON.parse(body).message).toEqual(
-        ErrorCodes.NON_EXISTENT_ADMIN_USER
-      )
+      expect(JSON.parse(body).message).toEqual(ErrorCodes.INVALID_SESSION)
     })
   })
 
-  describe('when the user exists', () => {
-    describe('when the passwords match', () => {
-      describe('when the password is valid', () => {
-        const password = faker.random.alphaNumeric(5) + 'Aa1'
+  describe('when the session is valid', () => {
+    const sessionId = faker.datatype.uuid()
+    const userId = faker.datatype.uuid()
 
-        const encryptedPassword = faker.datatype.string(20)
+    beforeEach(() => {
+      mocked(fetchSession).mockResolvedValueOnce({
+        sessionId,
+        sessionData: {
+          userId
+        }
+      })
+    })
 
-        const APIGatewayEvent = createAPIGatewayProxyEvent({
-          email,
+    describe('when the password is valid', () => {
+      const password = faker.random.alphaNumeric(5) + 'Aa1'
+
+      const encryptedPassword = faker.datatype.string(20)
+
+      const APIGatewayEvent = createAPIGatewayProxyEventWithAuthorisationHeader(
+        {
           newPassword: password,
           confirmNewPassword: password
+        },
+        sessionId
+      )
+
+      beforeEach(() => {
+        mocked(bcrypt.hash).mockResolvedValueOnce(encryptedPassword as never)
+      })
+
+      it('returns statusCode 200', async () => {
+        const { statusCode } = await handleSetAdminUserPassword(
+          APIGatewayEvent,
+          context,
+          jest.fn()
+        )
+
+        expect(statusCode).toEqual(200)
+      })
+
+      it('calls setPassword with the correct arguments', async () => {
+        await handleSetAdminUserPassword(APIGatewayEvent, context, jest.fn())
+
+        expect(updatePassword).toHaveBeenCalledWith({
+          userId,
+          newPasswordHash: encryptedPassword
         })
+      })
+    })
 
-        beforeEach(() => {
-          mocked(adminUserEmailExists).mockResolvedValueOnce(true)
+    describe('when the password is invalid', () => {
+      describe.each([
+        ['is too short', faker.random.alphaNumeric(4) + 'Aa1'],
+        ['has no uppercase letters', faker.random.alphaNumeric(6) + 'a1'],
+        [
+          'has no lowercase letters',
+          faker.random.alphaNumeric(6, { casing: 'upper' }) + 'A1'
+        ],
+        ['has no numbers', faker.random.alpha(6)]
+      ])(`when the password %s`, (_, password) => {
+        const APIGatewayEvent =
+          createAPIGatewayProxyEventWithAuthorisationHeader(
+            {
+              email,
+              newPassword: password,
+              confirmNewPassword: password
+            },
+            faker.datatype.uuid()
+          )
 
-          mocked(bcrypt.hash).mockResolvedValueOnce(encryptedPassword as never)
-
-          mocked(updatePassword).mockResolvedValueOnce()
-        })
-
-        it('returns statusCode 200', async () => {
+        it('returns statusCode 400', async () => {
           const { statusCode } = await handleSetAdminUserPassword(
             APIGatewayEvent,
             context,
             jest.fn()
           )
 
-          expect(statusCode).toEqual(200)
+          expect(statusCode).toEqual(400)
         })
 
-        it('calls setPassword with the correct arguments', async () => {
-          await handleSetAdminUserPassword(APIGatewayEvent, context, jest.fn())
-
-          expect(updatePassword).toHaveBeenCalledWith({
-            email,
-            newPasswordHash: encryptedPassword
-          })
-        })
-
-        it(`returns passwordSet true`, async () => {
+        it(`returns ${ErrorCodes.INVALID_PASSWORD} error message`, async () => {
           const { body } = await handleSetAdminUserPassword(
             APIGatewayEvent,
             context,
             jest.fn()
           )
 
-          expect(JSON.parse(body).passwordSet).toEqual(true)
-        })
-      })
-
-      describe('when the password is invalid', () => {
-        beforeEach(() => {
-          mocked(adminUserEmailExists).mockResolvedValueOnce(true)
-        })
-
-        describe.each([
-          ['is too short', faker.random.alphaNumeric(4) + 'Aa1'],
-          ['has no uppercase letters', faker.random.alphaNumeric(6) + 'a1'],
-          [
-            'has no lowercase letters',
-            faker.random.alphaNumeric(6, { casing: 'upper' }) + 'A1'
-          ],
-          ['has no numbers', faker.random.alpha(6)]
-        ])(`when the password %s`, (_, password) => {
-          const APIGatewayEvent = createAPIGatewayProxyEvent({
-            email,
-            newPassword: password,
-            confirmNewPassword: password
-          })
-
-          it('returns statusCode 400', async () => {
-            const { statusCode } = await handleSetAdminUserPassword(
-              APIGatewayEvent,
-              context,
-              jest.fn()
-            )
-
-            expect(statusCode).toEqual(400)
-          })
-
-          it(`returns ${ErrorCodes.INVALID_PASSWORD} error message`, async () => {
-            const { body } = await handleSetAdminUserPassword(
-              APIGatewayEvent,
-              context,
-              jest.fn()
-            )
-
-            expect(JSON.parse(body).message).toEqual(
-              ErrorCodes.INVALID_PASSWORD
-            )
-          })
+          expect(JSON.parse(body).message).toEqual(ErrorCodes.INVALID_PASSWORD)
         })
       })
     })
-  })
 
-  describe('when the passwords do not match', () => {
-    const password = faker.internet.password()
-    const APIGatewayEvent = createAPIGatewayProxyEvent({
-      email,
-      newPassword: password,
-      confirmNewPassword: faker.internet.password()
-    })
-    beforeEach(() => {
-      mocked(adminUserEmailExists).mockResolvedValueOnce(true)
-    })
-
-    it('returns statusCode 400', async () => {
-      const { statusCode } = await handleSetAdminUserPassword(
-        APIGatewayEvent,
-        context,
-        jest.fn()
+    describe('when the passwords do not match', () => {
+      const APIGatewayEvent = createAPIGatewayProxyEventWithAuthorisationHeader(
+        {
+          newPassword: faker.internet.password(),
+          confirmNewPassword: faker.internet.password()
+        },
+        sessionId
       )
 
-      expect(statusCode).toEqual(400)
-    })
+      it('returns statusCode 400', async () => {
+        const { statusCode } = await handleSetAdminUserPassword(
+          APIGatewayEvent,
+          context,
+          jest.fn()
+        )
 
-    it(`returns ${ErrorCodes.PASSWORD_MISMATCH} error message`, async () => {
-      const { body } = await handleSetAdminUserPassword(
-        APIGatewayEvent,
-        context,
-        jest.fn()
-      )
+        expect(statusCode).toEqual(400)
+      })
 
-      expect(JSON.parse(body).message).toEqual(ErrorCodes.PASSWORD_MISMATCH)
+      it(`returns ${ErrorCodes.PASSWORD_MISMATCH} error message`, async () => {
+        const { body } = await handleSetAdminUserPassword(
+          APIGatewayEvent,
+          context,
+          jest.fn()
+        )
+
+        expect(JSON.parse(body).message).toEqual(ErrorCodes.PASSWORD_MISMATCH)
+      })
     })
   })
 })

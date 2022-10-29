@@ -46,6 +46,11 @@ const adminUserFunctions: AWS['functions'] = {
           request: {
             schemas: {
               'application/json': adminUserSetPasswordInput
+            },
+            parameters: {
+              headers: {
+                Authorization: true
+              }
             }
           },
           authorizer: {

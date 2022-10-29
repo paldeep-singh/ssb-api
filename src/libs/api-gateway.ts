@@ -14,6 +14,22 @@ export type ValidatedAPIGatewayProxyEvent<requestSchema extends JSONSchema7> =
     body: FromSchema<requestSchema>
   }
 
+export type APIGatewayProxyEventWithAuthorisationHeader = Omit<
+  APIGatewayProxyEvent,
+  'headers'
+> & {
+  headers: {
+    Authorization: string
+    [name: string]: string | undefined
+  }
+}
+
+export type ValidatedAPIGatewayProxyEventWithAuthorisationHeader<
+  requestSchema extends JSONSchema7
+> = Omit<APIGatewayProxyEventWithAuthorisationHeader, 'body'> & {
+  body: FromSchema<requestSchema>
+}
+
 type HandlerWithResult<TEvent, TResult> = (
   event: TEvent,
   context: Context,
@@ -57,6 +73,14 @@ export type LambdaEventWithSchemaAndResult<
   TResult = APIGatewayProxyResult
 > = HandlerWithResult<ValidatedAPIGatewayProxyEvent<requestSchema>, TResult>
 
+export type LambdaEventWithSchemaAndAuthorisationHeaderAndResult<
+  requestSchema extends JSONSchema7,
+  TResult = APIGatewayProxyResult
+> = HandlerWithResult<
+  ValidatedAPIGatewayProxyEventWithAuthorisationHeader<requestSchema>,
+  TResult
+>
+
 type ApiGateWayResponse = {
   statusCode: number
   body: string
@@ -80,7 +104,7 @@ type ApiGateWayResponse = {
 
 export const formatJSONResponse = (
   statusCode: number,
-  response: Record<string, unknown>
+  response: Record<string, unknown> = {}
 ): ApiGateWayResponse => {
   return {
     statusCode,
@@ -95,9 +119,27 @@ export const formatJSONErrorResponse = (
   return formatJSONResponse(statusCode, { message })
 }
 
-export const jsonDeserializer =
-  <requestParams extends JSONSchema7>() =>
-  (handler: LambdaEventWithSchemaAndResult<requestParams>) =>
+const parseBody = <requestSchema extends JSONSchema7>(
+  body: string | null,
+  isBase64Encoded: boolean,
+  headers: Record<string, string | undefined>
+): FromSchema<requestSchema> => {
+  const mimePattern = /^application\/(.+\+)?json(;.*)?$/
+
+  const contentType = headers['Content-Type'] ?? headers['content-type'] ?? ''
+
+  if (!body || !mimePattern.test(contentType)) {
+    throw new Error('Invalid request params')
+  }
+
+  const data = isBase64Encoded ? Buffer.from(body, 'base64').toString() : body
+
+  return JSON.parse(data) as FromSchema<requestSchema>
+}
+
+const jsonDeserializer =
+  <requestSchema extends JSONSchema7>() =>
+  (handler: LambdaEventWithSchemaAndResult<requestSchema>) =>
   async (
     event: APIGatewayProxyEvent,
     context: Context,
@@ -105,17 +147,24 @@ export const jsonDeserializer =
   ): Promise<APIGatewayProxyResult> => {
     const { body, headers, isBase64Encoded } = event
 
-    const mimePattern = /^application\/(.+\+)?json(;.*)?$/
+    const bodyObject = parseBody<requestSchema>(body, isBase64Encoded, headers)
 
-    const contentType = headers['Content-Type'] ?? headers['content-type'] ?? ''
+    return await handler({ ...event, body: bodyObject }, context, callback)
+  }
 
-    if (!body || !mimePattern.test(contentType)) {
-      throw new Error('Invalid request params')
-    }
+const jsonDeserializerWithAuthorisationHeader =
+  <requestSchema extends JSONSchema7>() =>
+  (
+    handler: LambdaEventWithSchemaAndAuthorisationHeaderAndResult<requestSchema>
+  ) =>
+  async (
+    event: APIGatewayProxyEventWithAuthorisationHeader,
+    context: Context,
+    callback: Callback<APIGatewayProxyResult>
+  ): Promise<APIGatewayProxyResult> => {
+    const { body, headers, isBase64Encoded } = event
 
-    const data = isBase64Encoded ? Buffer.from(body, 'base64').toString() : body
-
-    const bodyObject = JSON.parse(data) as FromSchema<requestParams>
+    const bodyObject = parseBody<requestSchema>(body, isBase64Encoded, headers)
 
     return await handler({ ...event, body: bodyObject }, context, callback)
   }
@@ -128,4 +177,16 @@ export const bodyParser = <requestSchema extends JSONSchema7>(
   callback: Callback<APIGatewayProxyResult>
 ) => Promise<APIGatewayProxyResult>) => {
   return jsonDeserializer<requestSchema>()(handler)
+}
+
+export const bodyParserWithAuthorisationHeader = <
+  requestSchema extends JSONSchema7
+>(
+  handler: LambdaEventWithSchemaAndAuthorisationHeaderAndResult<requestSchema>
+): ((
+  event: APIGatewayProxyEventWithAuthorisationHeader,
+  context: Context,
+  callback: Callback<APIGatewayProxyResult>
+) => Promise<APIGatewayProxyResult>) => {
+  return jsonDeserializerWithAuthorisationHeader<requestSchema>()(handler)
 }

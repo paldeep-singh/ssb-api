@@ -8,7 +8,9 @@ import {
   LambdaEventWithSchemaAndResult,
   formatJSONResponse,
   formatJSONErrorResponse,
-  bodyParser
+  bodyParser,
+  LambdaEventWithSchemaAndAuthorisationHeaderAndResult,
+  bodyParserWithAuthorisationHeader
 } from '@libs/api-gateway'
 import {
   adminUserEmailInput,
@@ -20,13 +22,9 @@ import { isError } from '@libs/utils'
 import { randomBytes } from 'crypto'
 import { sesClient } from '@libs/ses'
 import { SendEmailCommand } from '@aws-sdk/client-ses'
-import {
-  adminUserEmailExists,
-  fetchUserByEmail,
-  updatePassword
-} from './models/adminUsers'
+import { fetchUserByEmail, updatePassword } from './models/adminUsers'
 import bcrypt from 'bcryptjs'
-import { createNewSession } from './models/sessions'
+import { createNewSession, fetchSession } from './models/sessions'
 
 export const passwordValidationRegex =
   /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$/
@@ -52,14 +50,15 @@ const checkAccountIsClaimed: LambdaEventWithSchemaAndResult<
   }
 }
 
-const setPassword: LambdaEventWithSchemaAndResult<
+const setPassword: LambdaEventWithSchemaAndAuthorisationHeaderAndResult<
   typeof adminUserSetPasswordInput
 > = async (event) => {
-  const { email, newPassword, confirmNewPassword } = event.body
+  const { newPassword, confirmNewPassword } = event.body
+  const { Authorization: sessionId } = event.headers
 
-  if (!(await adminUserEmailExists(email))) {
-    return formatJSONErrorResponse(404, ErrorCodes.NON_EXISTENT_ADMIN_USER)
-  }
+  const session = await fetchSession(sessionId)
+
+  if (!session) return formatJSONErrorResponse(401, ErrorCodes.INVALID_SESSION)
 
   if (newPassword !== confirmNewPassword) {
     return formatJSONErrorResponse(400, ErrorCodes.PASSWORD_MISMATCH)
@@ -73,8 +72,8 @@ const setPassword: LambdaEventWithSchemaAndResult<
 
   const newPasswordHash = await bcrypt.hash(newPassword, 10)
 
-  await updatePassword({ email, newPasswordHash })
-  return formatJSONResponse(200, { passwordSet: true })
+  await updatePassword({ userId: session.sessionData.userId, newPasswordHash })
+  return formatJSONResponse(200)
 }
 
 const sendVerificationCode: LambdaEventWithSchemaAndResult<
@@ -205,7 +204,9 @@ export const handleCheckAdminUserAccountIsClaimed = bodyParser<
 >(checkAccountIsClaimed)
 
 export const handleSetAdminUserPassword =
-  bodyParser<typeof adminUserSetPasswordInput>(setPassword)
+  bodyParserWithAuthorisationHeader<typeof adminUserSetPasswordInput>(
+    setPassword
+  )
 
 export const handleSendAdminUserVerificationCode =
   bodyParser<typeof adminUserEmailInput>(sendVerificationCode)

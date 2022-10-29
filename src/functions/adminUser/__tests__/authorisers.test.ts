@@ -1,15 +1,12 @@
 import { GetParameterCommand, SSMClient } from '@aws-sdk/client-ssm'
 import { faker } from '@faker-js/faker'
 import {
-  createAPIGatewayProxyEvent,
   createAPIGatewayProxyEventContext,
   createTokenAuthorisationEvent
 } from '@libs/fixtures'
 import { mockClient } from 'aws-sdk-client-mock'
 import { specificAdminUserAuthoriserFunction } from '../authorisers'
 import nock from 'nock'
-import { fetchUser } from '../models/adminUsers'
-import { mocked } from 'jest-mock'
 
 const ssmMock = mockClient(SSMClient)
 const redisURL = faker.internet.url()

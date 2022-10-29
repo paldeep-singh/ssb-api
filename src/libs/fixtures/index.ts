@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker'
+import { APIGatewayProxyEventWithAuthorisationHeader } from '@libs/api-gateway'
 import {
   APIGatewayProxyEvent,
   APIGatewayTokenAuthorizerEvent,
@@ -7,8 +8,8 @@ import {
 
 export const createAPIGatewayProxyEvent = (
   body: Record<string, unknown> = {},
-  eventAttributes: Partial<APIGatewayProxyEvent> = {},
-  headers: Record<string, string> = {}
+  headers: Record<string, string> = {},
+  eventAttributes: Partial<APIGatewayProxyEvent> = {}
 ): APIGatewayProxyEvent => {
   return {
     multiValueHeaders: {},
@@ -57,6 +58,19 @@ export const createAPIGatewayProxyEvent = (
     ...eventAttributes,
     body: JSON.stringify(body)
   }
+}
+
+export const createAPIGatewayProxyEventWithAuthorisationHeader = (
+  body: Record<string, unknown> = {},
+  authorisationHeader: string,
+  headers: Record<string, string> = {},
+  eventAttributes: Partial<APIGatewayProxyEvent> = {}
+): APIGatewayProxyEventWithAuthorisationHeader => {
+  return createAPIGatewayProxyEvent(
+    body,
+    { ...headers, Authorization: authorisationHeader },
+    eventAttributes
+  ) as APIGatewayProxyEventWithAuthorisationHeader
 }
 
 export const createAPIGatewayProxyEventContext = (
