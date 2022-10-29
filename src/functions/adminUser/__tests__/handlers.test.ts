@@ -22,14 +22,9 @@ import { createAdminUser, createVerificationCode } from './fixtures'
 import { mockClient } from 'aws-sdk-client-mock'
 import { SendEmailCommand, SESClient } from '@aws-sdk/client-ses'
 import dayjs from 'dayjs'
-import {
-  adminUserEmailExists,
-  fetchUserByEmail,
-  updatePassword
-} from '../models/adminUsers'
+import { fetchUserByEmail, updatePassword } from '../models/adminUsers'
 import bcrypt from 'bcryptjs'
 import { createNewSession, fetchSession } from '../models/sessions'
-import { GetParameterCommand } from '@aws-sdk/client-ssm'
 
 const mockedSESCLient = mockClient(SESClient)
 
