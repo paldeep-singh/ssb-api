@@ -15,7 +15,7 @@ const path = handlerPath(__dirname)
 const route = handlerRoute(__dirname)
 
 const cors = {
-  origin: '*',
+  origin: 'http://localhost:3164',
   headers: [
     'Content-Type',
     'X-Amz-Date',
