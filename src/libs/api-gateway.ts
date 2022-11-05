@@ -84,6 +84,7 @@ export type LambdaEventWithSchemaAndAuthorisationHeaderAndResult<
 type ApiGateWayResponse = {
   statusCode: number
   body: string
+  headers: Record<string, string | boolean | number>
 }
 
 // export type APIGatewayAuthoriserResource = {
@@ -108,6 +109,10 @@ export const formatJSONResponse = (
 ): ApiGateWayResponse => {
   return {
     statusCode,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true
+    },
     body: JSON.stringify(response)
   }
 }

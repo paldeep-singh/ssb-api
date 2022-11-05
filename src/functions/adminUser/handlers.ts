@@ -38,11 +38,14 @@ const checkAccountIsClaimed: LambdaEventWithSchemaAndResult<
 
     const accountClaimed = !!user.passwordHash
 
+    console.log(formatJSONResponse(200, { accountClaimed }))
+
     return formatJSONResponse(200, { accountClaimed })
   } catch (error) {
     if (!isError(error)) throw error
 
     if (error.message === ErrorCodes.NON_EXISTENT_ADMIN_USER) {
+      console.log(formatJSONErrorResponse(404, error.message))
       return formatJSONErrorResponse(404, error.message)
     }
 

@@ -14,6 +14,20 @@ import {
 const path = handlerPath(__dirname)
 const route = handlerRoute(__dirname)
 
+const cors = {
+  origin: '*',
+  headers: [
+    'Content-Type',
+    'X-Amz-Date',
+    'Authorization',
+    'X-Api-Key',
+    'X-Amz-Security-Token',
+    'X-Amz-User-Agent',
+    'X-Amzn-Trace-Id'
+  ],
+  allowCredentials: true
+}
+
 const adminUserFunctions: AWS['functions'] = {
   [SPECIFIC_ADMIN_USER_AUTHORISER]: {
     handler: `${path}/authorisers.${SPECIFIC_ADMIN_USER_AUTHORISER_FUNCTION}`,
@@ -26,6 +40,7 @@ const adminUserFunctions: AWS['functions'] = {
         http: {
           method: 'post',
           path: `${route}/claimed`,
+          cors,
           request: {
             schemas: {
               'application/json': adminUserEmailInput
@@ -43,6 +58,7 @@ const adminUserFunctions: AWS['functions'] = {
         http: {
           method: 'post',
           path: `${route}/set-password`,
+          cors,
           request: {
             schemas: {
               'application/json': adminUserSetPasswordInput
@@ -68,6 +84,7 @@ const adminUserFunctions: AWS['functions'] = {
         http: {
           method: 'post',
           path: `${route}/request-verification`,
+          cors,
           request: {
             schemas: {
               'application/json': adminUserEmailInput
@@ -85,6 +102,7 @@ const adminUserFunctions: AWS['functions'] = {
         http: {
           method: 'post',
           path: `${route}/verify-email`,
+          cors,
           request: {
             schemas: {
               'application/json': adminUserVerifyEmailInput
@@ -102,6 +120,7 @@ const adminUserFunctions: AWS['functions'] = {
         http: {
           method: 'post',
           path: `${route}/login`,
+          cors,
           request: {
             schemas: {
               'application/json': adminUserLoginInput
