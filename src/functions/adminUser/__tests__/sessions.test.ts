@@ -68,7 +68,7 @@ describe('createNewSession', () => {
   describe('when creating a long session', () => {
     beforeEach(() => {
       redisScope
-        .post(`/set/${sessionBytes.toString('hex')}?EX=1800`, { userId })
+        .post(`/set/${sessionBytes.toString('hex')}?EX=108000`, { userId })
         .matchHeader('Authorization', `Bearer ${redisToken}`)
         .reply(200)
     })
@@ -96,7 +96,7 @@ describe('updateSession', () => {
 
   beforeEach(() => {
     redisScope
-      .post(`/set/${sessionId}?EX=1800`, { userId })
+      .post(`/set/${sessionId}?EX=108000`, { userId })
       .matchHeader('Authorization', `Bearer ${redisToken}`)
       .reply(200)
 

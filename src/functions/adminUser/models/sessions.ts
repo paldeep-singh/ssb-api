@@ -81,7 +81,7 @@ export const getRedisHeaders = async (): Promise<
 }
 
 const FIVE_MINUTES = 60 * 5
-const THIRTY_MINUTES = 60 * 30
+const THIRTY_DAYS = 60 * 60 * 30
 
 export const createNewSession = async (
   userId: string,
@@ -90,7 +90,7 @@ export const createNewSession = async (
   const redisURL = await getRedisURL()
   const sessionId = randomBytes(32).toString('hex')
 
-  const expiry = short ? FIVE_MINUTES : THIRTY_MINUTES
+  const expiry = short ? FIVE_MINUTES : THIRTY_DAYS
 
   const requestURL = `${redisURL}/set/${sessionId}?EX=${expiry}`
 
@@ -113,7 +113,7 @@ export const updateSession = async (
   sessionData: ISessionData
 ): Promise<ISession> => {
   const redisURL = await getRedisURL()
-  const requestURL = `${redisURL}/set/${sessionId}?EX=${THIRTY_MINUTES}`
+  const requestURL = `${redisURL}/set/${sessionId}?EX=${THIRTY_DAYS}`
   const headers = await getRedisHeaders()
 
   await axios.post(requestURL, sessionData, { headers })
