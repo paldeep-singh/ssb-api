@@ -110,7 +110,7 @@ export const formatJSONResponse = (
   return {
     statusCode,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': 'http://localhost:3164',
       'Access-Control-Allow-Credentials': true
     },
     body: JSON.stringify(response)
