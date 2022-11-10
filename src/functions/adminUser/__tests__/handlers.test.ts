@@ -161,8 +161,8 @@ describe('handleSetAdminUserPassword', () => {
 
     beforeEach(() => {
       mocked(fetchSession).mockResolvedValueOnce({
-        sessionId,
-        sessionData: {
+        id: sessionId,
+        data: {
           userId
         }
       })
@@ -561,8 +561,8 @@ describe('handleVerifyAdminUserEmail', () => {
         beforeEach(() => {
           mocked(bcrypt.compare).mockResolvedValueOnce(true as never)
           mocked(createNewSession).mockResolvedValueOnce({
-            sessionId,
-            sessionData: {
+            id: sessionId,
+            data: {
               userId
             }
           })
@@ -586,8 +586,8 @@ describe('handleVerifyAdminUserEmail', () => {
           )
 
           expect(JSON.parse(body)).toEqual({
-            sessionId,
-            sessionData: {
+            id: sessionId,
+            data: {
               userId
             }
           })
@@ -708,8 +708,8 @@ describe('handleLogin', () => {
           mocked(fetchUserByEmail).mockResolvedValueOnce(adminUser)
           mocked(bcrypt.compare).mockResolvedValueOnce(true as never)
           mocked(createNewSession).mockResolvedValueOnce({
-            sessionId,
-            sessionData: {
+            id: sessionId,
+            data: {
               userId: adminUser.userId
             }
           })
@@ -733,8 +733,8 @@ describe('handleLogin', () => {
           )
 
           expect(JSON.parse(body)).toEqual({
-            sessionId,
-            sessionData: {
+            id: sessionId,
+            data: {
               userId: adminUser.userId
             }
           })

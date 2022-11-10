@@ -59,8 +59,8 @@ describe('createNewSession', () => {
       const session = await createNewSession(userId, true)
 
       expect(session).toEqual({
-        sessionId: sessionBytes.toString('hex'),
-        sessionData: { userId }
+        id: sessionBytes.toString('hex'),
+        data: { userId }
       })
     })
   })
@@ -83,8 +83,8 @@ describe('createNewSession', () => {
       const session = await createNewSession(userId)
 
       expect(session).toEqual({
-        sessionId: sessionBytes.toString('hex'),
-        sessionData: { userId }
+        id: sessionBytes.toString('hex'),
+        data: { userId }
       })
     })
   })
@@ -158,8 +158,8 @@ describe('fetchSession', () => {
       const session = await fetchSession(sessionId)
 
       expect(session).toEqual({
-        sessionId,
-        sessionData: {
+        id: sessionId,
+        data: {
           userId
         }
       })

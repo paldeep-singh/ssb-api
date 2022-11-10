@@ -12,8 +12,8 @@ interface ISessionData {
 }
 
 export interface ISession {
-  sessionId: string
-  sessionData: ISessionData
+  id: string
+  data: ISessionData
 }
 
 export const getRedisURL = async (): Promise<string> => {
@@ -103,8 +103,8 @@ export const createNewSession = async (
   await axios.post(requestURL, data, { headers })
 
   return {
-    sessionId,
-    sessionData: data
+    id: sessionId,
+    data: data
   }
 }
 
@@ -119,8 +119,8 @@ export const updateSession = async (
   await axios.post(requestURL, sessionData, { headers })
 
   return {
-    sessionId,
-    sessionData: sessionData
+    id: sessionId,
+    data: sessionData
   }
 }
 
@@ -143,7 +143,7 @@ export const fetchSession = async (
   const data = JSON.parse(response.data.result)
 
   return {
-    sessionId,
-    sessionData: data
+    id: sessionId,
+    data: data
   }
 }

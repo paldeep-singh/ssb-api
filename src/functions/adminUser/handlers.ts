@@ -72,7 +72,7 @@ const setPassword: LambdaEventWithSchemaAndAuthorisationHeaderAndResult<
 
   const newPasswordHash = await bcrypt.hash(newPassword, 10)
 
-  await updatePassword({ userId: session.sessionData.userId, newPasswordHash })
+  await updatePassword({ userId: session.data.userId, newPasswordHash })
   return formatJSONResponse(200)
 }
 
