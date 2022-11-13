@@ -12,6 +12,7 @@ import { isError } from 'lodash'
 export interface IAdminUser {
   userId: string
   email: string
+  name: string
   passwordHash?: string
 }
 
@@ -28,7 +29,8 @@ const adminUserSchema = new Schema({
       project: true
     }
   },
-  passwordHash: String
+  passwordHash: String,
+  name: String
 })
 
 interface adminUserItem extends Item, IAdminUser {}

@@ -11,6 +11,7 @@ export const createAdminUser = (
   userId: faker.datatype.uuid(),
   email: faker.internet.email(),
   passwordHash: faker.datatype.string(20),
+  name: faker.name.firstName(),
   ...adminUserAttributes
 })
 
