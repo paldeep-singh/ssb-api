@@ -130,6 +130,28 @@ const adminUserFunctions: AWS['functions'] = {
       }
     ],
     role: 'adminUserLoginRole'
+  },
+  getAdminUserDetails: {
+    handler: `${path}/handlers.handleGetAdminUserDetails`,
+    events: [
+      {
+        http: {
+          method: 'get',
+          path: `${route}/details`,
+          cors,
+          request: {
+            parameters: {
+              headers: {
+                Authorization: true
+              }
+            }
+          },
+          authorizer: {
+            name: SPECIFIC_ADMIN_USER_AUTHORISER
+          }
+        }
+      }
+    ]
   }
 }
 
