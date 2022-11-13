@@ -36,6 +36,13 @@ type HandlerWithResult<TEvent, TResult> = (
   callback: Callback<TResult>
 ) => Promise<TResult>
 
+const emptyInput = {
+  type: 'object',
+  required: []
+} as const
+
+export type IEmptyInputType = typeof emptyInput
+
 type APIGatewayRequestAuthoriserEventWithContext<
   TAuthoriserContext = Record<string, string | null>
 > = APIGatewayRequestAuthorizerEvent & {
@@ -69,12 +76,12 @@ export type LambdaEventWithUnknownSchema<
 >
 
 export type LambdaEventWithSchemaAndResult<
-  requestSchema extends JSONSchema7,
+  requestSchema extends JSONSchema7 = IEmptyInputType,
   TResult = APIGatewayProxyResult
 > = HandlerWithResult<ValidatedAPIGatewayProxyEvent<requestSchema>, TResult>
 
 export type LambdaEventWithSchemaAndAuthorisationHeaderAndResult<
-  requestSchema extends JSONSchema7,
+  requestSchema extends JSONSchema7 = IEmptyInputType,
   TResult = APIGatewayProxyResult
 > = HandlerWithResult<
   ValidatedAPIGatewayProxyEventWithAuthorisationHeader<requestSchema>,
@@ -185,7 +192,7 @@ export const bodyParser = <requestSchema extends JSONSchema7>(
 }
 
 export const bodyParserWithAuthorisationHeader = <
-  requestSchema extends JSONSchema7
+  requestSchema extends JSONSchema7 = IEmptyInputType
 >(
   handler: LambdaEventWithSchemaAndAuthorisationHeaderAndResult<requestSchema>
 ): ((

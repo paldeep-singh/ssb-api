@@ -10,7 +10,8 @@ import {
   formatJSONErrorResponse,
   bodyParser,
   LambdaEventWithSchemaAndAuthorisationHeaderAndResult,
-  bodyParserWithAuthorisationHeader
+  bodyParserWithAuthorisationHeader,
+  IEmptyInputType
 } from '@libs/api-gateway'
 import {
   adminUserEmailInput,
@@ -22,7 +23,11 @@ import { isError } from '@libs/utils'
 import { randomBytes } from 'crypto'
 import { sesClient } from '@libs/ses'
 import { SendEmailCommand } from '@aws-sdk/client-ses'
-import { fetchUserByEmail, updatePassword } from './models/adminUsers'
+import {
+  fetchUser,
+  fetchUserByEmail,
+  updatePassword
+} from './models/adminUsers'
 import bcrypt from 'bcryptjs'
 import { createNewSession, fetchSession } from './models/sessions'
 
@@ -199,6 +204,20 @@ const login: LambdaEventWithSchemaAndResult<
   }
 }
 
+const getUserDetails: LambdaEventWithSchemaAndAuthorisationHeaderAndResult =
+  async (event) => {
+    const { Authorization: sessionId } = event.headers
+
+    const session = await fetchSession(sessionId)
+
+    if (!session)
+      return formatJSONErrorResponse(401, ErrorCodes.INVALID_SESSION)
+
+    const { name } = await fetchUser(session.data.userId)
+
+    return formatJSONResponse(200, { name })
+  }
+
 export const handleCheckAdminUserAccountIsClaimed = bodyParser<
   typeof adminUserEmailInput
 >(checkAccountIsClaimed)
@@ -215,3 +234,6 @@ export const handleVerifyAdminUserEmail =
   bodyParser<typeof adminUserVerifyEmailInput>(verifyEmail)
 
 export const handleLogin = bodyParser<typeof adminUserLoginInput>(login)
+
+export const handleGetAdminUserDetails =
+  bodyParserWithAuthorisationHeader<IEmptyInputType>(getUserDetails)

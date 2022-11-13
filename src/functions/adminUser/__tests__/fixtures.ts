@@ -4,6 +4,7 @@ import {
 } from '../models/verificationCodes'
 import { IAdminUser, adminUserModel } from '../models/adminUsers'
 import { faker } from '@faker-js/faker'
+import { ISession } from '../models/sessions'
 
 export const createAdminUser = (
   adminUserAttributes: Partial<IAdminUser> = {}
@@ -22,6 +23,16 @@ export const createVerificationCode = (
   codeHash: faker.datatype.string(20),
   ttl: faker.date.soon().toISOString(),
   ...verficationCodeAttributes
+})
+
+export const createSession = (
+  id = faker.datatype.uuid(),
+  userId = faker.datatype.uuid()
+): ISession => ({
+  id,
+  data: {
+    userId
+  }
 })
 
 export const insertTestAdminUser = async (

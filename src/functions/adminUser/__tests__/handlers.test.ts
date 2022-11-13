@@ -3,7 +3,8 @@ import {
   handleSetAdminUserPassword,
   handleSendAdminUserVerificationCode,
   handleVerifyAdminUserEmail,
-  handleLogin
+  handleLogin,
+  handleGetAdminUserDetails
 } from '../handlers'
 import { faker } from '@faker-js/faker'
 import {
@@ -18,11 +19,19 @@ import {
 } from '../models/verificationCodes'
 import { ErrorCodes } from '../misc'
 import { mocked } from 'jest-mock'
-import { createAdminUser, createVerificationCode } from './fixtures'
+import {
+  createAdminUser,
+  createSession,
+  createVerificationCode
+} from './fixtures'
 import { mockClient } from 'aws-sdk-client-mock'
 import { SendEmailCommand, SESClient } from '@aws-sdk/client-ses'
 import dayjs from 'dayjs'
-import { fetchUserByEmail, updatePassword } from '../models/adminUsers'
+import {
+  fetchUserByEmail,
+  updatePassword,
+  fetchUser
+} from '../models/adminUsers'
 import bcrypt from 'bcryptjs'
 import { createNewSession, fetchSession } from '../models/sessions'
 
@@ -740,6 +749,74 @@ describe('handleLogin', () => {
           })
         })
       })
+    })
+  })
+})
+
+describe('handleGetAdminUserDetails', () => {
+  const userId = faker.datatype.uuid()
+  const adminUser = createAdminUser({
+    userId
+  })
+  const sessionId = faker.datatype.uuid()
+
+  const APIGatewayEvent = createAPIGatewayProxyEventWithAuthorisationHeader(
+    {},
+    sessionId
+  )
+
+  describe('when the session does not exist', () => {
+    beforeEach(() => {
+      mocked(fetchSession).mockResolvedValueOnce(null)
+    })
+
+    it('returns statusCode 401', async () => {
+      const { statusCode } = await handleGetAdminUserDetails(
+        APIGatewayEvent,
+        context,
+        jest.fn()
+      )
+
+      expect(statusCode).toEqual(401)
+    })
+
+    it(`returns ${ErrorCodes.INVALID_SESSION} error message`, async () => {
+      const { body } = await handleGetAdminUserDetails(
+        APIGatewayEvent,
+        context,
+        jest.fn()
+      )
+
+      expect(JSON.parse(body).message).toEqual(ErrorCodes.INVALID_SESSION)
+    })
+  })
+
+  describe('when the session exists', () => {
+    const session = createSession(sessionId, userId)
+    beforeEach(() => {
+      mocked(fetchSession).mockResolvedValueOnce(session)
+
+      mocked(fetchUser).mockResolvedValueOnce(adminUser)
+    })
+
+    it('returns statusCode 200', async () => {
+      const { statusCode } = await handleGetAdminUserDetails(
+        APIGatewayEvent,
+        context,
+        jest.fn()
+      )
+
+      expect(statusCode).toEqual(200)
+    })
+
+    it('returns the admin user details', async () => {
+      const { body } = await handleGetAdminUserDetails(
+        APIGatewayEvent,
+        context,
+        jest.fn()
+      )
+
+      expect(JSON.parse(body)).toEqual({ name: adminUser.name })
     })
   })
 })
