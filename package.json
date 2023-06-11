@@ -39,7 +39,8 @@
     "test:integration": "./scripts/runTests.sh integration",
     "test:all": "./scripts/runTests.sh all",
     "lint": "eslint . --ext .ts",
-    "prettify": "prettier --write \"**/*.ts\""
+    "prettify": "prettier --write \"**/*.ts\"",
+    "localdb": "./scripts/recipeDb/localDb.sh"
   },
   "dependencies": {
     "@aws-sdk/client-kms": "^3.171.0",
