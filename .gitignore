@@ -3,4 +3,5 @@ node_modules
 .build
 .serverless
 .esbuild
-scripts/recipeDb/plugins
+localRecipeDb/plugins
+localRecipeDb/neo4j/import

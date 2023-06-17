@@ -2,15 +2,14 @@ version: '3.7'
 services:
   neo4j:
     image: neo4j:5.8.0
-    restart: always
     hostname: neo4j
     container_name: recipe_db_local
     ports:
       - 7474:7474
       - 7687:7687
     volumes:
-      - ./import:/var/lib/neo4j/import
       - ./plugins:/plugins
+      - ./neo4j/import:/var/lib/neo4j/import
     environment:
       - NEO4J_AUTH=neo4j/pleaseletmein
       - NEO4J_PLUGINS=["apoc"]
