@@ -161,7 +161,11 @@ const jsonDeserializer =
 
     const bodyObject = parseBody<requestSchema>(body, isBase64Encoded, headers)
 
-    return await handler({ ...event, body: bodyObject }, context, callback)
+    return (await handler(
+      { ...event, body: bodyObject },
+      context,
+      callback
+    )) as APIGatewayProxyResult
   }
 
 const jsonDeserializerWithAuthorisationHeader =
