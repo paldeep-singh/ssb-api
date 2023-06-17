@@ -1,7 +1,9 @@
 import adminUserRoles from './adminUser/roles'
+import foodRoles from './food/roles'
 
 const roles = {
-  ...adminUserRoles
+  ...adminUserRoles,
+  ...foodRoles
 }
 
 export default roles

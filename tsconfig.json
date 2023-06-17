@@ -17,7 +17,7 @@
       "@libs/*": ["src/libs/*"]
     }
   },
-  "include": ["src/**/*.ts", "serverless.ts"],
+  "include": ["src/**/*.ts", "serverless.ts", "src/functions/food/tag"],
   "exclude": ["node_modules"],
   "ts-node": {
     "require": ["tsconfig-paths/register"]

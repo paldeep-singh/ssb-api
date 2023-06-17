@@ -38,12 +38,7 @@ type HandlerWithResult<TEvent, TResult> = (
   callback: Callback<TResult>
 ) => Promise<TResult>
 
-const emptyInput = {
-  type: 'object',
-  required: []
-} as const
-
-export type IEmptyInputType = FromSchema<typeof emptyInput>
+export type IEmptyInputType = Record<string, never>
 
 type APIGatewayRequestAuthoriserEventWithContext<
   TAuthoriserContext = Record<string, string | null>

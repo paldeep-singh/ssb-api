@@ -80,7 +80,7 @@ const lambdaBaseStatement: Statement = {
 }
 
 interface ICreateLambdaRole {
-  statements: Statement[]
+  statements?: Statement[]
   roleName: string
   policyName: string
 }
@@ -100,7 +100,7 @@ export const createLambdaRole = ({
           PolicyName: policyName,
           PolicyDocument: {
             Version: '2012-10-17',
-            Statement: [lambdaBaseStatement, ...statements]
+            Statement: [lambdaBaseStatement, ...(statements ?? [])]
           }
         }
       ]

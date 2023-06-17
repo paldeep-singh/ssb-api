@@ -10,23 +10,10 @@ import {
   SPECIFIC_ADMIN_USER_AUTHORISER,
   SPECIFIC_ADMIN_USER_AUTHORISER_FUNCTION
 } from './authorisers'
+import { cors } from '@functions/constants'
 
 const path = handlerPath(__dirname)
 const route = handlerRoute(__dirname)
-
-const cors = {
-  origin: 'http://localhost:3164',
-  headers: [
-    'Content-Type',
-    'X-Amz-Date',
-    'Authorization',
-    'X-Api-Key',
-    'X-Amz-Security-Token',
-    'X-Amz-User-Agent',
-    'X-Amzn-Trace-Id'
-  ],
-  allowCredentials: true
-}
 
 const adminUserFunctions: AWS['functions'] = {
   [SPECIFIC_ADMIN_USER_AUTHORISER]: {
