@@ -17,7 +17,7 @@ FOREACH (rc IN recipe_collection |
     MERGE (r:Recipe {name: rc.name})
     FOREACH (ing IN range(0,size(rc.ingredientList)-1,1) |
         MERGE (i:Ingredient {name: rc.ingredientList[ing]})
-        MERGE (r) - [c:CONTAINS_INGREDIENT] -> (i)
+        MERGE (r) - [c:HAS_INGREDIENT] -> (i)
         SET c.unit = rc.unitsList[ing], c.preparation = rc.ingredientPrep[ing], c.amount = rc.amountList[ing], i.id = apoc.create.uuid()
         )
     FOREACH (tag in range(0,size(rc.tags)-1,1) |
@@ -27,8 +27,8 @@ FOREACH (rc IN recipe_collection |
         )
     FOREACH (mainIng in range(0,size(rc.mainIngredients)-1,1) | 
         MERGE (mi:Ingredient {name: rc.mainIngredients[mainIng]})
+        ON CREATE SET mi.id = apoc.create.uuid()
         MERGE (r) - [:HAS_MAIN_INGREDIENT] -> (mi)
-        SET mi.id = apoc.create.uuid()
         )
     SET r.id = apoc.create.uuid(), r.method = rc.steps, r.picture = rc.pictureLink
     );
