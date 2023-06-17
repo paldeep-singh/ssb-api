@@ -14,10 +14,10 @@ import {
   IEmptyInputType
 } from '@libs/api-gateway'
 import {
-  adminUserEmailInput,
-  adminUserLoginInput,
-  adminUserSetPasswordInput,
-  adminUserVerifyEmailInput
+  IAdminUserEmailInput,
+  IAdminUserLoginInput,
+  IAdminUserSetPasswordInput,
+  IAdminUserVerifyEmailInput
 } from './schema'
 import { isError } from '@libs/utils'
 import { randomBytes } from 'crypto'
@@ -35,7 +35,7 @@ export const passwordValidationRegex =
   /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$/
 
 const checkAccountIsClaimed: LambdaEventWithSchemaAndResult<
-  typeof adminUserEmailInput
+  IAdminUserEmailInput
 > = async (event) => {
   const { email } = event.body
   try {
@@ -56,7 +56,7 @@ const checkAccountIsClaimed: LambdaEventWithSchemaAndResult<
 }
 
 const setPassword: LambdaEventWithSchemaAndAuthorisationHeaderAndResult<
-  typeof adminUserSetPasswordInput
+  IAdminUserSetPasswordInput
 > = async (event) => {
   const { newPassword, confirmNewPassword } = event.body
   const { Authorization: sessionId } = event.headers
@@ -82,7 +82,7 @@ const setPassword: LambdaEventWithSchemaAndAuthorisationHeaderAndResult<
 }
 
 const sendVerificationCode: LambdaEventWithSchemaAndResult<
-  typeof adminUserEmailInput
+  IAdminUserEmailInput
 > = async (event) => {
   const { email } = event.body
 
@@ -129,7 +129,7 @@ const sendVerificationCode: LambdaEventWithSchemaAndResult<
 }
 
 const verifyEmail: LambdaEventWithSchemaAndResult<
-  typeof adminUserVerifyEmailInput
+  IAdminUserVerifyEmailInput
 > = async (event) => {
   const { email, verificationCode: providedCode } = event.body
 
@@ -173,9 +173,9 @@ const verifyEmail: LambdaEventWithSchemaAndResult<
   }
 }
 
-const login: LambdaEventWithSchemaAndResult<
-  typeof adminUserLoginInput
-> = async ({ body: { email, password } }) => {
+const login: LambdaEventWithSchemaAndResult<IAdminUserLoginInput> = async ({
+  body: { email, password }
+}) => {
   try {
     const adminUser = await fetchUserByEmail(email)
 
@@ -218,22 +218,19 @@ const getUserDetails: LambdaEventWithSchemaAndAuthorisationHeaderAndResult =
     return formatJSONResponse(200, { name })
   }
 
-export const handleCheckAdminUserAccountIsClaimed = bodyParser<
-  typeof adminUserEmailInput
->(checkAccountIsClaimed)
+export const handleCheckAdminUserAccountIsClaimed =
+  bodyParser<IAdminUserEmailInput>(checkAccountIsClaimed)
 
 export const handleSetAdminUserPassword =
-  bodyParserWithAuthorisationHeader<typeof adminUserSetPasswordInput>(
-    setPassword
-  )
+  bodyParserWithAuthorisationHeader<IAdminUserSetPasswordInput>(setPassword)
 
 export const handleSendAdminUserVerificationCode =
-  bodyParser<typeof adminUserEmailInput>(sendVerificationCode)
+  bodyParser<IAdminUserEmailInput>(sendVerificationCode)
 
 export const handleVerifyAdminUserEmail =
-  bodyParser<typeof adminUserVerifyEmailInput>(verifyEmail)
+  bodyParser<IAdminUserVerifyEmailInput>(verifyEmail)
 
-export const handleLogin = bodyParser<typeof adminUserLoginInput>(login)
+export const handleLogin = bodyParser<IAdminUserLoginInput>(login)
 
 export const handleGetAdminUserDetails =
   bodyParserWithAuthorisationHeader<IEmptyInputType>(getUserDetails)

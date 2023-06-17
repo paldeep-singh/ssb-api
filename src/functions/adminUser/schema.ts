@@ -1,3 +1,7 @@
+export interface IAdminUserEmailInput {
+  email: string
+}
+
 export const adminUserEmailInput = {
   type: 'object',
   properties: {
@@ -5,6 +9,11 @@ export const adminUserEmailInput = {
   },
   required: ['email']
 } as const
+
+export interface IAdminUserSetPasswordInput {
+  newPassword: string
+  confirmNewPassword: string
+}
 
 export const adminUserSetPasswordInput = {
   type: 'object',
@@ -15,6 +24,11 @@ export const adminUserSetPasswordInput = {
   required: ['newPassword', 'confirmNewPassword']
 } as const
 
+export interface IAdminUserLoginInput {
+  email: string
+  password: string
+}
+
 export const adminUserLoginInput = {
   type: 'object',
   properties: {
@@ -23,6 +37,11 @@ export const adminUserLoginInput = {
   },
   required: ['email', 'password']
 } as const
+
+export interface IAdminUserVerifyEmailInput {
+  email: string
+  verificationCode: string
+}
 
 export const adminUserVerifyEmailInput = {
   type: 'object',

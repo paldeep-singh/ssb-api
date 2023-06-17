@@ -7,12 +7,14 @@ import type {
   APIGatewayProxyWithLambdaAuthorizerEventRequestContext
 } from 'aws-lambda'
 import { AuthoriserStatement } from './iam'
-import type { FromSchema, JSONSchema7 } from 'json-schema-to-ts'
+import type { FromSchema } from 'json-schema-to-ts'
 
-export type ValidatedAPIGatewayProxyEvent<requestSchema extends JSONSchema7> =
-  Omit<APIGatewayProxyEvent, 'body'> & {
-    body: FromSchema<requestSchema>
-  }
+export type ValidatedAPIGatewayProxyEvent<requestSchema> = Omit<
+  APIGatewayProxyEvent,
+  'body'
+> & {
+  body: requestSchema
+}
 
 export type APIGatewayProxyEventWithAuthorisationHeader = Omit<
   APIGatewayProxyEvent,
@@ -25,9 +27,9 @@ export type APIGatewayProxyEventWithAuthorisationHeader = Omit<
 }
 
 export type ValidatedAPIGatewayProxyEventWithAuthorisationHeader<
-  requestSchema extends JSONSchema7
+  requestSchema
 > = Omit<APIGatewayProxyEventWithAuthorisationHeader, 'body'> & {
-  body: FromSchema<requestSchema>
+  body: requestSchema
 }
 
 type HandlerWithResult<TEvent, TResult> = (
@@ -41,7 +43,7 @@ const emptyInput = {
   required: []
 } as const
 
-export type IEmptyInputType = typeof emptyInput
+export type IEmptyInputType = FromSchema<typeof emptyInput>
 
 type APIGatewayRequestAuthoriserEventWithContext<
   TAuthoriserContext = Record<string, string | null>
@@ -76,12 +78,12 @@ export type LambdaEventWithUnknownSchema<
 >
 
 export type LambdaEventWithSchemaAndResult<
-  requestSchema extends JSONSchema7 = IEmptyInputType,
+  requestSchema = IEmptyInputType,
   TResult = APIGatewayProxyResult
 > = HandlerWithResult<ValidatedAPIGatewayProxyEvent<requestSchema>, TResult>
 
 export type LambdaEventWithSchemaAndAuthorisationHeaderAndResult<
-  requestSchema extends JSONSchema7 = IEmptyInputType,
+  requestSchema = IEmptyInputType,
   TResult = APIGatewayProxyResult
 > = HandlerWithResult<
   ValidatedAPIGatewayProxyEventWithAuthorisationHeader<requestSchema>,
@@ -131,11 +133,11 @@ export const formatJSONErrorResponse = (
   return formatJSONResponse(statusCode, { message })
 }
 
-const parseBody = <requestSchema extends JSONSchema7>(
+const parseBody = <requestSchema>(
   body: string | null,
   isBase64Encoded: boolean,
   headers: Record<string, string | undefined>
-): FromSchema<requestSchema> => {
+): requestSchema => {
   const mimePattern = /^application\/(.+\+)?json(;.*)?$/
 
   const contentType = headers['Content-Type'] ?? headers['content-type'] ?? ''
@@ -146,11 +148,11 @@ const parseBody = <requestSchema extends JSONSchema7>(
 
   const data = isBase64Encoded ? Buffer.from(body, 'base64').toString() : body
 
-  return JSON.parse(data) as FromSchema<requestSchema>
+  return JSON.parse(data) as requestSchema
 }
 
 const jsonDeserializer =
-  <requestSchema extends JSONSchema7>() =>
+  <requestSchema>() =>
   (handler: LambdaEventWithSchemaAndResult<requestSchema>) =>
   async (
     event: APIGatewayProxyEvent,
@@ -161,15 +163,11 @@ const jsonDeserializer =
 
     const bodyObject = parseBody<requestSchema>(body, isBase64Encoded, headers)
 
-    return (await handler(
-      { ...event, body: bodyObject },
-      context,
-      callback
-    )) as APIGatewayProxyResult
+    return await handler({ ...event, body: bodyObject }, context, callback)
   }
 
 const jsonDeserializerWithAuthorisationHeader =
-  <requestSchema extends JSONSchema7>() =>
+  <requestSchema>() =>
   (
     handler: LambdaEventWithSchemaAndAuthorisationHeaderAndResult<requestSchema>
   ) =>
@@ -185,7 +183,7 @@ const jsonDeserializerWithAuthorisationHeader =
     return await handler({ ...event, body: bodyObject }, context, callback)
   }
 
-export const bodyParser = <requestSchema extends JSONSchema7>(
+export const bodyParser = <requestSchema>(
   handler: LambdaEventWithSchemaAndResult<requestSchema>
 ): ((
   event: APIGatewayProxyEvent,
@@ -196,7 +194,7 @@ export const bodyParser = <requestSchema extends JSONSchema7>(
 }
 
 export const bodyParserWithAuthorisationHeader = <
-  requestSchema extends JSONSchema7 = IEmptyInputType
+  requestSchema = IEmptyInputType
 >(
   handler: LambdaEventWithSchemaAndAuthorisationHeaderAndResult<requestSchema>
 ): ((
