@@ -1,0 +1,19 @@
+version: '3.7'
+services:
+  neo4j:
+    image: neo4j:5.8.0
+    restart: always
+    hostname: neo4j
+    container_name: recipe_db_local
+    ports:
+      - 7474:7474
+      - 7687:7687
+    volumes:
+      - ./import:/var/lib/neo4j/import
+      - ./plugins:/plugins
+    environment:
+      - NEO4J_AUTH=neo4j/pleaseletmein
+      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4J_dbms_security_procedures_allowlist=apoc.load.csv,apoc.create.uuid
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.load.csv,apoc.create.uuid

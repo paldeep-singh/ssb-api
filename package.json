@@ -40,7 +40,8 @@
     "test:all": "./scripts/runTests.sh all",
     "lint": "eslint . --ext .ts",
     "prettify": "prettier --write \"**/*.ts\"",
-    "localdb": "./scripts/recipeDb/localDb.sh"
+    "localdb": "./scripts/recipeDb/localDb.sh",
+    "docker:stop": "docker rm -v -f $(docker ps -qa)"
   },
   "dependencies": {
     "@aws-sdk/client-kms": "^3.171.0",
