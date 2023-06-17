@@ -20,8 +20,6 @@ const getTags: LambdaEventWithSchemaAndResult = async () => {
       (record) => record['_fields'][0].properties
     )
 
-    console.log(tags)
-
     return formatJSONResponse(200, { tags })
   } catch (error) {
     if (!isError(error)) throw error
