@@ -41,7 +41,8 @@
     "lint": "eslint . --ext .ts",
     "prettify": "prettier --write \"**/*.ts\"",
     "localdb": "./scripts/localDb.sh",
-    "docker:stop": "docker rm -v -f $(docker ps -qa)"
+    "docker:stop": "docker rm -v -f $(docker ps -qa)",
+    "postinstall": "sed -i 's|http://s3-us-west-2|https://s3-us-west-2|g' ./node_modules/dynamodb-localhost/dynamodb/config.json && sed -i 's|require(\"http\")|require(\"https\")|g' ./node_modules/dynamodb-localhost/dynamodb/installer.js"
   },
   "dependencies": {
     "@aws-sdk/client-kms": "^3.171.0",
@@ -54,7 +55,8 @@
     "dayjs": "^1.11.5",
     "dynamoose": "^3.1.0",
     "lodash": "^4.17.21",
-    "neo4j-driver": "^5.9.1"
+    "neo4j-driver": "^5.9.1",
+    "serverless": "^3.32.2"
   },
   "resolutions": {
     "@aws-sdk/types": "^3.188.0"

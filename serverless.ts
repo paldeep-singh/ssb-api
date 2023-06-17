@@ -12,6 +12,9 @@ const dynamoDbPort = 8448
 
 const serverlessConfiguration: AWS = {
   service: 'ssb-api',
+  package: {
+    exclude: ['./localRecipeDb/neo4j/import']
+  },
   plugins: [
     'serverless-esbuild',
     'serverless-dynamodb-local',
