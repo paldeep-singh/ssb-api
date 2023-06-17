@@ -1,63 +1,63 @@
-category_name,tag_name
+categoryName,tagName
 dish name,lasagna
 dish type,breakfast
 cuisine,italian
-dietary,vegan
+dietary requirement,vegan
 cooking method,oven baked
 equipment,wok
 flavour,spicy
-spices,fennel
+spice,fennel
 dish name,alfredo
 dish type,main dish
 cuisine,japanese
-dietary,vegetarian
+dietary requirement,vegetarian
 cooking method,pan fry
 equipment,oven
 flavour,spices
-spices,pepper
+spice,pepper
 dish name,alfredo
 dish type,dessert
 cuisine,asian
-dietary,pescatarian
+dietary requirement,pescatarian
 cooking method,frying
 flavour,sweet
-spices,cinnamon sticks
+spice,cinnamon sticks
 dish name,pizza
 dish type,side dish
 cuisine,indian
-dietary,dairy free
+dietary requirement,dairy free
 cooking method,breading
 flavour,sweet and sour 
-spices,cardamom
+spice,cardamom
 dish name,alfredo
 cuisine,thai
-dietary,nuts
-spices,cloves
+dietary requirement,nuts
+spice,cloves
 dish name,pizza
 cuisine,mexican
-dietary,peanuts
+dietary requirement,peanuts
 cooking method,stir fry
-spices,garam masala
+spice,garam masala
 dish name,bolognese
 cuisine,french
-dietary,dairy-free
+dietary requirement,dairy-free
 cooking method,braising
-spices,chilli powder
+spice,chilli powder
 dish name,risotto
 cuisine,british
-dietary,dairy
+dietary requirement,dairy
 cooking method,baking
-spices,paprika
+spice,paprika
 dish name,risotto
-dietary,gluten free
-spices,turmeric
+dietary requirement,gluten free
+spice,turmeric
 dish name,carbonara
-dietary,keto
-spices,cumin seeds
+dietary requirement,keto
+spice,cumin seeds
 dish name,arrabiata
-spices,mustard seeds
+spice,mustard seeds
 dish name,teriyaki
-spices,curry powder
+spice,curry powder
 dish name,teriyaki
 dish name,tonkatsu
 dish name,chicken karaage

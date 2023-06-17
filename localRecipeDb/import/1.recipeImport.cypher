@@ -33,12 +33,25 @@ FOREACH (rc IN recipe_collection |
     SET r.id = apoc.create.uuid(), r.method = rc.steps, r.picture = rc.pictureLink
     );
 
-//Import tag categories
-CALL apoc.load.csv("file:///data/testTags.csv", {header: true,
-    mapping:{
-       category_name : {type: 'str'},
-       tag_name: {type: 'str'}
-    }
-})
-YIELD map
-MERGE (t:tag{})
+// //Import tag categories
+// CALL apoc.load.csv("file:///data/testTags.csv", {header: true,
+//     mapping:{
+//        categoryName : {type: 'str'},
+//        tagName: {type: 'str'}
+//     }
+// })
+// YIELD map
+// WITH collect(map) AS tag_collection
+// MATCH 
+// FOREACH (tc IN tag_collection |
+//     MERGE (c:Category {name: tc.categoryName})
+//     MERGE (t:Tag {name: tc.tagName})
+//     ON MATCH SET (t) - [:IS_A] -> (c)
+//     ON CREATE SET (t) - [:IS_A] -> (c)
+//     SET  c.id = apoc.create.uuid()
+//     );
+
+LOAD CSV WITH HEADERS FROM "file:///data/testTags.csv" AS row
+MATCH (t:Tag {name: row.tagName})
+MERGE (c:Category {name: row.categoryName})
+MERGE (t) - [:IS_A] -> (c)
