@@ -34,7 +34,7 @@ FOREACH (rc IN recipe_collection |
     );
 
 //Import tag categories
-CALL apoc.load.csv("file:///data/organised_tags.csv", {header: true,
+CALL apoc.load.csv("file:///data/testTags.csv", {header: true,
     mapping:{
        category_name : {type: 'str'},
        tag_name: {type: 'str'}
