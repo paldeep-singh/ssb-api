@@ -41,6 +41,7 @@
     "lint": "eslint . --ext .ts",
     "prettify": "prettier --write \"**/*.ts\"",
     "db:recipes": "./scripts/localDb.sh",
+    "db:recipes:seed": "./scripts/localDb.sh seed",
     "db:stop:recipes": "docker compose down -f ./docker/recipe.db.yml",
     "db:admin-users": "docker compose -f ./docker/admin-user.db.yml up",
     "db:stop:admin-users": "docker compose -f ./docker/admin-user.db.yml down",

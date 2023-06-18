@@ -1,3 +1,6 @@
+#!/bin/bash
+set -e
+
 cp -r ./localRecipeDb/import ./localRecipeDb/neo4j/import || echo "Could not copy import folder, delete the folder if it already exists"
 
 docker compose -f ./docker/recipe.db.yml up -d
@@ -10,6 +13,11 @@ do
 done
 echo "neo4j started"
 
-echo "importing data"
-docker exec --interactive recipe_db_local cypher-shell --file import/1.recipeImport.cypher -u neo4j -p pleaseletmein
-echo "imported data"
+
+
+if [ "$1" = "seed" ]
+then
+  echo "seeding data"
+  docker exec --interactive recipe_db_local cypher-shell --file import/1.recipeImport.cypher -u neo4j -p pleaseletmein
+  echo "seeded data"
+fi
