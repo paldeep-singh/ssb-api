@@ -4,7 +4,7 @@ import resources from '@functions/resources'
 import roles from '@functions/roles'
 import environment from './src/env'
 
-const stage = environment.STAGE
+const stage = environment.STAGE ?? 'local'
 if (!stage) throw new Error('STAGE environment variable is not set')
 
 const local = 'local'

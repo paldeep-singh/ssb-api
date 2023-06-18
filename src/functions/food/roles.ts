@@ -1,4 +1,4 @@
-import tagRoles from './tag'
+import tagRoles from './tag/roles'
 
 export default {
   ...tagRoles
