@@ -1,11 +1,9 @@
 import {
   LambdaEventWithSchemaAndResult,
-  bodyParser,
   formatJSONErrorResponse,
   formatJSONResponse
 } from '@libs/api-gateway'
 import db, { ITag } from '../db'
-import { Record } from 'neo4j-driver'
 import { isError } from '@libs/utils'
 
 const getTags: LambdaEventWithSchemaAndResult = async () => {

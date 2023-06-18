@@ -33,7 +33,7 @@
     "typescript": "^5.1.3"
   },
   "scripts": {
-    "start": "STAGE=local serverless offline start --noPrependStageInUrl",
+    "start": "STAGE=local serverless offline start",
     "deploy": "STAGE=dev /usr/bin/time -f '%E' serverless",
     "teardown": "STAGE=dev /usr/bin/time -f '%E' serverless remove",
     "test": "./scripts/runTests.sh unit",
