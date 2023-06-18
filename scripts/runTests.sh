@@ -10,7 +10,7 @@ function runIntegrationTests {
 
   # If the test fails, we still want the teardown to run.
   # So we set STATUS to 1 and allow the script to proceed.
-  yarn run jest "$@" --testRegex=\\.integration.test\\.ts$
+  yarn run jest "$@" --testRegex=\\.integration.test\\.ts$ || STATUS=1
 
   # Teardown local DynamoDB instance
   docker-compose -f ./docker/admin-user.db.yml -f ./docker/recipe.db.yml down 
