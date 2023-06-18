@@ -5,14 +5,14 @@ STATUS=0
 
 function runIntegrationTests {
   # Setup local DynamoDB instance
-  docker-compose up -d
+  docker compose -f ./docker/admin-user.db.yml up -d 
 
   # If the test fails, we still want the teardown to run.
   # So we set STATUS to 1 and allow the script to proceed.
   yarn run jest "$@" --testRegex=\\.integration.test\\.ts$
 
   # Teardown local DynamoDB instance
-  docker-compose down
+  docker-compose -f ./docker/admin-user.db.yml down
 }
 
 function runUnitTests {
@@ -21,14 +21,14 @@ function runUnitTests {
 
 function runAllTests {
   # Setup local DynamoDB instance
-  docker-compose up -d
+  docker compose -f ./docker/admin-user.db.yml up -d 
 
   # If the test fails, we still want the teardown to run.
   # So we set STATUS to 1 and allow the script to proceed.
   yarn run jest "$@" --testPathPattern=.*.test.ts || STATUS=1
 
   # Teardown local DynamoDB instance
-  docker-compose down
+  docker-compose -f ./docker/admin-user.db.yml down
 }
 
 if (( "$#" != 0 ))

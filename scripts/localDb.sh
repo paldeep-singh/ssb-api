@@ -1,6 +1,6 @@
 cp -r ./localRecipeDb/import ./localRecipeDb/neo4j/import || echo "Could not copy import folder, delete the folder if it already exists"
 
-docker compose -f localRecipeDb/docker-compose.recipe.db.yml up -d
+docker compose -f ./docker/recipe.db.yml up -d
 
 while ! curl http://localhost:7474/
 do

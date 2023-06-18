@@ -8,8 +8,8 @@ services:
       - 7474:7474
       - 7687:7687
     volumes:
-      - ./plugins:/plugins
-      - ./neo4j/import:/var/lib/neo4j/import
+      - ../localRecipeDb/plugins:/plugins
+      - ../localRecipeDb/neo4j/import:/var/lib/neo4j/import
     environment:
       - NEO4J_AUTH=neo4j/pleaseletmein
       - NEO4J_PLUGINS=["apoc"]
