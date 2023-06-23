@@ -1,27 +1,25 @@
 import db, { ITag } from '../db'
 
-export const fetchTags = async (): Promise<ITag['properties'][]> => {
+export const fetchTags = async (): Promise<ITag[]> => {
   const session = db.session()
 
   const result = await session.run('MATCH (t:Tag) RETURN t')
 
   session.close()
 
-  const tags = result.records.map<ITag['properties']>(
+  const tags = result.records.map<ITag>(
     (record) => record['_fields'][0].properties
   )
 
   return tags
 }
 
-export const createTag = async (
-  tag: Pick<ITag['properties'], 'name'>
-): Promise<ITag['properties']> => {
+export const createTag = async (name: Pick<ITag, 'name'>): Promise<ITag> => {
   const session = db.session()
 
   const result = await session.run(
     'CREATE (t:Tag { name: $name }) SET t.id = apoc.create.uuid() RETURN t',
-    tag
+    name
   )
 
   await session.close()

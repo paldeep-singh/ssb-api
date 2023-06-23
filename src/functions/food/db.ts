@@ -1,6 +1,6 @@
 import neo4j, { Node, Relationship, Integer } from 'neo4j-driver'
 
-export type ITag = Node<
+type ITagNode = Node<
   Integer,
   {
     name: string
@@ -8,7 +8,9 @@ export type ITag = Node<
   }
 >
 
-export type IIngredient = Node<
+export type ITag = ITagNode['properties']
+
+export type IIngredientNode = Node<
   Integer,
   {
     name: string
@@ -16,7 +18,9 @@ export type IIngredient = Node<
   }
 >
 
-export type ICategory = Node<
+export type IIngredient = IIngredientNode['properties']
+
+export type ICategoryNode = Node<
   Integer,
   {
     name: string
@@ -24,7 +28,9 @@ export type ICategory = Node<
   }
 >
 
-export type IRecipe = Node<
+export type ICategory = ICategoryNode['properties']
+
+export type IRecipeNode = Node<
   Integer,
   {
     name: string
@@ -33,6 +39,8 @@ export type IRecipe = Node<
     id: string
   }
 >
+
+export type IRecipe = IRecipeNode['properties']
 
 export type IRecipeIngredient = Relationship<
   Integer,
