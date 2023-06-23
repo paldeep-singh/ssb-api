@@ -1,6 +1,6 @@
 import db, { ITag } from '../db'
 
-const fetchTags = async (): Promise<ITag['properties'][]> => {
+export const fetchTags = async (): Promise<ITag['properties'][]> => {
   const session = db.session()
 
   const result = await session.run('MATCH (t:Tag) RETURN t')

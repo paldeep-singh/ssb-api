@@ -1,5 +1,6 @@
-import { createTag } from '../../model'
+import { createTag, fetchTags } from '../../model'
 import db from '../../../db'
+import { faker } from '@faker-js/faker'
 
 afterAll(async () => {
   await db.close()
@@ -7,16 +8,19 @@ afterAll(async () => {
 
 describe('createTag', () => {
   it('creates a tag', async () => {
-    const returnedTag = await createTag({ name: 'test' })
+    const name = faker.word.noun()
+    const returnedTag = await createTag({ name })
 
     expect(returnedTag).toEqual({
       id: expect.any(String),
-      name: 'test'
+      name
     })
 
     const session = db.session()
 
-    const result = await session.run('MATCH (t:Tag {name: "test"}) RETURN t')
+    const result = await session.run('MATCH (t:Tag {name: $name}) RETURN t', {
+      name
+    })
 
     await session.close()
 
@@ -28,5 +32,27 @@ describe('createTag', () => {
         name: returnedTag.name
       }
     ])
+  })
+})
+
+describe('fetchTags', () => {
+  it('fetches tags', async () => {
+    const tags = Array.from({ length: 5 }, () => ({
+      name: faker.word.noun(),
+      id: faker.datatype.uuid()
+    }))
+
+    const session = db.session()
+
+    await session.run(
+      `UNWIND $tags AS tagProperties CREATE (t:Tag) SET t = tagProperties`,
+      { tags }
+    )
+
+    await session.close()
+
+    const returnedTags = await fetchTags()
+
+    expect(returnedTags).toEqual(expect.arrayContaining(tags))
   })
 })
