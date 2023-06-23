@@ -38,6 +38,7 @@
     "test": "./scripts/runTests.sh unit",
     "test:integration": "./scripts/runTests.sh integration",
     "test:all": "./scripts/runTests.sh all",
+    "test:dynamodb": "./scripts/runTests.sh dynamodb",
     "lint": "eslint . --ext .ts",
     "prettify": "prettier --write \"**/*.ts\"",
     "db:recipes": "./scripts/localDb.sh",
