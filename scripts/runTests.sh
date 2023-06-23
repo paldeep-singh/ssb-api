@@ -21,7 +21,7 @@ function runUnitTests {
 }
 
 function runAllTests {
-  # Setup local DynamoDB instance
+  # Setup local DynamoDB and Neo4J instances
   docker compose -f ./docker/admin-user.db.yml -f ./docker/recipe.db.yml up -d 
   ./scripts/localDb.sh
 
@@ -45,6 +45,19 @@ function runDynamoDBIntegrationTests {
   docker-compose -f ./docker/admin-user.db.yml down
 }
 
+function runNeo4JTests {
+  # Setup local Neo4J instance
+  docker compose -f ./docker/recipe.db.yml up -d 
+  ./scripts/localDb.sh
+
+  # If the test fails, we still want the teardown to run.
+  # So we set STATUS to 1 and allow the script to proceed.
+  yarn run jest "$@" --testRegex=.*neo4j\.integration\.test\.ts$ || STATUS=1
+
+  # Teardown local Neo4J instance
+  docker-compose -f ./docker/recipe.db.yml down
+}
+
 if (( "$#" != 0 ))
 then
   TEST_TYPE="$1"
@@ -61,9 +74,12 @@ then
   elif [ $TEST_TYPE = "dynamodb" ] 
   then
     runDynamoDBIntegrationTests "$@"
+  elif [ $TEST_TYPE = "neo4j" ] 
+  then
+    runNeo4JTests "$@"
   else
     STATUS=1
-    echo "Valid values for test type are 'unit', 'integration', or 'all', but '$TEST_TYPE' was received"
+    echo "Valid values for test type are 'unit', 'integration','all', 'dynamodb' or 'neo4j', but '$TEST_TYPE' was received"
   fi
 else
   STATUS=1

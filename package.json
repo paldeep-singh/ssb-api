@@ -39,6 +39,7 @@
     "test:integration": "./scripts/runTests.sh integration",
     "test:all": "./scripts/runTests.sh all",
     "test:dynamodb": "./scripts/runTests.sh dynamodb",
+    "test:neo4j": "./scripts/runTests.sh neo4j",
     "lint": "eslint . --ext .ts",
     "prettify": "prettier --write \"**/*.ts\"",
     "db:recipes": "./scripts/localDb.sh",
