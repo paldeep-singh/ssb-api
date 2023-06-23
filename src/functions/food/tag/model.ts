@@ -14,12 +14,12 @@ export const fetchTags = async (): Promise<ITag[]> => {
   return tags
 }
 
-export const createTag = async (name: Pick<ITag, 'name'>): Promise<ITag> => {
+export const createTag = async (name: string): Promise<ITag> => {
   const session = db.session()
 
   const result = await session.run(
     'CREATE (t:Tag { name: $name }) SET t.id = apoc.create.uuid() RETURN t',
-    name
+    { name }
   )
 
   await session.close()
@@ -27,4 +27,16 @@ export const createTag = async (name: Pick<ITag, 'name'>): Promise<ITag> => {
   const createdTag = result.records[0]['_fields'][0].properties
 
   return createdTag
+}
+
+export const fetchTag = async (id: string): Promise<ITag> => {
+  const session = db.session()
+
+  const result = await session.run('MATCH (t:Tag { id: $id }) RETURN t', { id })
+
+  await session.close()
+
+  const tag = result.records[0]['_fields'][0].properties
+
+  return tag
 }
