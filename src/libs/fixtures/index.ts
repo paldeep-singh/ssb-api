@@ -60,6 +60,14 @@ export const createAPIGatewayProxyEvent = (
   }
 }
 
+export const createAPIGatewayProxyEventWithNoBody = (
+  headers: Record<string, string> = {},
+  eventAttributes: Partial<APIGatewayProxyEvent> = {}
+): APIGatewayProxyEvent & { body: null } => ({
+  ...createAPIGatewayProxyEvent({}, headers, eventAttributes),
+  body: null
+})
+
 export const createAPIGatewayProxyEventWithAuthorisationHeader = (
   body: Record<string, unknown> = {},
   authorisationHeader: string,

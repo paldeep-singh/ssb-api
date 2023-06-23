@@ -19,6 +19,18 @@ const tagFunctions: AWS['functions'] = {
       }
     ],
     role: GET_TAGS_ROLE_NAME
+  },
+  getTag: {
+    handler: `${path}/handlers.handleGetTag`,
+    events: [
+      {
+        http: {
+          method: 'get',
+          path: `${route}/single`,
+          cors
+        }
+      }
+    ]
   }
 }
 

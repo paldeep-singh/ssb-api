@@ -1,4 +1,4 @@
-import { createTag, fetchTag, fetchTags } from '../../model'
+import { createTag, getTag, getTags } from '../../model'
 import db from '../../../db'
 import { faker } from '@faker-js/faker'
 
@@ -35,7 +35,7 @@ describe('createTag', () => {
   })
 })
 
-describe('fetchTags', () => {
+describe('getTags', () => {
   it('fetches tags', async () => {
     const tags = Array.from({ length: 5 }, () => ({
       name: faker.word.noun(),
@@ -51,13 +51,13 @@ describe('fetchTags', () => {
 
     await session.close()
 
-    const returnedTags = await fetchTags()
+    const returnedTags = await getTags()
 
     expect(returnedTags).toEqual(expect.arrayContaining(tags))
   })
 })
 
-describe('fetchTag', () => {
+describe('getTag', () => {
   it('fetches a tag', async () => {
     const tag = {
       name: faker.word.noun(),
@@ -73,7 +73,7 @@ describe('fetchTag', () => {
 
     await session.close()
 
-    const returnedTag = await fetchTag(tag.id)
+    const returnedTag = await getTag(tag.id)
 
     expect(returnedTag).toEqual(tag)
   })

@@ -7,8 +7,20 @@ export const getTagsRole = createLambdaRole({
   roleName: GET_TAGS_ROLE_NAME
 })
 
+export const getTagRole = createLambdaRole({
+  policyName: 'getTagPolicy',
+  roleName: 'getTagRole'
+})
+
+export const createTagRole = createLambdaRole({
+  policyName: 'createTagPolicy',
+  roleName: 'createTagRole'
+})
+
 const tagRoles = {
-  getTagsRole
+  getTagsRole,
+  getTagRole,
+  createTagRole
 }
 
 export default tagRoles

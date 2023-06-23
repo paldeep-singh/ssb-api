@@ -38,7 +38,7 @@ type HandlerWithResult<TEvent, TResult> = (
   callback: Callback<TResult>
 ) => Promise<TResult>
 
-export type IEmptyInputType = Record<string, never>
+export type IEmptyInputType = null
 
 type APIGatewayRequestAuthoriserEventWithContext<
   TAuthoriserContext = Record<string, string | null>
