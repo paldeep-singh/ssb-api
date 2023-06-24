@@ -1,4 +1,4 @@
-import { Tag } from './misc-aws-utils'
+import { AwsStrings, Tag } from './misc-aws-utils'
 
 type CapacityProviderStrategy = {
   Base: number
@@ -20,6 +20,11 @@ type DeploymentConfiguration = {
   }
 }
 
+type ISecret = {
+  Name: string
+  ValueFrom: string
+}
+
 type LogConfiguration = {
   LogDriver?:
     | 'awsfirelens'
@@ -31,10 +36,7 @@ type LogConfiguration = {
     | 'journald'
     | 'syslog'
   Options?: Record<string, string>
-  SecretOptions?: {
-    Name: string
-    ValueFrom: string
-  }[]
+  SecretOptions?: ISecret[]
 }
 type ServiceConnectConfiguration = {
   Enabled: boolean
@@ -244,85 +246,177 @@ export type IECSCluster = {
   }
 }
 
+type IContainerDefinition = {
+  Command?: string[]
+  Cpu?: number
+  DependsOn?: {
+    Condition?: 'START' | 'COMPLETE' | 'SUCCESS' | 'HEALTHY'
+    ContainerName: string
+  }
+  DisableNetworking?: boolean
+  DnsSearchDomains?: string[]
+  DnsServers?: string[]
+  DockerLabels?: Record<string, string>
+  DockerSecurityOptions?: string[]
+  EntryPoint?: string[]
+  Environment?: Record<string, string>
+  EnvironmentFiles?: {
+    Type: 's3'
+    Value: string
+  }
+  Essential?: boolean
+  ExtraHosts?: {
+    Hostname: string
+    IpAddress: string
+  }
+  FirelensConfiguration?: {
+    Options?: Record<string, string>
+    Type: 'fluentbit' | 'fluentd'
+  }
+  HealthCheck?: {
+    Command: string[]
+    Interval?: number
+    Retries?: number
+    StartPeriod?: number
+    Timeout?: number
+  }
+  Hostname?: string
+  Image: string
+  Interactive?: boolean
+  Links?: string[]
+  LinuxParameters?: {
+    Capabilities?: {
+      Add?: Add[]
+      Drop?: Drop[]
+    }
+    Devices?: {
+      ContainerPath: string
+      HostPath: string
+      Permissions: string[]
+    }
+    InitProcessEnabled?: boolean
+    MaxSwap?: number
+    SharedMemorySize?: number
+    Swappiness?: number
+    Tmpfs?: {
+      ContainerPath: string
+      MountOptions?: MountOptions[]
+      Size: number
+    }
+  }
+  LogConfiguration?: LogConfiguration
+  Memory?: number
+  MemoryReservation?: number
+  MountPoints?: {
+    ContainerPath: string
+    ReadOnly?: boolean
+    SourceVolume: string
+  }
+  Name: string
+  PortMapping?: {
+    AppProtocol?: 'grpc' | 'http' | 'http2'
+    ContainerPort: number
+    ContainerPortRange?: string
+    HostPort?: number
+    Name?: string
+    Protocol?: 'tcp' | 'udp'
+  }[]
+  Priveleged?: boolean
+  PseudoTerminal?: boolean
+  ReadonlyRootFilesystem?: boolean
+  RepositoryCredentials?: {
+    CredentialsParameter: string
+  }
+  ResourceRequirements?: {
+    Type: 'GPU' | 'InferenceAccelerator'
+    Value: string
+  }
+  Secrets?: ISecret[]
+  StartTimeout?: number
+  StopTimeout?: number
+  SystemControls?: {
+    Namespace: string
+    Value: string
+  }
+  Ulimits?: {
+    HardLimit: number
+    Name: string
+    SoftLimit: number
+  }[]
+  User: string
+  VolumesFrom?: {
+    ReadOnly?: boolean
+    SourceContainer: string
+  }[]
+  WorkingDirectory?: string
+}
+
+type IProxyConfigurationProperties = {
+  IgnoredUID: number | null
+  IgnoredGID: number | null
+  AppPorts: number[]
+  ProxyEgressPort: number
+  ProxyIngressPort: number
+  EgressIgnoredPorts: number[]
+  EgressIgnoredIPs: string[]
+}
+
 export type IECSTaskDefinition = {
   Type: 'AWS::ECS::TaskDefinition'
   Properties: {
-    ContainerDefinitions: {
-      Command?: string[]
-      Cpu?: number
-      DependsOn?: {
-        Condition?: 'START' | 'COMPLETE' | 'SUCCESS' | 'HEALTHY'
-        ContainerName: string
+    ContainerDefinitions: IContainerDefinition[]
+    Cpu?: string
+    EphemeralStorage?: {
+      SizeInGiB: number
+    }
+    ExecutionRoleArn?: string
+    Family?: string
+    InferenceAccelerators?: {
+      DeviceName: string
+      DeviceType: string
+    }
+    IpcMode?: 'host' | 'task' | 'none'
+    Memory?: string
+    NetworkMode?: 'bridge' | 'host' | 'awsvpc' | 'none'
+    PidMode?: 'host' | 'task'
+    PlacementConstraints?: {
+      Expression?: string
+      Type: 'memberOf'
+    }
+    ProxyConfiguration?: {
+      ContainerName?: string
+      ProxyConfigurationProperties: IProxyConfigurationProperties
+      Type: 'APPMESH'
+    }
+    RequiresCompatibilities?: ('EC2' | 'FARGATE')[]
+    RuntimePlatform?: {
+      CpuArchitecture?: 'ARM64' | 'X86_64'
+      OperatingSystemFamily?: 'LINUX'
+    }
+    Tags?: Tag[]
+    TaskRoleArn?: AwsStrings
+    Volumes?: {
+      DockerVolumeConfiguration?: {
+        Autoprovision?: boolean
+        Driver?: string
+        DriverOpts?: Record<string, string>
+        Labels?: Record<string, string>
+        Scope?: 'task' | 'shared'
       }
-      DisableNetworking?: boolean
-      DnsSearchDomains?: string[]
-      DnsServers?: string[]
-      DockerLabels?: Record<string, string>
-      DockerSecurityOptions?: string[]
-      EntryPoint?: string[]
-      Environment?: Record<string, string>
-      EnvironmentFiles?: {
-        Type: 's3'
-        Value: string
-      }
-      Essential?: boolean
-      ExtraHosts?: {
-        Hostname: string
-        IpAddress: string
-      }
-      FirelensConfiguration?: {
-        Options?: Record<string, string>
-        Type: 'fluentbit' | 'fluentd'
-      }
-      HealthCheck?: {
-        Command: string[]
-        Interval?: number
-        Retries?: number
-        StartPeriod?: number
-        Timeout?: number
-      }
-      Hostname?: string
-      Image: string
-      Interactive?: boolean
-      Links?: string[]
-      LinuxParameters?: {
-        Capabilities?: {
-          Add?: Add[]
-          Drop?: Drop[]
+      EFSVolumeConfiguration?: {
+        AuthorizationConfig?: {
+          AccessPointId?: string
+          Iam?: 'ENABLED' | 'DISABLED'
         }
-        Devices?: {
-          ContainerPath: string
-          HostPath: string
-          Permissions: string[]
-        }
-        InitProcessEnabled?: boolean
-        MaxSwap?: number
-        SharedMemorySize?: number
-        Swappiness?: number
-        Tmpfs?: {
-          ContainerPath: string
-          MountOptions?: MountOptions[]
-          Size: number
-        }
+        FilesystemId: string
+        RootDirectory?: string
+        TransitEncryption?: 'ENABLED' | 'DISABLED'
+        TransitEncryptionPort?: number
       }
-      LogConfiguration?: LogConfiguration
-      Memory?: number
-      MemoryReservation?: number
-      MountPoints?: {
-        ContainerPath: string
-        ReadOnly?: boolean
-        SourceVolume: string
+      Host?: {
+        SourcePath?: string
       }
-      Name: string
-      PortMapping?: {
-        AppProtocol?: 'grpc' | 'http' | 'http2'
-        ContainerPort: number
-        ContainerPortRange?: string
-        HostPort?: number
-        Name?: string
-        Protocol?: 'tcp' | 'udp'
-      }[]
-      // Unfinished
+      Name?: string
     }
   }
 }
