@@ -1,12 +1,16 @@
 import { IECSCluster, IECSService } from '@libs/ecs'
 
-const FoodDatabaseResource: IECSService = {
+const FoodDatabaseService: IECSService = {
   DesiredCount: 1,
   LaunchType: 'FARGATE'
 }
 
+const FoodDatabaseTaskDefinition: IECSService = {
+  LaunchType: 'FARGATE'
+}
+
 const resources = {
-  FoodDatabaseResource
+  FoodDatabaseResource: FoodDatabaseService
 }
 
 export default resources

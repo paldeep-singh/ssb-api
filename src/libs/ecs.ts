@@ -180,139 +180,149 @@ type MountOptions =
   | 'nr_blocks'
   | 'mpol'
 export interface IECSService {
-  CapacityProviderStrategy?: CapacityProviderStrategy[]
-  Cluster?: string
-  DeploymentConfiguration?: DeploymentConfiguration
-  DeploymentController?: {
-    Type: 'ECS' | 'CODE_DEPLOY' | 'EXTERNAL'
-  }
-  DesiredCount?: number
-  EnableECSManagedTags?: boolean
-  EnableExecuteCommand?: boolean
-  HealthCheckGracePeriodSeconds?: number
-  LaunchType?: 'EC2' | 'FARGATE' | 'EXTERNAL'
-  LoadBalancers?: {
-    ContainerName: string
-    ContainerPort: number
-    LoadBalancerName: string
-    TargetGroupArn: string
-  }
-  NetworkConfiguration?: {
-    AwsvpcConfiguration: {
-      AssignPublicIp?: 'ENABLED' | 'DISABLED'
-      SecurityGroups?: string[]
-      Subnets: string[]
+  Type: 'AWS::ECS::Service'
+  Properties: {
+    CapacityProviderStrategy?: CapacityProviderStrategy[]
+    Cluster?: string
+    DeploymentConfiguration?: DeploymentConfiguration
+    DeploymentController?: {
+      Type: 'ECS' | 'CODE_DEPLOY' | 'EXTERNAL'
     }
+    DesiredCount?: number
+    EnableECSManagedTags?: boolean
+    EnableExecuteCommand?: boolean
+    HealthCheckGracePeriodSeconds?: number
+    LaunchType?: 'EC2' | 'FARGATE' | 'EXTERNAL'
+    LoadBalancers?: {
+      ContainerName: string
+      ContainerPort: number
+      LoadBalancerName: string
+      TargetGroupArn: string
+    }
+    NetworkConfiguration?: {
+      AwsvpcConfiguration: {
+        AssignPublicIp?: 'ENABLED' | 'DISABLED'
+        SecurityGroups?: string[]
+        Subnets: string[]
+      }
+    }
+    PlacementConstraints?: {
+      Expression?: string
+      Type: 'memberOf' | 'distinctInstance'
+    }
+    PlacementStrategies?: {
+      Field?: string
+      Type: 'random' | 'spread' | 'binpack'
+    }[]
+    PlatformVersion?: string
+    PropagateTags?: 'TASK_DEFINITION' | 'SERVICE' | 'NONE'
+    Role?: string
+    SchedulingStrategy?: 'REPLICA' | 'DAEMON'
+    ServiceConnectConfiguration?: ServiceConnectConfiguration
+    ServiceName?: string
+    Tags?: Tag[]
   }
-  PlacementConstraints?: {
-    Expression?: string
-    Type: 'memberOf' | 'distinctInstance'
-  }
-  PlacementStrategies?: {
-    Field?: string
-    Type: 'random' | 'spread' | 'binpack'
-  }[]
-  PlatformVersion?: string
-  PropagateTags?: 'TASK_DEFINITION' | 'SERVICE' | 'NONE'
-  Role?: string
-  SchedulingStrategy?: 'REPLICA' | 'DAEMON'
-  ServiceConnectConfiguration?: ServiceConnectConfiguration
-  ServiceName?: string
-  Tags?: Tag[]
 }
 
 export type IECSCluster = {
-  CapacityProviders?: string[]
-  ClusterName: string
-  ClusterSettings?: {
-    Name: string
-    Value: string
-  }
-  Configuration?: {
-    ExecuteCommandConfiguration?: {
-      KmsKeyId?: string
-      LogConfiguration?: ExecuteCommandLogConfiguration
-      Logging?: 'DEFAULT' | 'OVERRIDE' | 'NONE'
+  Type: 'AWS::ECS::Cluster'
+  Properties: {
+    CapacityProviders?: string[]
+    ClusterName: string
+    ClusterSettings?: {
+      Name: string
+      Value: string
     }
+    Configuration?: {
+      ExecuteCommandConfiguration?: {
+        KmsKeyId?: string
+        LogConfiguration?: ExecuteCommandLogConfiguration
+        Logging?: 'DEFAULT' | 'OVERRIDE' | 'NONE'
+      }
+    }
+    DefaultCapacityProviderStrategy?: CapacityProviderStrategy[]
   }
-  DefaultCapacityProviderStrategy?: CapacityProviderStrategy[]
 }
 
 export type IECSTaskDefinition = {
-  ContainerDefinitions: {
-    Command?: string[]
-    Cpu?: number
-    DependsOn?: {
-      Condition?: 'START' | 'COMPLETE' | 'SUCCESS' | 'HEALTHY'
-      ContainerName: string
-    }
-    DisableNetworking?: boolean
-    DnsSearchDomains?: string[]
-    DnsServers?: string[]
-    DockerLabels?: Record<string, string>
-    DockerSecurityOptions?: string[]
-    EntryPoint?: string[]
-    Environment?: Record<string, string>
-    EnvironmentFiles?: {
-      Type: 's3'
-      Value: string
-    }
-    Essential?: boolean
-    ExtraHosts?: {
-      Hostname: string
-      IpAddress: string
-    }
-    FirelensConfiguration?: {
-      Options?: Record<string, string>
-      Type: 'fluentbit' | 'fluentd'
-    }
-    HealthCheck?: {
-      Command: string[]
-      Interval?: number
-      Retries?: number
-      StartPeriod?: number
-      Timeout?: number
-    }
-    Hostname?: string
-    Image: string
-    Interactive?: boolean
-    Links?: string[]
-    LinuxParameters?: {
-      Capabilities?: {
-        Add?: Add[]
-        Drop?: Drop[]
+  Type: 'AWS::ECS::TaskDefinition'
+  Properties: {
+    ContainerDefinitions: {
+      Command?: string[]
+      Cpu?: number
+      DependsOn?: {
+        Condition?: 'START' | 'COMPLETE' | 'SUCCESS' | 'HEALTHY'
+        ContainerName: string
       }
-      Devices?: {
+      DisableNetworking?: boolean
+      DnsSearchDomains?: string[]
+      DnsServers?: string[]
+      DockerLabels?: Record<string, string>
+      DockerSecurityOptions?: string[]
+      EntryPoint?: string[]
+      Environment?: Record<string, string>
+      EnvironmentFiles?: {
+        Type: 's3'
+        Value: string
+      }
+      Essential?: boolean
+      ExtraHosts?: {
+        Hostname: string
+        IpAddress: string
+      }
+      FirelensConfiguration?: {
+        Options?: Record<string, string>
+        Type: 'fluentbit' | 'fluentd'
+      }
+      HealthCheck?: {
+        Command: string[]
+        Interval?: number
+        Retries?: number
+        StartPeriod?: number
+        Timeout?: number
+      }
+      Hostname?: string
+      Image: string
+      Interactive?: boolean
+      Links?: string[]
+      LinuxParameters?: {
+        Capabilities?: {
+          Add?: Add[]
+          Drop?: Drop[]
+        }
+        Devices?: {
+          ContainerPath: string
+          HostPath: string
+          Permissions: string[]
+        }
+        InitProcessEnabled?: boolean
+        MaxSwap?: number
+        SharedMemorySize?: number
+        Swappiness?: number
+        Tmpfs?: {
+          ContainerPath: string
+          MountOptions?: MountOptions[]
+          Size: number
+        }
+      }
+      LogConfiguration?: LogConfiguration
+      Memory?: number
+      MemoryReservation?: number
+      MountPoints?: {
         ContainerPath: string
-        HostPath: string
-        Permissions: string[]
+        ReadOnly?: boolean
+        SourceVolume: string
       }
-      InitProcessEnabled?: boolean
-      MaxSwap?: number
-      SharedMemorySize?: number
-      Swappiness?: number
-      Tmpfs?: {
-        ContainerPath: string
-        MountOptions?: MountOptions[]
-        Size: number
-      }
-    }
-    LogConfiguration?: LogConfiguration
-    Memory?: number
-    MemoryReservation?: number
-    MountPoints?: {
-      ContainerPath: string
-      ReadOnly?: boolean
-      SourceVolume: string
-    }
-    Name: string
-    PortMapping?: {
-      AppProtocol?: 'grpc' | 'http' | 'http2'
-      ContainerPort: number
-      ContainerPortRange?: string
-      HostPort?: number
-      Name?: string
-      Protocol?: 'tcp' | 'udp'
+      Name: string
+      PortMapping?: {
+        AppProtocol?: 'grpc' | 'http' | 'http2'
+        ContainerPort: number
+        ContainerPortRange?: string
+        HostPort?: number
+        Name?: string
+        Protocol?: 'tcp' | 'udp'
+      }[]
+      // Unfinished
     }
   }
 }
