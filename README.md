@@ -1,5 +1,7 @@
 # ssb-api
 
+Also see [ssb-backend-web-app](https://github.com/paldeep-singh/ssb-backend-web-app).
+
 ## Additional set up requirements
 1. Docker
 2. A default aws config to run local DynamoDB intgeration tests: https://github.com/dynamoose/dynamoose/issues/1534
