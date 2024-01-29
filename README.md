@@ -16,3 +16,14 @@
     c. Recipes
     d. Categories
 4. Think more about migrating to self-hosting Redis instance instead of Upstash? Is it worth it?
+5. Think more about expanding database schema
+
+
+Current schema:
+<br>
+<img src="https://i.imgur.com/eaebdOb.png" height=600px></img>
+
+
+Expanded schema:
+<br>
+<img src="https://i.imgur.com/oUG9AJ6.png" height=600px></img>
