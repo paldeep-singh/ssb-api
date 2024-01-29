@@ -13,8 +13,8 @@
     b. Deploy Neo4j to ECS? 
 3. Create Recipe database API routes
     a. Ingredients
-    c. Recipes
-    d. Categories
+    b. Recipes
+    c. Categories
 4. Think more about migrating to self-hosting Redis instance instead of Upstash? Is it worth it?
 5. Think more about expanding database schema
 
