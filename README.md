@@ -1,6 +1,6 @@
 # ssb-api
 
-## Undocumented set up requirements
+## Additional set up requirements
 1. Docker
 2. A default aws config to run local DynamoDB intgeration tests: https://github.com/dynamoose/dynamoose/issues/1534
 3. Serverless-dynamodb-local requirements: https://www.serverless.com/plugins/serverless-dynamodb-local (we don't use Docker for this yet)
@@ -9,8 +9,10 @@
 
 ## TODO
 1. Migrate from Serverless to Terraform
-2. Create Recipe database API routes
+    a. Improve the Neo4j docker setup
+    b. Deploy Neo4j to ECS? 
+3. Create Recipe database API routes
     a. Ingredients
     c. Recipes
     d. Categories
-3. Think more about migrating to self-hosting Redis instance instead of Upstash? Is it worth it?
+4. Think more about migrating to self-hosting Redis instance instead of Upstash? Is it worth it?
