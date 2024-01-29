@@ -9,12 +9,12 @@
 
 ## TODO
 1. Migrate from Serverless to Terraform
-    a. Improve the Neo4j docker setup
-    b. Deploy Neo4j to ECS? 
+    - Improve the Neo4j docker setup
+    - Deploy Neo4j to ECS? 
 3. Create Recipe database API routes
-    a. Ingredients
-    b. Recipes
-    c. Categories
+    - Ingredients
+    - Recipes
+    - Categories
 4. Think more about migrating to self-hosting Redis instance instead of Upstash? Is it worth it?
 5. Think more about expanding database schema
 
