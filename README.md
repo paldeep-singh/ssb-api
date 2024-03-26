@@ -1,10 +1,10 @@
 # ssb-api
 
-Also see [ssb-backend-web-app](https://github.com/paldeep-singh/ssb-backend-web-app).
+Serverless API for Spice Spice Baby recipe app project, utilising the Serverless Framework, DynamoDB, Redis and Neo4j. Also see [ssb-backend-web-app](https://github.com/paldeep-singh/ssb-backend-web-app).
 
 ## Additional set up requirements
 1. Docker
-2. A default aws config to run local DynamoDB intgeration tests: https://github.com/dynamoose/dynamoose/issues/1534
+2. A default aws config to run local DynamoDB integration tests: https://github.com/dynamoose/dynamoose/issues/1534
 3. Serverless-dynamodb-local requirements: https://www.serverless.com/plugins/serverless-dynamodb-local (we don't use Docker for this yet)
 4. localRecipeDb/neo4j/import folder must be created for running against local neo4j and if contents need to be updated, it must be manually deleted using sudo
 5. apoc and apoc extended jar files for neo4j must be downloaded and placed in localRecipeDb/plugins
